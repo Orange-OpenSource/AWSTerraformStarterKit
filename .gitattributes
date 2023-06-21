@@ -1,5 +1,5 @@
 terraform/ export-ignore
-LICENSE/ export-ignore
+LICENSE export-ignore
 README.md export-ignore
 .gitattributes export-ignore
 config.yaml export-ignore
