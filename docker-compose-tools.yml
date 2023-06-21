@@ -1,0 +1,140 @@
+---
+
+services:
+  precommit:
+    container_name: ${COMPOSE_PROJECT_NAME}_precommit
+    image: ghcr.io/antonbabenko/pre-commit-terraform:${PRECOMMIT_IMAGE_TAG}
+    user: root
+    environment:
+      PRE_COMMIT_HOME: /tmp
+    volumes:
+      - ./:/lint
+      - /tmp:/tmp
+    working_dir: /lint
+
+  lint:
+    container_name: ${COMPOSE_PROJECT_NAME}_lint
+    build:
+      dockerfile: automation/TFlint/Dockerfile
+      context: .
+      args:
+        - TFLINT_VERSION=0.46.1
+        - TFLINT_OS=linux
+        - TFLINT_ARCH=amd64
+    image: tflint:0.46.1
+    user: ${MY_UID}:${MY_GID}
+    environment:
+      - HOME=/workdir
+    env_file:
+      - .env
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - ./:/workdir
+    working_dir: /workdir
+
+  dotenv-linter:
+    container_name: ${COMPOSE_PROJECT_NAME}_dotenv_linter
+    image: dotenvlinter/dotenv-linter:${DOTENV_LINTER_IMAGE_TAG}
+    volumes:
+      - .env:/app/.env
+    working_dir: /app
+
+  markdown_lint:
+    container_name: ${COMPOSE_PROJECT_NAME}_markdown_lint
+    image: pipelinecomponents/markdownlint:${MARKDOWN_LINTER_IMAGE_TAG}
+    volumes:
+      - ./:/md
+    working_dir: /md
+
+  shell_lint:
+    container_name: ${COMPOSE_PROJECT_NAME}_shell_lint
+    image: pipelinecomponents/shellcheck:${SHELL_LINTER_IMAGE_TAG}
+    user: ${MY_UID}:${MY_GID}
+    environment:
+      - HOME=/app
+    env_file:
+      - .env
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - ./:/app
+    working_dir: /app
+
+  yaml_lint:
+    container_name: ${COMPOSE_PROJECT_NAME}_yaml_lint
+    image: pipelinecomponents/yamllint:${YAML_LINTER_IMAGE_TAG}
+    user: ${MY_UID}:${MY_GID}
+    environment:
+      - HOME=/app
+    env_file:
+      - .env
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - ./:/code
+    working_dir: /code
+
+  powershell_lint:
+    container_name: ${COMPOSE_PROJECT_NAME}_powershell_lint
+    image: cypher0n3/psscriptanalyzer-docker:${POWERSHELL_LINTER_IMAGE_TAG}
+    volumes:
+      - ./:/app
+    working_dir: /app
+
+  json_lint:
+    container_name: ${COMPOSE_PROJECT_NAME}_json_lint
+    image: pipelinecomponents/jsonlint:${JSON_LINTER_IMAGE_TAG}
+    volumes:
+      - ./:/code
+    working_dir: /code
+
+  trivy:
+    container_name: ${COMPOSE_PROJECT_NAME}_trivy
+    image: aquasec/trivy:${TRIVY_IMAGE_TAG}
+    volumes:
+      - ./:/myapp
+    working_dir: /myapp
+
+  terrascan:
+    container_name: ${COMPOSE_PROJECT_NAME}_terrascan
+    image: tenable/terrascan:${TERRASCAN_IMAGE_TAG}
+    volumes:
+      - ./:/myapp
+    working_dir: /myapp
+
+  jinja2docker:
+    container_name: jinja2docker
+    build:
+      dockerfile: Dockerfile
+      context: ./automation/jinja2/
+    hostname: jinja2docker
+    entrypoint: python3 /scripts/entities/render.py
+    #entrypoint: tail -f /etc/alpine-release
+    env_file:
+      - .env
+    volumes:
+      - ./automation/jinja2/templates:/templates
+      - ./automation/jinja2/variables:/variables
+      - ./automation/jinja2/render.py:/script/entities/render.py
+
+  terraform_docs:
+    container_name: ${COMPOSE_PROJECT_NAME}_terraform_docs
+    build:
+      dockerfile: automation/TerraformDocs/Dockerfile
+      context: .
+      args:
+        - TERRAFORM_DOCS_VERSION=0.16.0
+        - TERRAFORM_DOCS_OS=linux
+        - TERRAFORM_DOCS_ARCH=amd64
+    image: terraforms-docs:0.16.0
+    user: ${MY_UID}:${MY_GID}
+    environment:
+      HOME: /workdir
+    env_file:
+      - .env
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - ./:/workdir
+    working_dir: /workdir

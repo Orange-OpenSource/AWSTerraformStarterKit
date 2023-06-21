@@ -1,0 +1,53 @@
+---
+# this is required
+formatter: "markdown"
+
+version: ""
+
+header-from: main.tf
+footer-from: ""
+
+recursive:
+  enabled: true
+  path: .
+
+sections:
+  hide: []
+  show: []
+  # deprecated in v0.13.0, removed in v0.15.0
+  hide-all: false
+  # deprecated in v0.13.0, removed in v0.15.0
+  show-all: true
+
+content: ""
+
+output:
+  file: "README.md"
+  mode: inject
+  template: |-
+    <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+    {{ .Content }}
+    <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+
+output-values:
+  enabled: false
+  from: ""
+
+sort:
+  enabled: true
+  by: name
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: false
+  escape: true
+  hide-empty: false
+  html: true
+  indent: 2
+  lockfile: true
+  read-comments: true
+  required: true
+  sensitive: true
+  type: true

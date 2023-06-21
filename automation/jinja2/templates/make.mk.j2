@@ -1,0 +1,96 @@
+{%- set plans_install = environ('PLAN_INSTALL_LIST').split(',') -%}
+{%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
+
+# Automatic Content Generated
+
+generate_documentation: ## Generate Terraform Documentation
+generate_documentation:
+{% for plan_name in plans_install %}
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs {{ plan_name }} --config=./.config/.terraform-docs.yml
+{% endfor %}
+
+terraform_terrascan: ## Terrascan Terraform
+terraform_terrascan:
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml {% for plan_name in plans_install %} --iac-dir={{ plan_name }} {% endfor %}
+
+format: ## Format all Terraform files using "terraform fmt"
+format:
+{% for plan_name in plans_install %}
+	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="{{ plan_name }}"
+{% endfor %}
+
+trivy:  ## Terraform Trivy
+trivy:
+{% for plan_name in plans_install %}
+	$(TRIVY_RUN) config {{ plan_name }} --config=./.config/.trivy.yaml --skip-dirs .terraform
+{% endfor %}
+
+validate: ## Validate all Terraform files using "terraform validate"
+validate:
+{% for plan_name in plans_install %}
+	@$(MAKE) --no-print-directory terraform_validate CURRENT_DIR="{{ plan_name }}"
+{% endfor %}
+
+lint: ## Check that good naming practices are respected in Terraform files (using tflint)
+lint:
+	$(TFLINT_RUN) --init
+{% for plan_name in plans_install %}
+	@$(MAKE) --no-print-directory terraform_lint CURRENT_DIR="{{ plan_name }}"
+{% endfor %}
+
+
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+init_{{ slug}}: ## Init AWS {{ plan_name }} layer
+init_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_init_commands
+{% endfor %}
+
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+plan_{{ slug}}: ## Plan AWS {{ plan_name }} layer
+plan_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_plan_commands
+{% endfor %}
+
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+install_{{ slug }}: ## Install AWS {{ plan_name }} layer
+install_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_install_commands
+{% endfor %}
+
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+destroy_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer
+destroy_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_destroy_commands
+{% endfor %}
+
+
+init_all: ## Init all AWS layers
+init_all:
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+	@$(MAKE) --no-print-directory init_{{ slug }}
+{% endfor %}
+
+plan_all: ## Plan all AWS layers
+plan_all:
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+	@$(MAKE) --no-print-directory plan_{{ slug }}
+{% endfor %}
+
+install_all: ## Install all AWS layers
+install_all: {% for plan_name in plans_install %}{% set slug = plan_name.replace('/',"_") %}{% set path = plan_name.split('/') %}install_{{ slug }} {% endfor %}
+
+
+destroy_all: ## Uninstall all layers
+destroy_all: {% for plan_name in plans_delete %}{% set slug = plan_name.replace('/',"_") %}{% set path = plan_name.split('/') %}delete_{{ slug }} {% endfor %}

@@ -1,0 +1,21 @@
+---
+format: table
+debug: true
+insecure: false
+ignore-policy:
+  - avd-aws-0057
+  - avd-aws-0104
+severity:
+  - CRITICAL
+  - HIGH
+exclude:
+  - .terraform/**/*
+  - terraform-aws-modules
+  - .terraform
+  - .terraform/modules/**/*
+
+skip-dirs:
+  - .terraform/**/*
+  - terraform-aws-modules
+  - .terraform
+  - .terraform/modules/**/*

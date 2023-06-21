@@ -1,0 +1,26 @@
+---
+
+services:
+  terraform:
+    container_name: ${COMPOSE_PROJECT_NAME}_terraform
+    build:
+      dockerfile: automation/TFEnv/Dockerfile
+      args:
+        - TFENV_VERSION=3.0.0
+        - BASH_VERSION=5
+    image: tfenv:3.0.0
+    user: ${MY_UID}:${MY_GID}
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+    env_file:
+      - .env
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - ./:/workdir
+      - $HOME/.terraformrc:$HOME/.terraformrc
+      - $HOME/.terraform.d:$HOME/.terraform.d
+    working_dir: /workdir
+    entrypoint: [ "tail", "-f", "/dev/null" ]
