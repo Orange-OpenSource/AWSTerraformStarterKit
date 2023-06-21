@@ -13,4 +13,4 @@
 
 set -o errexit -o nounset -o pipefail
 
-ls -a | grep -xvi ".gitignore\|.git\|.idea\|terraform\|README.md\|configure.yaml\|configure.yaml.dist" | xargs  rm -rfv
+ls -a | grep -xvi ".gitignore\|.git\|.idea\|terraform\|README.md\|configure.yaml\|configure.yaml.dist\|get-starter-kit.sh\|remove-starter-kit.sh" | xargs  rm -rfv

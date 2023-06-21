@@ -14,20 +14,13 @@
 set -o errexit -o nounset -o pipefail
 
 # Set Starterkit version
-STARTER_KIT_VERSION="v0.0.8"
+STARTER_KIT_VERSION="v0.0.1"
 
-# Set GitLab URL and GitLab project ID (AWS Terraform StarterKit porject ID)
-GITLAB_URL="git.mydomain.com"
-GITLAB_PROJECT_ID="27"
-
-# Set GitLab HTTP token
-GITLAB_TOKEN="YOUR_GITLAB_HTTP_TOKEN"
-
-curl --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
-"https://${GITLAB_URL}/api/v4/projects/${GITLAB_PROJECT_ID}/repository/archive.zip?sha=${STARTER_KIT_VERSION}" \
+curl  -L\
+ "https://github.com/Orange-OpenSource/AWSTerraformStarterKit/archive/refs/tags/${STARTER_KIT_VERSION}.zip" \
 -o /tmp/archive.zip
 
 unzip /tmp/archive.zip -d .
-cp -r awsterraformstarterkit-*/. .
-rm -rf awsterraformstarterkit-*
+cp -r AWSTerraformStarterKit-*/. .
+rm -rf AWSTerraformStarterKit-*
 rm /tmp/archive.zip
