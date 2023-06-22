@@ -14,11 +14,19 @@
 set -o errexit -o nounset -o pipefail
 
 # Set Starterkit version
-STARTER_KIT_VERSION="v0.0.1"
+STARTER_KIT_VERSION="latest"
 
-curl  -L\
- "https://github.com/Orange-OpenSource/AWSTerraformStarterKit/archive/refs/tags/${STARTER_KIT_VERSION}.zip" \
--o /tmp/archive.zip
+if [ "$STARTER_KIT_VERSION" == "latest" ]; then
+
+    LOCATION=$(curl -s https://api.github.com/repos/Orange-OpenSource/AWSTerraformStarterKit/releases/latest  \
+    | grep "tag_name" \
+    | awk '{print "https://github.com/Orange-OpenSource/AWSTerraformStarterKit/archive/" substr($2, 2, length($2)-3) ".zip"}') \
+    ; curl -L -o /tmp/archive.zip "$LOCATION"
+else
+  curl  -L\
+   "https://github.com/Orange-OpenSource/AWSTerraformStarterKit/archive/refs/tags/${STARTER_KIT_VERSION}.zip" \
+  -o /tmp/archive.zip
+fi
 
 unzip /tmp/archive.zip -d .
 cp -r AWSTerraformStarterKit-*/. .
