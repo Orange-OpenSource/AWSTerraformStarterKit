@@ -107,7 +107,7 @@ services:
     container_name: jinja2docker
     build:
       dockerfile: Dockerfile
-      context: ./automation/jinja2/
+      #context: ./automation/jinja2/
     hostname: jinja2docker
     entrypoint: python3 /scripts/entities/render.py
     #entrypoint: tail -f /etc/alpine-release
