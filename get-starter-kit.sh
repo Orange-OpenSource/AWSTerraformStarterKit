@@ -14,7 +14,7 @@
 set -o errexit -o nounset -o pipefail
 
 # Set Starterkit version
-STARTER_KIT_VERSION="latest"
+STARTER_KIT_VERSION="${1:-latest}"
 
 if [ "$STARTER_KIT_VERSION" == "latest" ]; then
 
