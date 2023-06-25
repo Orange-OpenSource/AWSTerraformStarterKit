@@ -17,17 +17,15 @@ set -o errexit -o nounset -o pipefail
 STARTER_KIT_VERSION="${1:-latest}"
 STARTER_KIT_PROJECT="${2:-Orange-OpenSource/AWSTerraformStarterKit}"
 
-if [ "$STARTER_KIT_VERSION" == "latest" ]; then
+STARTER_KIT_FORMAT="zip"
+STARTER_KIT_URL="https://github.com/${STARTER_KIT_PROJECT}"
 
-    LOCATION=$(curl -s "https://api.github.com/repos/${STARTER_KIT_PROJECT}/releases/latest  \
-    | grep "tag_name" \
-    | awk '{print "https://github.com/${STARTER_KIT_PROJECT}/archive/" substr($2, 2, length($2)-3) ".zip"}') \
-    ; curl -L -o /tmp/archive.zip "$LOCATION"
-else
-  curl  -L\
-   "https://github.com/${STARTER_KIT_PROJECT}/archive/refs/tags/${STARTER_KIT_VERSION}.zip" \
-  -o /tmp/archive.zip
+if [ "$STARTER_KIT_VERSION" == "latest" ]; then
+    STARTER_KIT_VERSION=$(curl -s "https://api.github.com/repos/${STARTER_KIT_PROJECT}/releases/latest" | jq -r ".tag_name")
 fi
+
+STARTER_KIT_LOCATION="${STARTER_KIT_URL}/archive/refs/tags/${STARTER_KIT_VERSION}.${STARTER_KIT_FORMAT}"
+curl --fail -L "${STARTER_KIT_LOCATION}" -o /tmp/archive.zip
 
 unzip /tmp/archive.zip -d .
 cp -r AWSTerraformStarterKit-*/. .
