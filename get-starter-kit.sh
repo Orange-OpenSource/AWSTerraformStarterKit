@@ -14,21 +14,15 @@
 set -o errexit -o nounset -o pipefail
 
 # Set Starterkit version
-STARTER_KIT_VERSION="latest"
+STARTER_KIT_VERSION="${1:-latest}"
+STARTER_KIT_PROJECT="${2:-Orange-OpenSource/AWSTerraformStarterKit}"
+
+STARTER_KIT_FORMAT="tar"
+STARTER_KIT_URL="https://api.github.com/repos/${STARTER_KIT_PROJECT}"
+STARTER_KIT_LOCATION="${STARTER_KIT_URL}/${STARTER_KIT_FORMAT}ball/${STARTER_KIT_VERSION}"
 
 if [ "$STARTER_KIT_VERSION" == "latest" ]; then
-
-    LOCATION=$(curl -s https://api.github.com/repos/Orange-OpenSource/AWSTerraformStarterKit/releases/latest  \
-    | grep "tag_name" \
-    | awk '{print "https://github.com/Orange-OpenSource/AWSTerraformStarterKit/archive/" substr($2, 2, length($2)-3) ".zip"}') \
-    ; curl -L -o /tmp/archive.zip "$LOCATION"
-else
-  curl  -L\
-   "https://github.com/Orange-OpenSource/AWSTerraformStarterKit/archive/refs/tags/${STARTER_KIT_VERSION}.zip" \
-  -o /tmp/archive.zip
+    STARTER_KIT_LOCATION=$(curl -s ${STARTER_KIT_URL}/releases/latest | jq -r ".${STARTER_KIT_FORMAT}ball_url")
 fi
 
-unzip /tmp/archive.zip -d .
-cp -r AWSTerraformStarterKit-*/. .
-rm -rf AWSTerraformStarterKit-*
-rm /tmp/archive.zip
+curl --fail -L "${STARTER_KIT_LOCATION}" | tar -xz --strip-components 1
