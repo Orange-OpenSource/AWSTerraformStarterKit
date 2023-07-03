@@ -58,6 +58,7 @@ GITLAB_JOBS:
     delete_all: True
 
 CICD_ROLE_NAME: XXXXXX-CiCd-CrossAccountRole
+CICD_ACCOUNT_ID: 123546789123
 
 # Run Terraform apply only on main branch
 TF_APPLY_ONLY_MAIN: True
