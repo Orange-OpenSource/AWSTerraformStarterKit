@@ -66,7 +66,7 @@ stages:
   script: |
     #!/usr/bin/env bash
     echo "Getting temporary credentials associated to assume role"
-    STS_CREDS=$(aws sts assume-role --role-arn arn:aws:iam::903534291474:role/XXXXXX-CiCd-CrossAccountRole --role-session-name ${CI_COMMIT_SHA})
+    STS_CREDS=$(aws sts assume-role --role-arn arn:aws:iam::{{ environ('CICD_ACCOUNT_ID') }}:role/{{ environ('CICD_ROLE_NAME') }} --role-session-name ${CI_COMMIT_SHA})
     AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
     AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
     AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
