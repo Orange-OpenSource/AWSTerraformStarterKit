@@ -77,10 +77,16 @@ TF_LOG_PATH: /tmp/terraform_logs
 ########################################################################################################################
 # Terraform S3 Backend Configuration
 ########################################################################################################################
+# Leave empty if you want to cusomize the Terraform backend config into the Terraform plans 
 TF_VAR_backend_bucket_name: tfstate-sso-900894545262-primary
 TF_VAR_backend_bucket_region: eu-west-3
 TF_VAR_backend_dynamodb_table: tfstate-terraformstarterkit-lock
 TF_VAR_backend_bucket_access_role: arn:aws:iam::538728450418:role/vcl-platformadmin-role
+
+# Customize Terraform backend bucket key
+# True: set the key in the Terraform plan remote state confgirutation
+# False: Terraform backend bucket key is automatically
+CUSTOM_BACKEND_BUCKET_KEY: False
 
 ########################################################################################################################
 # LOCAL DEVELOPMENT

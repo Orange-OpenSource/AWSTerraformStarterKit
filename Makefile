@@ -43,12 +43,28 @@ ifdef CICD_MODE
 else
 	ROLE_NAME := ${LOCAL_ROLE_NAME}
 endif
-TERRAFORM_INIT = init --upgrade \
--backend-config="bucket=${TF_VAR_backend_bucket_name}"\
--backend-config="region=${TF_VAR_backend_bucket_region}" \
--backend-config="dynamodb_table=${TF_VAR_backend_dynamodb_table}" \
--backend-config="key=${PROJECT_NAME}${subst terraform,,$(CURRENT_DIR)}.tfstate" \
--backend-config="role_arn=${TF_VAR_backend_bucket_access_role}"
+
+ifdef TF_VAR_backend_bucket_name
+	TERRAFORM_INIT_BACKEND_CONFIG_BUCKET = -backend-config="bucket=${TF_VAR_backend_bucket_name}"
+endif
+
+ifdef TF_VAR_backend_bucket_region
+	TERRAFORM_INIT_BACKEND_CONFIG_REGION = -backend-config="region=${TF_VAR_backend_bucket_region}"
+endif
+
+ifdef TF_VAR_backend_dynamodb_table
+	TERRAFORM_INIT_BACKEND_CONFIG_DYNAMO_TABLE = -backend-config="dynamodb_table=${TF_VAR_backend_dynamodb_table}"
+endif
+
+ifdef TF_VAR_backend_bucket_access_role
+	TERRAFORM_INIT_BACKEND_CONFIG_ROLE_ARN = -backend-config="role_arn=${TF_VAR_backend_bucket_access_role}"
+endif
+
+ifdef CUSTOM_BACKEND_BUCKET_KEY
+	TERRAFORM_INIT_BACKEND_CONFIG_KEY = -backend-config="key=${PROJECT_NAME}${subst terraform,,$(CURRENT_DIR)}.tfstate"
+endif
+
+TERRAFORM_INIT = init --upgrade $(TERRAFORM_INIT_BACKEND_CONFIG_BUCKET) $(TERRAFORM_INIT_BACKEND_CONFIG_REGION) $(TERRAFORM_INIT_BACKEND_CONFIG_DYNAMO_TABLE) $(TERRAFORM_INIT_BACKEND_CONFIG_ROLE_ARN) $(TERRAFORM_INIT_BACKEND_CONFIG_KEY)
 
 ifdef CICD_MODE
 	TFENV_EXEC ?= $(shell which tfenv)
