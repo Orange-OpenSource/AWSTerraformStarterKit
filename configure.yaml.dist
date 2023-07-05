@@ -85,7 +85,7 @@ TF_VAR_backend_bucket_access_role: arn:aws:iam::538728450418:role/vcl-platformad
 
 # Customize Terraform backend bucket key
 # True: set the key in the Terraform plan remote state confgirutation
-# False: Terraform backend bucket key is automatically
+# False: Terraform backend bucket key is automatically generated
 CUSTOM_BACKEND_BUCKET_KEY: False
 
 ########################################################################################################################
