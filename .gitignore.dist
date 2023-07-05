@@ -47,7 +47,8 @@ tfplan.json
 automation/
 docker-compose-tools.yml
 docker-compose.yml
-.gitignore-project
+.gitignore.dist
 configure.yaml.dist
 .env
+Makefile.dist
 makeplan.mk
