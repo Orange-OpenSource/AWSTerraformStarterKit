@@ -41,7 +41,7 @@ tfplan.binary
 tfplan.json
 .terraform.lock.hcl
 
-# TerraformStarterKit
+# AWSTerraformStarterKit
 .config/
 .backup/
 automation/
