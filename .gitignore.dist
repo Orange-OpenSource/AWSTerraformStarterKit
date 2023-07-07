@@ -41,13 +41,14 @@ tfplan.binary
 tfplan.json
 .terraform.lock.hcl
 
-# TerraformStarterKit
+# AWSTerraformStarterKit
 .config/
 .backup/
 automation/
 docker-compose-tools.yml
 docker-compose.yml
-.gitignore-project
+.gitignore.dist
 configure.yaml.dist
 .env
+Makefile.dist
 makeplan.mk

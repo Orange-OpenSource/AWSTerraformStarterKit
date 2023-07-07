@@ -93,4 +93,4 @@ install_all: {% for plan_name in plans_install %}{% set slug = plan_name.replace
 
 
 destroy_all: ## Uninstall all layers
-destroy_all: {% for plan_name in plans_delete %}{% set slug = plan_name.replace('/',"_") %}{% set path = plan_name.split('/') %}delete_{{ slug }} {% endfor %}
+destroy_all: {% for plan_name in plans_delete %}{% set slug = plan_name.replace('/',"_") %}{% set path = plan_name.split('/') %}destroy_{{ slug }} {% endfor %}

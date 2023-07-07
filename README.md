@@ -12,6 +12,8 @@ The StarterKit utilizes several technologies to facilitate the deployment of res
 
 3. Jinja: Jinja is a powerful templating engine for Python. In the context of the StarterKit, Jinja is used for templating purposes to generate configuration files or scripts dynamically. It allows for the inclusion of variables, conditionals, loops, and other programming constructs within templates, enabling dynamic generation of Terraform configurations based on user-defined parameters.
 
+4. GitLab-CI: if you wish to orchestrate your Terraform deployments thanks to GitLab-CI, this starter kit is able to generate a `.gitlab-ci.ym` designed to create and execute the GitLab jobs of your choice. (**at the moment, the AWSTerraformStarterKit is designed to manage GitLab-CI only**)
+
 These technologies work together to provide an efficient and streamlined workflow for deploying resources on AWS using Terraform. Docker ensures consistent and isolated environments, the Makefile automates common tasks, and Jinja enables flexible and dynamic templating.
 
 ## Objectives and Benefits
@@ -32,7 +34,7 @@ Here are some key objectives and benefits of an AWS StarterKit:
 
 Overall, an AWS StarterKit aims to streamline the process of deploying resources on AWS using Terraform, reducing the learning curve and accelerating the time to value for users. It provides a solid foundation and best practices to help users start their infrastructure-as-code journey on AWS with confidence.
 
-## pre-requisite
+## Prerequisites
 
 To install the StarterKit, several tools are required on the user's computer:
 
@@ -46,63 +48,37 @@ To install the StarterKit, several tools are required on the user's computer:
 
 5. **jq**: [jq](https://jqlang.github.io/jq/) is a lightweight and flexible command-line JSON processor. It enables you to manipulate and extract data from JSON files and API responses, which can be useful for processing and transforming data within the starter kit.
 
-6. **Git**: [Git](https://jqlang.github.io/jq/) is a distributed version control system used for tracking changes in source code during software development.
+6. **Git**: [Git](https://git-scm.com/) is a distributed version control system used for tracking changes in source code during software development.
 
 By having these tools installed, users can seamlessly set up and utilize the StarterKit for deploying resources on AWS with Terraform.
 
-### Initialize a new project
+## Initialize a Project
 
-#### Step 1
+### Step 1
 
-To start using the StarterKit, follow these steps:
+To start using the AWSTerraformStarterKit, follow these steps:
 
-1. Create a new folder on your computer. You can choose a suitable location for the folder based on your preference.
+1. Clone an empty Git repo or create a empty directory and intitialize de Git repo with `git init` command
 
-2. Download or clone the StarterKit repository to your local machine.
+2. Create a **terraform** folder within your new repository and copy your Terraform plans into. A Terraform plan is a subfolder of the **terraform** directory.
 
-3. Locate the "terraform" folder within the StarterKit repository.
+3. You can create a **common.tfvars** file at the root level of **terraform** directory that will contain the common parameters of your Teraform plans. 
 
-4. Copy or move the "terraform" folder into the newly created folder on your computer.
+4. Download `get-starter-kit.sh` shell script from this repository at the root level of you repo and make it executalbe (`chmod +x get-starter-kit.sh`)
 
-By completing these steps, you will have the necessary "terraform" folder from the StarterKit in your designated folder.
+5. Execute `get-starter-kit.sh`
+   - Without any arguments: the shell script will download the lastest version of the shell script.
+   - With a AWSTerraformStaertKit specific version to be downloade as argument (release list: https://github.com/Orange-OpenSource/AWSTerraformStarterKit/releases)
 
-#### Step 2
+6. The `get-starter-kit.sh` will download the AWSTerraformStarterKit files and folders. You are now ready to bootstrap you first Terraform project with the AWSTerraformStaertKit!
 
-Launch the `get-starter-kit.sh` script from the `terraform` folder, you need to set the version of the StarterKit you want to use and provide Git HTTP credentials to download the StarterKit. Here's how you can do it:
+### Step 2
 
-1. Open the `get-starter-kit.sh` script in a text editor.
+1. Locate the `.gitignore.dist`
 
-2. Look for a variable or section in the script where you can set the version of the StarterKit. Update the variable or field with the desired version. It might look like this:
+2. Rename `.gitignore.dist` to `.gitignore`. The `.gitignore` file contains the standard ignore file list for a Terraform project and the AWSTerraformStarterKit files and folders that should not be commited in your Git repo.
 
-   ```bash
-   # Set the version of the StarterKit
-   STARTER_KIT_VERSION="v1.2.3"
-   ```
-
-   Replace `v1.2.3` with the specific version you want to use.
-
-3. Next, you'll need to set the Git HTTP credentials for downloading the StarterKit. Look for a section in the script where you can specify the credentials. It may resemble the following:
-
-   ```bash
-   # Set GitLab HTTP token
-   GITLAB_TOKEN="your_gitlab_http_token"
-   ```
-
-4. Save the changes to the `get-starter-kit.sh` script.
-
-5. Open a terminal or command prompt and navigate to the `terraform` folder.
-
-6. Run the `get-starter-kit.sh` script by executing the following command:
-
-   ```bash
-   ./get-starter-kit.sh
-   ```
-
-   This will execute the script and initiate the process of downloading the specified version of the StarterKit using the provided Git HTTP Token.
-
-Ensure that you have the necessary permissions and access rights to download the StarterKit from the Git repository.
-
-#### Step 3
+### Step 3
 
 1. Locate the `configure.yaml.dist` file in the StarterKit directory.
 
@@ -122,7 +98,7 @@ Ensure that you have the necessary permissions and access rights to download the
 
 6. Save the changes to the `configure.yaml` file.
 
-#### Step4
+### Step4
 
 [Export AWS credentials as environment variables in your path.](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
 
@@ -164,7 +140,7 @@ By setting these environment variables, AWS CLI and other AWS-related tools will
 
 **Please note that exporting credentials as environment variables may not be the most secure method, especially in shared environments.**
 
-### Start the project
+## Start the Project
 
 Once you have set your AWS credentials in the path and modified the `configure.yaml` file to fit your needs, you can start the StarterKit using the command `make start`. This command will execute the `make init` command, which performs the following steps:
 
@@ -178,7 +154,7 @@ By executing `make start`, the StarterKit will be initialized with the provided 
 
 It's important to note that if your AWS credentials expire or change, you need to update the credentials in the environment variables or the AWS CLI configuration and then restart the StarterKit by running `make start` again. This ensures that the StarterKit uses the updated credentials for all AWS operations.
 
-#### Help
+## Help
 
 To get help and list all the available commands in the StarterKit, you can use the `make help` command. This command will display the available targets and their descriptions from the `Makefile`. Here's how you can use it:
 
@@ -198,7 +174,7 @@ Additionally, you can open the `Makefile` in a text editor to explore and unders
 
 By using `make help` and referring to the `Makefile`, you can gain a better understanding of the available commands and utilize them effectively in your StarterKit workflow.
 
-### Usage
+## Usage
 
 Every available commands are described in the make file. Use the `make help` command to get all available commands.
 
@@ -235,7 +211,7 @@ install_all                    Install all AWS layers
 delete_all                     Uninstall all layers
 ```
 
-### Add a new Plan
+## Add a Terraform Plan
 
 To add a new Terraform plan to the project, you can follow these steps:
 
@@ -274,9 +250,9 @@ This command will generate the necessary templates based on the newly added plan
 
 4. Once the process completes, you can proceed with using the generated templates for your Terraform deployment.
 
-### Add a new tool
+## Add a Tool
 
-#### New Service in Docker
+### New Service in Docker
 
 1. Open the `docker-compose-tools.yaml` file located in the project's directory.
 
@@ -298,7 +274,7 @@ This command will generate the necessary templates based on the newly added plan
 
 5. Save the `docker-compose-tools.yaml` file after adding the new service definition.
 
-#### New command in Makefile
+### New command in Makefile
 
 If the command you want to add to the starter kit does not depend on the configure.yaml file, you can directly add it to
 the Makefile. However, if the command requires some dynamic configuration based on the configure.yaml file, you should add it to
