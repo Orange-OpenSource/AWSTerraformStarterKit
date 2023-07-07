@@ -362,4 +362,4 @@ install_all: ## Install all AWS layers
 install_all: install_terraform_demo 
 
 destroy_all: ## Uninstall all layers
-destroy_all: delete_terraform_demo 
+destroy_all: destroy_terraform_demo 

@@ -31,13 +31,6 @@ TERRASCAN_IMAGE_TAG: latest
 ########################################################################################################################
 GENERATE_GITLAB_CI: False
 
-GITLAB_API_URL:
-
-# https://docs.gitlab.com/ee/user/project/settings/project_access_tokens.html
-# SCOPE api and read_api
-# Create a token for each project
-GITLAB_TOKEN:
-
 CICD_RUNNER_TAGS:
      - aws
 
@@ -63,7 +56,7 @@ CICD_ACCOUNT_ID: 123546789123
 # Run Terraform apply only on main branch
 TF_APPLY_ONLY_MAIN: True
 
-# Set Terraform Token key and value to access Terraform Module stored onGitLab
+# Set Terraform Token key and value to access Terraform Modules stored into private GitLab repo
 TF_TOKEN_MODULE_ACCESS: False
 TF_TOKEN_MODULE_ACCESS_KEY:
 TF_TOKEN_MODULE_ACCESS_VALUE:
