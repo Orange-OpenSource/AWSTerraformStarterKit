@@ -13,4 +13,9 @@
 
 set -o errexit -o nounset -o pipefail
 
-ls -a | grep -xvi ".gitignore\|.git\|.idea\|terraform\|README.md\|configure.yaml\|configure.yaml.dist\|get-starter-kit.sh\|remove-starter-kit.sh" | xargs  rm -rfv
+FILE_LIST=".config automation .gitignore.dist docker-compose.yml docker-compose-tools.yml makeplan.mk .env .editorconfig Makefile .gitlab-ci.yml"
+
+for file in $FILE_LIST
+do
+    [ -f $file ] || [ -d $file ] && echo "$file exists, will be deleted" && rm -r $file
+done
