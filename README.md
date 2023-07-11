@@ -211,6 +211,18 @@ install_all                    Install all AWS layers
 delete_all                     Uninstall all layers
 ```
 
+## Update AWSTerraformStarterKit
+
+1. Download the `remove-starter-kit.sh`, make it executable (`chmod +x remove-starter-kit.sh`) and execute the shell script.  
+2. Execute the `get-starter-kit.sh` to download the latest version of the AWSTerraformStarterKit (or provide the desired version as argument).
+
+> `remove-starter-kit.sh` shell script removes all the AWSTerraformStarterKit and the `Makefile` and the `.gitlab-ci.yml`  
+> Please run `make init` (generate `.env` file for Docker environment) and `make generate` to regenerate both `Makefile` and `.gitlab-ci.yml`  
+> This will align `Makefile` and `.gitlab-ci.yml` with the AWSTerraformStarterKit version you downloaded  
+> Do not forget to commit the newly generated files
+
+A note regarding `configure.yaml.dist`: this will be committed into your Git repo (not in .gitignore file). This will help you making a diff with the `configure.yaml.dist` of the release you downloaded and apply the changes in the `configure.yaml` file accordingly.
+
 ## Add a Terraform Plan
 
 To add a new Terraform plan to the project, you can follow these steps:
