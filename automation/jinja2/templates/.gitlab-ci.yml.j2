@@ -27,6 +27,12 @@ variables:
   ACCOUNT_ID: {{ environ('ACCOUNT_ID') }}
   CICD_ROLE_NAME: {{ environ('CICD_ROLE_NAME') }}
 
+  {% if CUSTOM_ENV is defined %}
+  {% for key, value in CUSTOM_ENV.items() %}
+  {{ key }}: ${{ key }}_SECRET
+    {% endfor %}
+  {% endif %}
+
   {%- set plans_install = environ('PLAN_INSTALL_LIST').split(',') -%}
   {%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
   {%- set runners = environ('CICD_RUNNER_TAGS').split(',') %}
