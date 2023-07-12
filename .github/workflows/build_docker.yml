@@ -15,17 +15,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Output GitHub context
+    - name: Get branch or tag name
+      id: image_tag
       run: |
-        echo "GitHub Context: ${{ toJson(github) }}"
-
-    - name: Get branch name
-      id: branch_name
-      run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')"
-
-    - name: Get tag name
-      id: tag_name
-      run: echo "TAG_NAME=$(echo ${GITHUB_REF#refs/tags/})"
+        if [[ "${GITHUB_REF}" == "refs/heads/"* ]]; then
+          echo "TAG=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')"
+        elif [[ "${GITHUB_REF}" == "refs/tags/"* ]]; then
+          echo "TAG=$(echo ${GITHUB_REF#refs/tags/} | tr '/' '-')"
+        else
+          echo "::error::Unable to determine branch or tag name."
+          exit 1
+        fi
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -43,7 +43,7 @@ jobs:
         ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         TAG: ${{ steps.get-ref.outputs.ref }}
         IMAGE_NAMES: TFlint TFEnv TerraformDocs jinja2  # List of Directories separated by spaces
-        IMAGE_TAG: ${{ env.GITHUB_REF }}
+        IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}"
       run: |
         for IMAGE_NAME in $IMAGE_NAMES; do
           LOWERCASE_IMAGE_NAME=$(echo $IMAGE_NAME | tr '[:upper:]' '[:lower:]')
