@@ -19,9 +19,9 @@ jobs:
       id: image_tag
       run: |
         if [[ "${GITHUB_REF}" == "refs/heads/"* ]]; then
-          echo "TAG=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')"
+          TAG=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')
         elif [[ "${GITHUB_REF}" == "refs/tags/"* ]]; then
-          echo "TAG=$(echo ${GITHUB_REF#refs/tags/} | tr '/' '-')"
+          TAG=$(echo ${GITHUB_REF#refs/tags/} | tr '/' '-')
         else
           echo "::error::Unable to determine branch or tag name."
           exit 1
