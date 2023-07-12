@@ -3,11 +3,6 @@
 services:
   terraform:
     container_name: ${COMPOSE_PROJECT_NAME}_terraform
-    build:
-      dockerfile: automation/TFEnv/Dockerfile
-      args:
-        - TFENV_VERSION=3.0.0
-        - BASH_VERSION=5
     image: tfenv:3.0.0
     user: ${MY_UID}:${MY_GID}
     environment:

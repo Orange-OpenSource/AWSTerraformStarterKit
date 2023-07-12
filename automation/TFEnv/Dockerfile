@@ -1,4 +1,4 @@
-ARG BASH_VERSION
+ARG BASH_VERSION=5
 FROM "docker.io/bash:${BASH_VERSION}"
 
 # Runtime dependencies
@@ -9,7 +9,7 @@ RUN apk add --no-cache --purge \
     wget \
     ;
 
-ARG TFENV_VERSION
+ARG TFENV_VERSION=3.0.0
 
 RUN wget -O /tmp/tfenv.tar.gz "https://github.com/tfutils/tfenv/archive/refs/tags/v${TFENV_VERSION}.tar.gz" \
     && tar -C /tmp -xf /tmp/tfenv.tar.gz \
