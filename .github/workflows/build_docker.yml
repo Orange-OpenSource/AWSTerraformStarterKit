@@ -26,6 +26,7 @@ jobs:
           echo "::error::Unable to determine branch or tag name."
           exit 1
         fi
+        echo "::set-output name=TAG::$TAG"
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -41,8 +42,7 @@ jobs:
     - name: Build and push Docker images
       env:
         ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-        IMAGE_TAG: "totot"
-        #"${{ steps.image_tag.outputs.TAG }}
+        IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
         IMAGE_NAMES: TFlint TFEnv TerraformDocs jinja2  # List of Directories separated by spaces
       run: |
         for var in $(env | awk -F'=' '{print $1}'); do
