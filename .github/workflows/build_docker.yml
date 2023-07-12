@@ -27,6 +27,7 @@ jobs:
           exit 1
         fi
         echo "::set-output name=TAG::$TAG"
+        echo "$TAG" >> $GITHUB_OUTPUT
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
