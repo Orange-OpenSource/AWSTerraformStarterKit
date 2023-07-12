@@ -43,7 +43,7 @@ jobs:
       env:
         ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
-        IMAGE_NAMES: TFlint TFEnv TerraformDocs jinja2  # List of Directories separated by spaces
+        IMAGE_NAMES: TFEnv  # List of Directories separated by spaces
       run: |
         for IMAGE_NAME in $IMAGE_NAMES; do
           LOWERCASE_IMAGE_NAME=$(echo $IMAGE_NAME | tr '[:upper:]' '[:lower:]')
