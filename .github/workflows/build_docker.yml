@@ -26,7 +26,6 @@ jobs:
           echo "::error::Unable to determine branch or tag name."
           exit 1
         fi
-        echo "::set-output name=TAG::$TAG"
         echo "$TAG" >> $GITHUB_OUTPUT
 
     - name: Configure AWS credentials
