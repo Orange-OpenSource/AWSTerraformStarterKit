@@ -45,7 +45,7 @@ jobs:
         IMAGE_NAMES: TFlint TFEnv TerraformDocs jinja2  # List of Directories separated by spaces
         IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
       run: |
-        echo "SECRET_VALUE=$MY_SECRET" >> $ECR_REGISTRY_ENV
+        echo "$ECR_REGISTRY" >> $ECR_REGISTRY_ENV
         echo " ECR Registry: $ECR_REGISTRY_ENV"
-        echo "Image Tag :$IMAGE_TAG"
+        echo "Image Tag : $IMAGE_TAG"
 
