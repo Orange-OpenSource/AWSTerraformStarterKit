@@ -41,7 +41,7 @@ jobs:
 
     - name: Build and push Docker images
       env:
-        ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+        ECR_REGISTRY: "public.ecr.aws/h1a2u4u1"
         IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
         IMAGE_NAMES: TFEnv  # List of Directories separated by spaces
       run: |
