@@ -42,8 +42,8 @@ jobs:
       env:
         #ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         ECR_REGISTRY: "public.ecr.aws/h1a2u4u1"
-        #IMAGE_TAG: "test"
-        IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
+        IMAGE_TAG: "test"
+        #IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
         IMAGE_NAMES: TFlint TFEnv TerraformDocs jinja2  # List of Directories separated by spaces
       run: |
         for IMAGE_NAME in $IMAGE_NAMES; do
