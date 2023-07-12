@@ -41,11 +41,12 @@ jobs:
     - name: Build and push Docker images
       env:
         ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-        TAG: ${{ steps.get-ref.outputs.ref }}
-        IMAGE_NAMES: TFlint TFEnv TerraformDocs jinja2  # List of Directories separated by spaces
         IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
+        IMAGE_NAMES: TFlint TFEnv TerraformDocs jinja2  # List of Directories separated by spaces
       run: |
-        echo "$ECR_REGISTRY" >> $ECR_REGISTRY_ENV
-        echo " ECR Registry: $ECR_REGISTRY_ENV"
-        echo "Image Tag : $IMAGE_TAG"
+        for IMAGE_NAME in $IMAGE_NAMES; do
+          LOWERCASE_IMAGE_NAME=$(echo $IMAGE_NAME | tr '[:upper:]' '[:lower:]')
+          docker build -t $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:$IMAGE_TAG ./automation/${IMAGE_NAME} .
+          docker push $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:$IMAGE_TAG
+        done
 
