@@ -43,7 +43,7 @@ jobs:
         ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         TAG: ${{ steps.get-ref.outputs.ref }}
         IMAGE_NAMES: TFlint TFEnv TerraformDocs jinja2  # List of Directories separated by spaces
-        IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}"
+        IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
       run: |
         echo $ECR_REGISTRY
         echo $IMAGE_TAG
