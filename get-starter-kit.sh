@@ -26,3 +26,7 @@ if [ "$STARTER_KIT_VERSION" == "latest" ]; then
 fi
 
 curl --fail -L "${STARTER_KIT_LOCATION}" | tar -xz --strip-components 1
+
+STARTER_KIT_VERSION=${STARTER_KIT_LOCATION##*/}
+echo "${STARTER_KIT_VERSION}" > STARTER_KIT_VERSION
+
