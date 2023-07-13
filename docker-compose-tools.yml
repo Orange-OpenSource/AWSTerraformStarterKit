@@ -111,14 +111,7 @@ services:
 
   terraform_docs:
     container_name: ${COMPOSE_PROJECT_NAME}_terraform_docs
-    build:
-      dockerfile: automation/TerraformDocs/Dockerfile
-      context: .
-      args:
-        - TERRAFORM_DOCS_VERSION=0.16.0
-        - TERRAFORM_DOCS_OS=linux
-        - TERRAFORM_DOCS_ARCH=amd64
-    image: terraforms-docs:0.16.0
+    image: public.ecr.aws/h1a2u4u1/terraformdocs:${TERRAFORM_DOCS_IMAGE_TAG}
     user: ${MY_UID}:${MY_GID}
     environment:
       HOME: /workdir
