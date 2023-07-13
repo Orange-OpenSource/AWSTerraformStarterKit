@@ -12,8 +12,10 @@ PLAN_JSON_FILE: tfplan.json
 ########################################################################################################################
 # Docker Compose image tags to use
 ########################################################################################################################
-TFENV_IMAGE_TAG: latest
-TFLINT_IMAGE_TAG: v0.39.3
+TFENV_IMAGE_TAG: STARTER_KIT_VERSION
+TFLINT_IMAGE_TAG: STARTER_KIT_VERSION
+JINJA2_IMAGE_TAG: STARTER_KIT_VERSION
+TERRAFORM_DOCS_IMAGE_TAG: STARTER_KIT_VERSION
 PRECOMMIT_IMAGE_TAG: v1.74.1
 DRIFTCTL_IMAGE_TAG: latest
 DOTENV_LINTER_IMAGE_TAG: latest

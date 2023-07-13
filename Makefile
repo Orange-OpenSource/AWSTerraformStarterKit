@@ -206,11 +206,15 @@ init: ## Generate .env file
 init:
 	if [ ! -f ~/.terraformrc ] ; then touch ~/.terraformrc ; fi
 	if [ ! -d .backup ] ; then mkdir .backup ; fi
-	if [ -f .env ] ; then   cp .env .backup/.env-${cur_date}.bck ; else touch .env ; fi
+	if [ -f .env ] ; then mv .env .backup/.env-${cur_date}.bck ; fi
+	if [ ! -f .env ] ; then echo "JINJA2_IMAGE_TAG=$(shell cat STARTER_KIT_VERSION)" >> .env ; fi
 	cp configure.yaml automation/jinja2/variables/
+
+	sed -i 's/STARTER_KIT_VERSION/$(shell cat STARTER_KIT_VERSION)/g' ./automation/jinja2/variables/configure.yaml
 	# Hack: use only for first run
 	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml
 	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
+	mv .env.tmp .env
 
 generate: ## Generate from template gitlab-ci.yml and Makefile
 generate:
