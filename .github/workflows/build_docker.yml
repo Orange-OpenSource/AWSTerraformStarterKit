@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: [ app1, app2, app3 ]  # Specify the Docker images you want to build
+        image: [ TFEnv, TFlint, jinja2, TerraformDocs ]  # Specify the Docker images you want to build
 
     steps:
     - name: Checkout repository
