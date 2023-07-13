@@ -46,7 +46,7 @@ jobs:
       env:
         ECR_REGISTRY: "public.ecr.aws/h1a2u4u1"
         IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
-        IMAGE_NAMES: TFEnv  # List of Directories separated by spaces
+        IMAGE_NAMES: TFEnv TFlint # List of Directories separated by spaces
       run: |
         for IMAGE_NAME in $IMAGE_NAMES; do
           LOWERCASE_IMAGE_NAME=$(echo $IMAGE_NAME | tr '[:upper:]' '[:lower:]')

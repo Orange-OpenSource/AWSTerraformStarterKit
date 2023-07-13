@@ -14,14 +14,7 @@ services:
 
   lint:
     container_name: ${COMPOSE_PROJECT_NAME}_lint
-    build:
-      dockerfile: automation/TFlint/Dockerfile
-      context: .
-      args:
-        - TFLINT_VERSION=0.46.1
-        - TFLINT_OS=linux
-        - TFLINT_ARCH=amd64
-    image: tflint:0.46.1
+    image: public.ecr.aws/h1a2u4u1/tflint:${TFLINT_IMAGE_TAG}
     user: ${MY_UID}:${MY_GID}
     environment:
       - HOME=/workdir
