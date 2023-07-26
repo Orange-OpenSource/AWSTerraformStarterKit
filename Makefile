@@ -208,8 +208,8 @@ init:
 	if [ -f .env ] ; then   cp .env .backup/.env-${cur_date}.bck ; else touch .env ; fi
 	cp configure.yaml automation/jinja2/variables/
 	# Hack: use only for first run
-	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker .env.dist.j2 /variables/configure.yaml
-	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
+	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
 
 generate: ## Generate from template gitlab-ci.yml and Makefile
 generate:
