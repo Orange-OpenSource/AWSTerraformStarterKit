@@ -26,6 +26,8 @@ RUN wget -O /tmp/tfenv.tar.gz "https://github.com/tfutils/tfenv/archive/refs/tag
 ENV TFENV_ROOT /usr/local/lib/tfenv
 
 ENV TFENV_CONFIG_DIR /var/tfenv
+ENV TFENV_TERRAFORM_VERSION ""
+
 VOLUME /var/tfenv
 
 ENTRYPOINT ["/usr/local/bin/terraform"]
