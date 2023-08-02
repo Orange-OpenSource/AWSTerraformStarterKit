@@ -22,7 +22,7 @@ RUN wget -O /tmp/tfenv.tar.gz "https://github.com/tfutils/tfenv/archive/refs/tag
     && rm -rf /tmp/tfenv* \
     && mkdir /var/tfenv \
     && touch /var/tfenv/version \
-    && echo "latest" > /ver/tfenv/version \
+    && echo "latest" > /var/tfenv/version \
     && chmod 777 -R /var/tfenv \
     ;
 ENV TFENV_ROOT /usr/local/lib/tfenv
