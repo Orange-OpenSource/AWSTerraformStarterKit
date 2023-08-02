@@ -42,9 +42,15 @@ class Render:
         return yaml.dump(value, Dumper=yaml.RoundTripDumper, indent=4)
 
     def rend_template(self):
+        env_data = {}
+        for k,v in os.environ.items():
+            env_data[k] = v
+        var_data = {}
         with open(self.variables_path, closefd=True) as f:
-            data = yaml.full_load(f)
-
+            var_data = yaml.full_load(f)
+        data = env_data
+        for k,v in var_data.items():
+            data[k] = v
         self.env.filters['yaml'] = self.yaml_filter
         self.env.globals["environ"] = lambda key: os.environ.get(key)
 
