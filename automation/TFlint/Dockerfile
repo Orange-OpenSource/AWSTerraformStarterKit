@@ -1,6 +1,8 @@
 FROM alpine:3.18.0
 
-ARG TFLINT_VERSION TFLINT_OS TFLINT_ARCH
+ARG TFLINT_VERSION=0.46.1
+ARG TFLINT_OS=linux
+ARG TFLINT_ARCH=amd64
 
 RUN apk add --no-curl --purge wget
 

@@ -1,4 +1,4 @@
-ARG BASH_VERSION
+ARG BASH_VERSION=5
 FROM "docker.io/bash:${BASH_VERSION}"
 
 # Runtime dependencies
@@ -9,7 +9,7 @@ RUN apk add --no-cache --purge \
     wget \
     ;
 
-ARG TFENV_VERSION
+ARG TFENV_VERSION=3.0.0
 
 RUN wget -O /tmp/tfenv.tar.gz "https://github.com/tfutils/tfenv/archive/refs/tags/v${TFENV_VERSION}.tar.gz" \
     && tar -C /tmp -xf /tmp/tfenv.tar.gz \
@@ -21,17 +21,11 @@ RUN wget -O /tmp/tfenv.tar.gz "https://github.com/tfutils/tfenv/archive/refs/tag
     && mv "/tmp/tfenv-${TFENV_VERSION}/LICENSE" /usr/local/share/licenses/tfenv \
     && rm -rf /tmp/tfenv* \
     && mkdir /var/tfenv \
-    && touch /var/tfenv/version \
-    && echo "latest" > /var/tfenv/version \
-    && chmod 777 -R /var/tfenv \
+    && chmod 777 /var/tfenv \
     ;
 ENV TFENV_ROOT /usr/local/lib/tfenv
 
 ENV TFENV_CONFIG_DIR /var/tfenv
-
-ENV TFENV_TERRAFORM_VERSION ""
-
 VOLUME /var/tfenv
 
 ENTRYPOINT ["/usr/local/bin/terraform"]
-
