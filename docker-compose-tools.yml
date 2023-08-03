@@ -98,7 +98,7 @@ services:
 
   jinja2docker:
     container_name: jinja2docker
-    image: ${DOCKER_REGISTRY}jinja2:${JINJA2_IMAGE_TAG}
+    image: public.ecr.aws/h1a2u4u1/jinja2:${JINJA2_IMAGE_TAG}
     hostname: jinja2docker
     entrypoint: python3 /scripts/entities/render.py
     #entrypoint: tail -f /etc/alpine-release
