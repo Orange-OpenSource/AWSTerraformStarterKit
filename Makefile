@@ -204,7 +204,7 @@ endif
 
 init: ## Generate .env file
 init:
-  if [ ! -f ~/.terraformrc ] ; then touch ~/.terraformrc ; fi
+	if [ ! -f ~/.terraformrc ] ; then touch ~/.terraformrc ; fi
 	if [ ! -d .backup ] ; then mkdir .backup ; fi
 	if [ -f .env ] ; then   cp .env .backup/.env-${cur_date}.bck ; else touch .env ; fi
 	if [ ! -f .env ] ; then echo "JINJA2_IMAGE_TAG=$(shell cat STARTER_KIT_CURRENT_VERSION)" >> .env ; fi
