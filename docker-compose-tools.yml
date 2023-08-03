@@ -14,7 +14,14 @@ services:
 
   lint:
     container_name: ${COMPOSE_PROJECT_NAME}_lint
-    image: public.ecr.aws/h1a2u4u1/tflint:${TFLINT_IMAGE_TAG}
+    build:
+      dockerfile: automation/TFlint/Dockerfile
+      context: .
+      args:
+        - TFLINT_VERSION=0.46.1
+        - TFLINT_OS=linux
+        - TFLINT_ARCH=amd64
+    image: tflint:0.46.1
     user: ${MY_UID}:${MY_GID}
     environment:
       - HOME=/workdir
@@ -98,7 +105,9 @@ services:
 
   jinja2docker:
     container_name: jinja2docker
-    image: public.ecr.aws/h1a2u4u1/jinja2:${JINJA2_IMAGE_TAG}
+    build:
+      dockerfile: Dockerfile
+      context: ./automation/jinja2/
     hostname: jinja2docker
     entrypoint: python3 /scripts/entities/render.py
     #entrypoint: tail -f /etc/alpine-release
@@ -111,7 +120,14 @@ services:
 
   terraform_docs:
     container_name: ${COMPOSE_PROJECT_NAME}_terraform_docs
-    image: public.ecr.aws/h1a2u4u1/terraformdocs:${TERRAFORM_DOCS_IMAGE_TAG}
+    build:
+      dockerfile: automation/TerraformDocs/Dockerfile
+      context: .
+      args:
+        - TERRAFORM_DOCS_VERSION=0.16.0
+        - TERRAFORM_DOCS_OS=linux
+        - TERRAFORM_DOCS_ARCH=amd64
+    image: terraforms-docs:0.16.0
     user: ${MY_UID}:${MY_GID}
     environment:
       HOME: /workdir

@@ -204,17 +204,15 @@ endif
 
 init: ## Generate .env file
 init:
-	if [ ! -f ~/.terraformrc ] ; then touch ~/.terraformrc ; fi
 	if [ ! -d .backup ] ; then mkdir .backup ; fi
-	if [ -f .env ] ; then mv .env .backup/.env-${cur_date}.bck ; fi
-	if [ ! -f .env ] ; then echo "JINJA2_IMAGE_TAG=$(shell cat STARTER_KIT_VERSION)" >> .env ; fi
+	if [ -f .env ] ; then   cp .env .backup/.env-${cur_date}.bck ; else touch .env ; fi
 	cp configure.yaml automation/jinja2/variables/
 
-	sed -i 's/STARTER_KIT_VERSION/$(shell cat STARTER_KIT_VERSION)/g' ./automation/jinja2/variables/configure.yaml
+	sed -i 's/STARTER_KIT_CURRENT_VERSION/$(shell cat STARTER_KIT_CURRENT_VERSION)/g' ./automation/jinja2/variables/configure.yaml
+
 	# Hack: use only for first run
 	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml
 	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
-	mv .env.tmp .env
 
 generate: ## Generate from template gitlab-ci.yml and Makefile
 generate:
@@ -312,3 +310,59 @@ quality-checks: dotenv_lint format validate lint precommit markdown_lint shell_l
 ########################################################################################################################
 
 # Automatic Content Generated
+
+generate_documentation: ## Generate Terraform Documentation
+generate_documentation:
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs terraform/demo --config=./.config/.terraform-docs.yml
+
+terraform_terrascan: ## Terrascan Terraform
+terraform_terrascan:
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo 
+format: ## Format all Terraform files using "terraform fmt"
+format:
+	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="terraform/demo"
+
+trivy:  ## Terraform Trivy
+trivy:
+	$(TRIVY_RUN) config terraform/demo --config=./.config/.trivy.yaml --skip-dirs .terraform
+
+validate: ## Validate all Terraform files using "terraform validate"
+validate:
+	@$(MAKE) --no-print-directory terraform_validate CURRENT_DIR="terraform/demo"
+
+lint: ## Check that good naming practices are respected in Terraform files (using tflint)
+lint:
+	$(TFLINT_RUN) --init
+	@$(MAKE) --no-print-directory terraform_lint CURRENT_DIR="terraform/demo"
+
+
+init_terraform_demo: ## Init AWS terraform/demo layer
+init_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_init_commands
+
+plan_terraform_demo: ## Plan AWS terraform/demo layer
+plan_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_plan_commands
+
+install_terraform_demo: ## Install AWS terraform/demo layer
+install_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_install_commands
+
+destroy_terraform_demo: ## Uninstall AWS terraform/demo layer
+destroy_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_destroy_commands
+
+
+init_all: ## Init all AWS layers
+init_all:
+	@$(MAKE) --no-print-directory init_terraform_demo
+
+plan_all: ## Plan all AWS layers
+plan_all:
+	@$(MAKE) --no-print-directory plan_terraform_demo
+
+install_all: ## Install all AWS layers
+install_all: install_terraform_demo 
+
+destroy_all: ## Uninstall all layers
+destroy_all: destroy_terraform_demo 

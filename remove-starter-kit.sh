@@ -13,7 +13,7 @@
 
 set -o errexit -o nounset -o pipefail
 
-FILE_LIST=".config automation .gitignore.dist docker-compose.yml docker-compose-tools.yml makeplan.mk .env .editorconfig Makefile .gitlab-ci.yml STARTER_KIT_VERSION"
+FILE_LIST=".config automation .gitignore.dist docker-compose.yml docker-compose-tools.yml makeplan.mk .env .editorconfig Makefile .gitlab-ci.yml"
 
 for file in $FILE_LIST
 do
