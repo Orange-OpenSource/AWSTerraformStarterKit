@@ -76,11 +76,11 @@ TF_LOG_PATH: /tmp/terraform_logs
 ########################################################################################################################
 # Terraform S3 Backend Configuration
 ########################################################################################################################
-# Leave empty if you want to cusomize the Terraform backend config into the Terraform plans
-TF_VAR_backend_bucket_name: tfstate-sso-900894545262-primary
-TF_VAR_backend_bucket_region: eu-west-3
-TF_VAR_backend_dynamodb_table: tfstate-terraformstarterkit-lock
-TF_VAR_backend_bucket_access_role: arn:aws:iam::538728450418:role/vcl-platformadmin-role
+# Leave empty if you want to customize the Terraform backend config into the Terraform plans
+TF_VAR_backend_bucket_name: <AWS_S3_BUCKET_NAME>
+TF_VAR_backend_bucket_region: <AWS_REGION_CODE>
+TF_VAR_backend_dynamodb_table: <AWS_DYNAMODB_TABLE_NAME>
+TF_VAR_backend_bucket_access_role: arn:aws:iam::<AWS_ACCOUNT_ID>:role/<AWS_IAM_ROLE_NAME>
 
 # Customize Terraform backend bucket key
 # True: set the key in the Terraform plan remote state confgirutation
@@ -90,8 +90,8 @@ CUSTOM_BACKEND_BUCKET_KEY: False
 ########################################################################################################################
 # LOCAL DEVELOPMENT
 ########################################################################################################################
-LOCAL_ROLE_NAME: vcl-platformadmin-role
-TF_VAR_assume_role: vcl-platformadmin-role
+LOCAL_ROLE_NAME: <AWS_IAM_ROLE_NAME>
+TF_VAR_assume_role: <AWS_IAM_ROLE_NAME>
 
 ########################################################################################################################
 # PLANS
@@ -102,7 +102,7 @@ plans:
 
 # AWS Account ID in which your plan are deployed and containing the backend bucket
 # SSO Account
-ACCOUNT_ID: 900894545262
+ACCOUNT_ID: <AWS_ACCOUNT_ID>
 
 ########################################################################################################################
 # PROXY
