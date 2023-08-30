@@ -61,23 +61,28 @@ To **intialize** the AWSTerraformStarterKit, follow these steps:
 
 #### Directory Structure Overview after AWSTerraformStarterKit download
 
-- **Project Root Directory**
+```yaml
+Project Root Directory:
+  - .config/:
+  - .editorconfig
+  - .git
+  - .gitignore
   - Makefile
-  - <span style="color:blue;">automation/</span>
+  - automation/:
   - configure.yaml.dist
   - docker-compose-tools.yml
   - docker-compose.yml
-  - <span style="color:green;">get-starter-kit.sh</span>
-  - <span style="color:blue;">terraform/</span>
+  - get-starter-kit.sh
+  - terraform/:
     - common.tfvars
-    - <span style="color:blue;">network/</span>
+    - network/:
       - main.tf
       - provider.tf
       - parameters.auto.tfvars
       - ...
-    - <span style="color:blue;">compute/</span>
+    - compute/:
       - ...
-
+```
 
 ### Step 2
 
@@ -141,48 +146,42 @@ By executing `make start`, the AWSTerraformStarterKit will be initialized with t
 It's important to note that if your AWS credentials expire or change, you need to update the credentials in the environment variables or the AWS CLI configuration and then restart the AWSTerraformStarterKit by running `make start` again. This ensures that the AWSTerraformStarterKit uses the updated credentials for all AWS operations.
 
 #### Directory Structure overview after AWSTerraformStarterKit starts
-
-- **Project Root Directory**
-  - Makefile
-  - README.md
-  - <span style="color:blue;">automation/</span>
-  - configure.yaml
-  - configure.yaml.dist
-  - docker-compose-dashboard.yml
-  - docker-compose-tools.yml
-  - docker-compose.yml
-  - <span style="color:green;">get-starter-kit.sh</span>
-  - makeplan.mk
-    - <span style="color:blue;">terraform/</span>
-    - common.tfvars
-    - <span style="color:blue;">network/</span>
-      - main.tf
-      - provider.tf
-      - parameters.auto.tfvars
-      - ...
-    - <span style="color:blue;">compute/</span>
-      - ...
-
+```yaml
+  Project Root Directory:
+   - .backup/:
+   - .config/:
+   - .editorconfig
+   - .env
+   - .git
+   - .gitignore
+   - .gitignore.dist
+   - Makefile
+   - README.md
+   - automation/:
+   - configure.yaml
+   - configure.yaml.dist
+   - docker-compose-dashboard.yml
+   - docker-compose-tools.yml
+   - docker-compose.yml
+   - get-starter-kit.sh
+   - makeplan.mk
+   - terraform/:
+      - common.tfvars
+      - network/:
+         - main.tf
+         - provider.tf
+         - parameters.auto.tfvars
+         - ...
+      - compute/:
+         - ...
+```
 ## Help
 
-To get help and list all the available commands in the AWSTerraformStarterKit, you can use the `make help` command. This command will display the available targets and their descriptions from the `Makefile`. Here's how you can use it:
-
-Run the following command:
+To get help and list all the available commands in the AWSTerraformStarterKit, you can use the `make help` command. This command will display the available targets and their descriptions from the `Makefile`. 
 
 ```bash
-make help
+$ make help
 ```
-
-   This will display the list of available targets and their descriptions, providing you with information about the available commands and their purposes.
-
-Additionally, you can open the `Makefile` in a text editor to explore and understand the various targets and commands defined in it. The `Makefile` contains rules that define how the AWSTerraformStarterKit is built, executed, and managed using the `make` command.
-
-By using `make help` and referring to the `Makefile`, you can gain a better understanding of the available commands and utilize them effectively in your AWSTerraformStarterKit workflow.
-
-## Usage
-
-Every available commands are described in the make file. Use the `make help` command to get all available commands.
-
 ```bash
 help                           This help.
 debug                          Print debug logs
@@ -231,15 +230,15 @@ To add a new Terraform plan to the project, you can follow these steps:
 
    ```yaml
    plans:
-     - terraform/plan1
-     - terraform/plan2
+     - terraform/network
+     - terraform/compute
      - terraform/new-plan
 
    ```
 
 4. Save the `configure.yaml` file after adding the new plan name.
 
-After adding the new Terraform plan to the `configure.yaml` file, you can relaunch the AWSTerraformStarterKit by executing the `make start` command.
+After adding the new Terraform plan to the `configure.yaml` file, you can restart the AWSTerraformStarterKit by executing the `make start` command.
 This command will generate the necessary templates based on the newly added plan. Here are the steps:
 
 1. Open a terminal or command prompt in the project directory.
@@ -260,39 +259,38 @@ This command will generate the necessary templates based on the newly added plan
 # Update AWSTerraformStarterKit
 
 1. Download `remove-starter-kit.sh`, make it executable and execute the shell script.  
-   ```bash
-   curl -o remove-starter-kit.sh https://raw.githubusercontent.com/Orange-OpenSource/AWSTerraformStarterKit/master/remove-starter-kit.sh
-   chmod +x remove-starter-kit.sh
-   ./remove-starter-kit.sh
-   ```
+```bash
+curl -o remove-starter-kit.sh https://raw.githubusercontent.com/Orange-OpenSource/AWSTerraformStarterKit/master/remove-starter-kit.sh
+chmod +x remove-starter-kit.sh
+./remove-starter-kit.sh
+```
 
-   > `remove-starter-kit.sh` shell script removes all the AWSTerraformStarterKit, the `Makefile` and the `.gitlab-ci.yml`  
+   `remove-starter-kit.sh` shell script removes all the AWSTerraformStarterKit, the `Makefile` and the `.gitlab-ci.yml`  
 
-   ```bash
-   .config exists, will be deleted
-   automation exists, will be deleted
-   .gitignore.dist exists, will be deleted
-   docker-compose.yml exists, will be deleted
-   docker-compose-tools.yml exists, will be deleted
-   makeplan.mk exists, will be deleted
-   .env exists, will be deleted
-   .editorconfig exists, will be deleted
-   Makefile exists, will be deleted
-   ```
+```bash
+.config exists, will be deleted
+automation exists, will be deleted
+.gitignore.dist exists, will be deleted
+docker-compose.yml exists, will be deleted
+docker-compose-tools.yml exists, will be deleted
+makeplan.mk exists, will be deleted
+.env exists, will be deleted
+.editorconfig exists, will be deleted
+Makefile exists, will be deleted
+```
 
 2. Execute `get-starter-kit.sh` to download the latest version of the AWSTerraformStarterKit (or provide the desired version as argument).
 
-   ```bash
-   ./get-starter-kit.sh
-   ```
+```bash
+./get-starter-kit.sh
+```
 
-> Please run `make init` (generate `.env` file for Docker environment) and `make generate` to regenerate both `Makefile` and `.gitlab-ci.yml`  
-> This will align `Makefile` and `.gitlab-ci.yml` with the AWSTerraformStarterKit version you downloaded  
-
-   ```bash
-   make init
-   ```
+3. Run `make start` 
+```bash
+make start
+```
+It will generate `.env` file for Docker environment and regenerate both `Makefile` and `.gitlab-ci.yml`  
 
 > Do not forget to commit the newly generated files
 
-A note regarding `configure.yaml.dist`: this will be committed into your Git repo (not in .gitignore file). This will help you making a diff with the `configure.yaml.dist` of the release you downloaded and apply the changes in the `configure.yaml` file accordingly.
+A note regarding `configure.yaml.dist`: this will be committed into your Git repo (beacuse it is not in `.gitignore`). This will help you making a diff with the `configure.yaml.dist` of the release you downloaded and apply the changes in the `configure.yaml` file accordingly.
