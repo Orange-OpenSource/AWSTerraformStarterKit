@@ -81,7 +81,7 @@ TF_VAR_backend_bucket_name: <AWS_S3_BUCKET_NAME>
 TF_VAR_backend_bucket_region: <AWS_REGION_CODE>
 TF_VAR_backend_dynamodb_table: <AWS_DYNAMODB_TABLE_NAME>
 TF_VAR_backend_bucket_access_role: arn:aws:iam::<AWS_ACCOUNT_ID>:role/<AWS_IAM_ROLE_NAME>
-TERRAFORM_INIT_BACKEND_CONFIG_EXTERNAL_ID: <EXTERNAL_ID>
+TF_VAR_backend_bucket_external_id: <EXTERNAL_ID>
 
 # Customize Terraform backend bucket key
 # True: set the key in the Terraform plan remote state confgirutation
