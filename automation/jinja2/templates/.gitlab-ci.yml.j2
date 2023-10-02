@@ -21,6 +21,7 @@ variables:
   TF_VAR_backend_bucket_name: {{ environ('TF_VAR_backend_bucket_name') }}
   TF_VAR_backend_bucket_region: {{ environ('REGION') }}
   TF_VAR_backend_dynamodb_table: {{ environ('TF_VAR_backend_dynamodb_table')}}
+  TF_VAR_backend_bucket_external_id: {{ environ('TF_VAR_backend_bucket_external_id')}}
   TF_VAR_backend_bucket_access_role: "arn:aws:iam::{{ environ('ACCOUNT_ID') }}:role/{{ environ('CICD_ROLE_NAME') }}"
   {% if  CUSTOM_BACKEND_BUCKET_KEY is sameas false %}
   CUSTOM_BACKEND_BUCKET_KEY: auto

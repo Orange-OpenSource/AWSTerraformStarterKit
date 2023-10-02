@@ -60,6 +60,10 @@ ifdef TF_VAR_backend_bucket_access_role
 	TERRAFORM_INIT_BACKEND_CONFIG_ROLE_ARN = -backend-config="role_arn=${TF_VAR_backend_bucket_access_role}"
 endif
 
+ifdef TF_VAR_backend_bucket_external_id
+	TERRAFORM_INIT_BACKEND_CONFIG_EXTERNAL_ID = -backend-config="external_id=${TF_VAR_backend_bucket_external_id}"
+endif
+
 ifdef CUSTOM_BACKEND_BUCKET_KEY
 	TERRAFORM_INIT_BACKEND_CONFIG_KEY = -backend-config="key=${PROJECT_NAME}${subst terraform,,$(CURRENT_DIR)}.tfstate"
 endif
