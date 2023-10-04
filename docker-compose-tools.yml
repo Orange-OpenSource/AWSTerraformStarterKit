@@ -118,6 +118,17 @@ services:
       - ./automation/jinja2/variables:/variables
       - ./automation/jinja2/render.py:/script/entities/render.py
 
+  compare_configuration:
+    container_name: compare_configuration
+    user: ${MY_UID}:${MY_GID}
+    build:
+      dockerfile: Dockerfile
+      context: ./automation/CompareConfiguration/
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - ./:/workdir
+
   terraform_docs:
     container_name: ${COMPOSE_PROJECT_NAME}_terraform_docs
     build:

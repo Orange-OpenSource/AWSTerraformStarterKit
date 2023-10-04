@@ -211,6 +211,10 @@ init:
 	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml
 	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
 
+compare_configuration: ## Compare configuration file configure.yaml and configure.yaml.dist
+compare_configuration:
+	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm compare_configuration
+
 generate: ## Generate from template gitlab-ci.yml and Makefile
 generate:
 	@$(MAKE) init
