@@ -129,6 +129,7 @@ else
 	cd ${CURRENT_DIR} && tfenv install
 	cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 	cd ${CURRENT_DIR} && terraform validate
+	cd ${CURRENT_DIR} && rm -rf .terraform"
 endif
 
 terraform_format:
@@ -146,8 +147,8 @@ ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
-		cd ${CURRENT_DIR} && terraform plan ${VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
+		cd ${CURRENT_DIR} && rm -rf .terraform
 else
 		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
@@ -175,6 +176,7 @@ ifdef CICD_MODE
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 		cd ${CURRENT_DIR} && terraform plan ${VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}
 		cd ${CURRENT_DIR} && terraform show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}
+		cd ${CURRENT_DIR} && rm -rf .terraform
 else
 		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
@@ -192,6 +194,7 @@ ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform destroy ${VAR_PARAMETERS}
+		cd ${CURRENT_DIR} && rm -rf .terraform
 else
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform destroy ${VAR_PARAMETERS}"
@@ -314,7 +317,7 @@ generate_documentation:
 
 terraform_terrascan: ## Terrascan Terraform
 terraform_terrascan:
-	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo 
 format: ## Format all Terraform files using "terraform fmt"
 format:
 	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="terraform/demo"
@@ -359,7 +362,7 @@ plan_all:
 	@$(MAKE) --no-print-directory plan_terraform_demo
 
 install_all: ## Install all AWS layers
-install_all: install_terraform_demo
+install_all: install_terraform_demo 
 
 destroy_all: ## Uninstall all layers
-destroy_all: destroy_terraform_demo
+destroy_all: destroy_terraform_demo 
