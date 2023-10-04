@@ -129,6 +129,7 @@ else
 	cd ${CURRENT_DIR} && tfenv install
 	cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 	cd ${CURRENT_DIR} && terraform validate
+	cd ${CURRENT_DIR} && rm -rf .terraform"
 endif
 
 terraform_format:
@@ -146,8 +147,8 @@ ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
-		cd ${CURRENT_DIR} && terraform plan ${VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
+		cd ${CURRENT_DIR} && rm -rf .terraform
 else
 		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
@@ -175,6 +176,7 @@ ifdef CICD_MODE
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 		cd ${CURRENT_DIR} && terraform plan ${VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}
 		cd ${CURRENT_DIR} && terraform show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}
+		cd ${CURRENT_DIR} && rm -rf .terraform
 else
 		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
@@ -192,6 +194,7 @@ ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform destroy ${VAR_PARAMETERS}
+		cd ${CURRENT_DIR} && rm -rf .terraform
 else
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform destroy ${VAR_PARAMETERS}"
@@ -311,55 +314,74 @@ quality-checks: dotenv_lint format validate lint precommit markdown_lint shell_l
 generate_documentation: ## Generate Terraform Documentation
 generate_documentation:
 	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs terraform/demo --config=./.config/.terraform-docs.yml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs terraform/demo2 --config=./.config/.terraform-docs.yml
 
 terraform_terrascan: ## Terrascan Terraform
 terraform_terrascan:
-	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo  --iac-dir=terraform/demo2
 format: ## Format all Terraform files using "terraform fmt"
 format:
 	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="terraform/demo"
+	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="terraform/demo2"
 
 trivy:  ## Terraform Trivy
 trivy:
 	$(TRIVY_RUN) config terraform/demo --config=./.config/.trivy.yaml --skip-dirs .terraform
+	$(TRIVY_RUN) config terraform/demo2 --config=./.config/.trivy.yaml --skip-dirs .terraform
 
 validate: ## Validate all Terraform files using "terraform validate"
 validate:
 	@$(MAKE) --no-print-directory terraform_validate CURRENT_DIR="terraform/demo"
+	@$(MAKE) --no-print-directory terraform_validate CURRENT_DIR="terraform/demo2"
 
 lint: ## Check that good naming practices are respected in Terraform files (using tflint)
 lint:
 	$(TFLINT_RUN) --init
 	@$(MAKE) --no-print-directory terraform_lint CURRENT_DIR="terraform/demo"
+	@$(MAKE) --no-print-directory terraform_lint CURRENT_DIR="terraform/demo2"
 
 
 init_terraform_demo: ## Init AWS terraform/demo layer
 init_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_init_commands
+init_terraform_demo2: ## Init AWS terraform/demo2 layer
+init_terraform_demo2:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo2 terraform_init_commands
 
 plan_terraform_demo: ## Plan AWS terraform/demo layer
 plan_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_plan_commands
+plan_terraform_demo2: ## Plan AWS terraform/demo2 layer
+plan_terraform_demo2:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo2 terraform_plan_commands
 
 install_terraform_demo: ## Install AWS terraform/demo layer
 install_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_install_commands
+install_terraform_demo2: ## Install AWS terraform/demo2 layer
+install_terraform_demo2:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo2 terraform_install_commands
 
 destroy_terraform_demo: ## Uninstall AWS terraform/demo layer
 destroy_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_destroy_commands
+destroy_terraform_demo2: ## Uninstall AWS terraform/demo2 layer
+destroy_terraform_demo2:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo2 terraform_destroy_commands
 
 
 init_all: ## Init all AWS layers
 init_all:
 	@$(MAKE) --no-print-directory init_terraform_demo
+	@$(MAKE) --no-print-directory init_terraform_demo2
 
 plan_all: ## Plan all AWS layers
 plan_all:
 	@$(MAKE) --no-print-directory plan_terraform_demo
+	@$(MAKE) --no-print-directory plan_terraform_demo2
 
 install_all: ## Install all AWS layers
-install_all: install_terraform_demo
+install_all: install_terraform_demo install_terraform_demo2
 
 destroy_all: ## Uninstall all layers
-destroy_all: destroy_terraform_demo
+destroy_all: destroy_terraform_demo2 destroy_terraform_demo
