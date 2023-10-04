@@ -19,7 +19,7 @@ endif
 NON_INTERACTIVE ?= 0
 
 help: ## This help.
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[-a-zA-Z0-9\._]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
 
@@ -314,7 +314,7 @@ generate_documentation:
 
 terraform_terrascan: ## Terrascan Terraform
 terraform_terrascan:
-	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo 
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo
 format: ## Format all Terraform files using "terraform fmt"
 format:
 	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="terraform/demo"
@@ -359,7 +359,7 @@ plan_all:
 	@$(MAKE) --no-print-directory plan_terraform_demo
 
 install_all: ## Install all AWS layers
-install_all: install_terraform_demo 
+install_all: install_terraform_demo
 
 destroy_all: ## Uninstall all layers
-destroy_all: destroy_terraform_demo 
+destroy_all: destroy_terraform_demo
