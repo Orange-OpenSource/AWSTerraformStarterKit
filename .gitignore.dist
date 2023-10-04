@@ -46,6 +46,7 @@ tfplan.json
 # AWSTerraformStarterKit
 .config/
 .backup/
+**/.tflint.d/*
 automation/
 docker-compose-tools.yml
 docker-compose.yml
