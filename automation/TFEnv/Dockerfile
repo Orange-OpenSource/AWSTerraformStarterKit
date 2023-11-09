@@ -10,6 +10,12 @@ RUN apk add --no-cache --purge \
     openssh-client \
     ;
 
+RUN apk --update --no-cache --allow-untrusted --repository http://dl-cdn.alpinelinux.org/alpine/edge/community add \
+    corkscrew \
+    && rm -rf /var/cache/apk/* \
+          /tmp/* \
+          /var/tmp/*
+
 ARG TFENV_VERSION
 
 RUN wget -O /tmp/tfenv.tar.gz "https://github.com/tfutils/tfenv/archive/refs/tags/v${TFENV_VERSION}.tar.gz" \
