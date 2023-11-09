@@ -7,6 +7,7 @@ RUN apk add --no-cache --purge \
     python3 py3-pip \
     git \
     wget \
+    openssh-client \
     ;
 
 ARG TFENV_VERSION
