@@ -7,7 +7,14 @@ RUN apk add --no-cache --purge \
     python3 py3-pip \
     git \
     wget \
+    openssh-client \
     ;
+
+RUN apk --update --no-cache --allow-untrusted --repository http://dl-cdn.alpinelinux.org/alpine/edge/community add \
+    corkscrew \
+    && rm -rf /var/cache/apk/* \
+          /tmp/* \
+          /var/tmp/*
 
 ARG TFENV_VERSION
 

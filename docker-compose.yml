@@ -20,6 +20,7 @@ services:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
       - ./:/workdir
+      - $HOME/.ssh:$HOME/.ssh
       - $HOME/.terraformrc:$HOME/.terraformrc
       - $HOME/.terraform.d:$HOME/.terraform.d
     working_dir: /workdir
