@@ -50,6 +50,14 @@ init_{{ slug }}:
 {% for plan_name in plans_install %}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
+validate_{{ slug}}: ## Validate AWS {{ plan_name }} layer
+validate_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_validate
+{% endfor %}
+
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
 plan_{{ slug}}: ## Plan AWS {{ plan_name }} layer
 plan_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_plan_commands
