@@ -120,6 +120,12 @@ endif
 ########################################################################################################################
 #  FUNCTIONS
 ########################################################################################################################
+console_commands:
+ifndef CICD_MODE
+	$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+	$(DOCKER_COMPOSE) exec -w /workdir/${CURRENT_DIR} terraform /bin/sh
+endif
+
 terraform_validate:
 ifndef CICD_MODE
 	$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
@@ -339,6 +345,9 @@ lint:
 	$(TFLINT_RUN) --init
 	@$(MAKE) --no-print-directory terraform_lint CURRENT_DIR="terraform/demo"
 
+console_terraform_demo: ## Connect terraform Docker AWS terraform/demo layer
+console_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo console_commands
 
 init_terraform_demo: ## Init AWS terraform/demo layer
 init_terraform_demo:

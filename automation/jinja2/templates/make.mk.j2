@@ -38,6 +38,13 @@ lint:
 	@$(MAKE) --no-print-directory terraform_lint CURRENT_DIR="{{ plan_name }}"
 {% endfor %}
 
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+console_{{ slug}}: ## Connect terraform Docker AWS {{ plan_name }} layer
+console_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} console_commands
+{% endfor %}
 
 {% for plan_name in plans_install %}
 {% set path = plan_name.split('/') %}
