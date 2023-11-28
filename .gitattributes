@@ -6,3 +6,4 @@ config.yaml export-ignore
 .gitignore export-ignore
 get-starter-kit.sh export-ignore
 remove-starter-kit.sh export-ignore
+docs export-ignore
