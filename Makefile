@@ -135,7 +135,7 @@ else
 	cd ${CURRENT_DIR} && tfenv install
 	cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 	cd ${CURRENT_DIR} && terraform validate
-	cd ${CURRENT_DIR} && rm -rf .terraform"
+	cd ${CURRENT_DIR} && rm -rf .terraform
 endif
 
 terraform_format:
