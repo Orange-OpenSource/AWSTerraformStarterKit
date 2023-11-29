@@ -149,3 +149,17 @@ services:
       - /etc/group:/etc/group:ro
       - ./${PROJECT_ROOT_DIR}:/project
     working_dir: ${DOCKER_WORKDIR}
+
+  terraform_version_check:
+      container_name: ${COMPOSE_PROJECT_NAME}_terraform_version_check
+      image: tfverch/tfvc:${TERRAFORM_VERSION_CHECK_IMAGE_TAG}
+      user: ${MY_UID}:${MY_GID}
+      environment:
+        HOME: /workdir
+      env_file:
+        - .env
+      volumes:
+        - /etc/passwd:/etc/passwd:ro
+        - /etc/group:/etc/group:ro
+        - ./:/workdir
+      working_dir: /workdir

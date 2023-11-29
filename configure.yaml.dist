@@ -27,6 +27,7 @@ POWERSHELL_LINTER_IMAGE_TAG: latest
 JSON_LINTER_IMAGE_TAG: latest
 TRIVY_IMAGE_TAG: latest
 TERRASCAN_IMAGE_TAG: latest
+TERRAFORM_VERSION_CHECK_IMAGE_TAG: latest
 
 ########################################################################################################################
 # GITLAB CI

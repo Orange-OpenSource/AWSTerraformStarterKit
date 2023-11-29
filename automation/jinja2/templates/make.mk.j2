@@ -49,6 +49,18 @@ console_{{ slug }}:
 {% for plan_name in plans_install %}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
+tsvc_{{ slug}}: ## Check terraform module version {{ plan_name }}
+tsvc_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_check_version_commands
+{% endfor %}
+
+tsvc_all: ## Install all AWS layers
+tsvc_all: {% for plan_name in plans_install %}{% set slug = plan_name.replace('/',"_") %}{% set path = plan_name.split('/') %}tsvc_{{ slug }} {% endfor %}
+
+
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
 init_{{ slug}}: ## Init AWS {{ plan_name }} layer
 init_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_init_commands
