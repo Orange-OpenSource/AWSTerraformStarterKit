@@ -40,12 +40,6 @@ variables:
   {%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
   {%- set runners = environ('CICD_RUNNER_TAGS').split(',') %}
 
-
-cache:
-  key: $CI_COMMIT_REF_SLUG
-  paths:
-    - creds.env
-
 stages:
   - aws-creds
   - quality-checks
@@ -80,9 +74,9 @@ stages:
     AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
     AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
     AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
-    echo "export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
-    echo "export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
-    echo "export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
+    echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
+    echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
+    echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
 
 .terraform-base:
   before_script:
@@ -101,7 +95,6 @@ stages:
 .terraform-trivy:
   before_script:
     - rm -rf .terraform
-    - . ./creds.env
     - apk --no-cache --update  add make
   image:
     name: aquasec/trivy:latest
@@ -179,7 +172,6 @@ stages:
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   before_script:
     - apt-get update && apt-get install -y make
-    - . ./creds.env
   tags:
   {% for runner in runners %}
     - {{ runner }}
@@ -193,8 +185,6 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-  before_script:
-    - . ./creds.env
   tags:
   {% for runner in runners %}
     - {{ runner }}
@@ -210,7 +200,6 @@ stages:
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/bin'
   before_script:
     - apk --no-cache --update  add make
-    - . ./creds.env
   tags:
   {% for runner in runners %}
     - {{ runner }}
@@ -225,6 +214,9 @@ aws-creds:
   extends: .aws-cli
   stage: aws-creds
   <<: *aws_get_creds
+  artifacts:
+    reports:
+      dotenv: creds.env
 
 {% endif %}
 {% if  GITLAB_JOBS["terraform-compliance"]  %}
@@ -277,11 +269,9 @@ terraform-format:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-validate"]  %}
 terraform-validate:
-  needs: []
+  dependencies: [aws-creds]
   extends: .terraform-base
   allow_failure: true
-  before_script:
-    - . ./creds.env
   stage: quality-checks
   script:
     - make validate
@@ -313,7 +303,6 @@ shell-lint:
   extends: .shelllint
   allow_failure: true
   before_script:
-    - . ./creds.env
     - apk --no-cache --update  add make
   stage: quality-checks
   script:
@@ -346,7 +335,7 @@ terraform-trivy:
 ########################################################################################################################
 driftctl:
   stage: drift
-  needs: [aws-creds]
+  dependencies: [aws-creds]
   allow_failure: true
   image:
     name: snyk/driftctl:$DRIFTCTL_IMAGE_TAG
@@ -356,7 +345,6 @@ driftctl:
     ROLE_TO_ASSUME: ${TF_VAR_backend_bucket_access_role}
     AWS_ROLE_SESSION_NAME: "sessiondrifctl"
   before_script:
-    - . ./creds.env
     - apk add --no-cache aws-cli
     - apk add --no-cache jq
   script: |
@@ -377,10 +365,8 @@ driftctl:
 .plan_job: &plan_job
   extends: .terraform-base
   stage: plan
-  needs: [aws-creds]
+  dependencies: [aws-creds]
   allow_failure: false
-  before_script:
-    - . ./creds.env
 {% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
@@ -417,7 +403,6 @@ plan_all:
   allow_failure: false
   when: manual
   before_script:
-    - . ./creds.env
 {% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
@@ -456,8 +441,6 @@ apply_all:
   allow_failure: false
   stage: delete
   when: manual
-  before_script:
-    - . ./creds.env
   only:
     variables:
       - $PHASE == "DESTROY"
