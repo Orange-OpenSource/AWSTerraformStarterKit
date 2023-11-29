@@ -13,6 +13,10 @@
 
 set -o errexit -o nounset -o pipefail
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 # Set Starterkit version
 starter_kit_current_version_path=".STARTER_KIT_CURRENT_VERSION"
 touch $starter_kit_current_version_path
@@ -34,14 +38,23 @@ STARTER_KIT_LOCATION="${STARTER_KIT_URL}/${STARTER_KIT_FORMAT}ball/${STARTER_KIT
 
 if [ "$STARTER_KIT_VERSION" == "latest" ]; then
     STARTER_KIT_LOCATION=$(curl -s ${STARTER_KIT_URL}/releases/latest | jq -r ".${STARTER_KIT_FORMAT}ball_url")
+
 fi
+
+LAST_PUBLISH_VERSION=$(curl -s ${STARTER_KIT_URL}/releases/latest | jq -r ".tag_name")
 
 echo "Download StarterKit from: ${STARTER_KIT_LOCATION}"
 
-curl --fail -L "${STARTER_KIT_LOCATION}" | tar -xz --strip-components 1
+curl --fail -L --progress-bar "${STARTER_KIT_LOCATION}" | tar -xz --strip-components 1
 
 STARTER_KIT_VERSION=${STARTER_KIT_LOCATION##*/}
 
-echo "StaterKit Version ${STARTER_KIT_VERSION}"
+if [ "$STARTER_KIT_VERSION" == "$LAST_PUBLISH_VERSION" ]; then
+  printf "Downloaded StaterKit Version ${GREEN}${STARTER_KIT_VERSION}${NC}"
+else
+  printf "Downloaded StaterKit Version ${RED}${STARTER_KIT_VERSION}${NC}, the last published version available is ${RED}${LAST_PUBLISH_VERSION}${NC}"
+fi
+
+
 
 echo "${STARTER_KIT_VERSION}" > $starter_kit_current_version_path
