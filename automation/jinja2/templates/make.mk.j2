@@ -11,7 +11,7 @@ generate_documentation:
 
 terraform_terrascan: ## Terrascan Terraform
 terraform_terrascan:
-	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml {% for plan_name in plans_install %} --iac-dir={{ plan_name }} {% endfor %}
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.config/.terrascan_config.toml {% for plan_name in plans_install %} --iac-dir={{ plan_name }} {% endfor %}
 
 format: ## Format all Terraform files using "terraform fmt"
 format:
