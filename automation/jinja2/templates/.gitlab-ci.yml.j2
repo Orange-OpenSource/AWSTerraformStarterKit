@@ -392,8 +392,8 @@ plan_{{ slug }}:
     paths:
       - {{ plan_name }}/{{ environ('PLAN_BINARY_FILE') }}
       - {{ plan_name }}/{{ environ('PLAN_JSON_FILE') }}
-  only:
-    changes:
+  rules:
+    - changes:
       - {{ plan_name }}/**/*
 {% endfor %}
 
@@ -426,13 +426,12 @@ apply_{{ slug }}:
   needs: [plan_{{ slug }}]
   script:
     - make install_{{ slug }}
-  only:
+  rules:
 {% if TF_APPLY_ONLY_MAIN %}
-    refs:
-      - main
-{% endif %}
-    changes:
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
       - {{ plan_name }}/**/*
+{% endif %}
 {% endfor %}
 
 {% if  GITLAB_JOBS["apply_all"]  %}
@@ -442,9 +441,8 @@ apply_all:
   script:
     - make install_all
 {% if TF_APPLY_ONLY_MAIN %}
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 {% endif %}
 {% endif %}
 
@@ -458,9 +456,8 @@ apply_all:
   when: manual
   before_script:
     - . ./creds.env
-  only:
-    variables:
-      - $PHASE == "DESTROY"
+  rules:
+    - if: $PHASE == "DESTROY"
 {% for plan_name in plans_delete +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
