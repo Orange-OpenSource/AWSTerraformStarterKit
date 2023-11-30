@@ -93,6 +93,7 @@ stages:
 
 {% if  GITLAB_JOBS["terraform-trivy"]  %}
 .terraform-trivy:
+  dependencies: [aws-creds]
   before_script:
     - rm -rf .terraform
     - apk --no-cache --update  add make
@@ -165,6 +166,7 @@ stages:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-compliance"]  %}
 .terraform-compliance:
+  dependencies: [aws-creds]
   image:
     name: eerkunt/terraform-compliance:latest
     entrypoint:
@@ -180,6 +182,7 @@ stages:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 .terraform-terrascan:
+  dependencies: [aws-creds]
   image:
     name: tenable/terrascan:latest
     entrypoint:
@@ -193,6 +196,7 @@ stages:
 {% endif %}
 {% if  GITLAB_JOBS["md-lint"]  %}
 .md_lint:
+  dependencies: [aws-creds]
   image:
     name: pipelinecomponents/markdownlint:latest
     entrypoint:
@@ -269,9 +273,10 @@ terraform-format:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-validate"]  %}
 terraform-validate:
-  dependencies: [aws-creds]
+  needs: [aws-creds]
   extends: .terraform-base
   allow_failure: true
+  dependencies: [aws-creds]
   stage: quality-checks
   script:
     - make validate
@@ -302,6 +307,7 @@ shell-lint:
   needs: []
   extends: .shelllint
   allow_failure: true
+  dependencies: [aws-creds]
   before_script:
     - apk --no-cache --update  add make
   stage: quality-checks
@@ -335,7 +341,7 @@ terraform-trivy:
 ########################################################################################################################
 driftctl:
   stage: drift
-  dependencies: [aws-creds]
+  needs: [aws-creds]
   allow_failure: true
   image:
     name: snyk/driftctl:$DRIFTCTL_IMAGE_TAG
@@ -344,6 +350,7 @@ driftctl:
     AWS_DEFAULT_REGION: $REGION
     ROLE_TO_ASSUME: ${TF_VAR_backend_bucket_access_role}
     AWS_ROLE_SESSION_NAME: "sessiondrifctl"
+  dependencies: [aws-creds]
   before_script:
     - apk add --no-cache aws-cli
     - apk add --no-cache jq
@@ -365,8 +372,9 @@ driftctl:
 .plan_job: &plan_job
   extends: .terraform-base
   stage: plan
-  dependencies: [aws-creds]
+  needs: [aws-creds]
   allow_failure: false
+  dependencies: [aws-creds]
 {% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
@@ -402,13 +410,13 @@ plan_all:
   stage: apply
   allow_failure: false
   when: manual
-  before_script:
+  dependencies: [aws-creds]
 {% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 apply_{{ slug }}:
   <<: *apply_job
-  needs: [plan_{{ slug }}]
+  needs: [aws-creds, plan_{{ slug }}]
   script:
     - make install_{{ slug }}
   only:
@@ -441,6 +449,7 @@ apply_all:
   allow_failure: false
   stage: delete
   when: manual
+  dependencies: [aws-creds]
   only:
     variables:
       - $PHASE == "DESTROY"
