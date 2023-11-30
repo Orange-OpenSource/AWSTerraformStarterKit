@@ -1,12 +1,25 @@
 ---
 variables:
-  PHASE: BUILD
+  PHASE:
+    value: BUILD
+    options:
+      - BUILD
+      - DESTROY
+    description: When set to DESTROY plan and delete 
+  BUILD_TYPE:
+    value: CHANGES
+    options:
+      - CHANGES
+      - FORCE
+      - ALL
+    description: When set to CHANGES only changes are built, when set to ALL all plan are plan build
   CICD_MODE: "true"
   GIT_SUBMODULE_STRATEGY: "recursive"
   PRINT_DEBUG: "false"
   {% if  TF_TOKEN_MODULE_ACCESS %}
   {{ TF_TOKEN_MODULE_ACCESS_KEY }}: {{ TF_TOKEN_MODULE_ACCESS_VALUE }}
   {% endif %}
+  TF_PLUGIN_CACHE_DIR: .terraform.d/plugin-cache
 
   # Docker Image Tag
   TFLINT_IMAGE_TAG: {{ environ('TFLINT_IMAGE_TAG') }}
@@ -37,17 +50,18 @@ variables:
   {% endif %}
 
   {%- set plans_install = environ('PLAN_INSTALL_LIST').split(',') -%}
+  {%- set plans_apply = environ('PLAN_APPLY_LIST').split(',') -%}
   {%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
   {%- set runners = environ('CICD_RUNNER_TAGS').split(',') %}
-
 
 cache:
   key: $CI_COMMIT_REF_SLUG
   paths:
     - creds.env
+    - .terraform.d/plugin-cache/
 
 stages:
-  - aws-creds
+  - prepare
   - quality-checks
   - drift
   - plan
@@ -84,9 +98,7 @@ stages:
     echo "export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
     echo "export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
 
-.terraform-base:
-  before_script:
-    - rm -rf .terraform
+.terraform-base: &terraform_base
   image:
     name: marmarama/tfenv:$TFENV_IMAGE_TAG
     entrypoint:
@@ -170,22 +182,6 @@ stages:
    {% endfor %}
 
 {% endif %}
-{% if  GITLAB_JOBS["terraform-compliance"]  %}
-.terraform-compliance:
-  image:
-    name: eerkunt/terraform-compliance:latest
-    entrypoint:
-      - '/usr/bin/env'
-      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-  before_script:
-    - apt-get update && apt-get install -y make
-    - . ./creds.env
-  tags:
-  {% for runner in runners %}
-    - {{ runner }}
-   {% endfor %}
-
-{% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 .terraform-terrascan:
   image:
@@ -223,23 +219,16 @@ stages:
 {% if  GITLAB_JOBS["aws-creds"]  %}
 aws-creds:
   extends: .aws-cli
-  stage: aws-creds
+  stage: prepare
   <<: *aws_get_creds
 
 {% endif %}
-{% if  GITLAB_JOBS["terraform-compliance"]  %}
-########################################################################################################################
-# TESTS
-########################################################################################################################
-terraform-compliance:
-  needs: [plan_all]
-  extends: .terraform-compliance
-  allow_failure: true
-  stage: tests
+terraform-prepare:
+  stage: prepare
+  <<: *terraform_base
   script:
-    - make terraform_compliance
+  - mkdir -p $TF_PLUGIN_CACHE_DIR
 
-{% endif %}
 ########################################################################################################################
 # QUALITY CHECKS
 ########################################################################################################################
@@ -275,18 +264,6 @@ terraform-format:
     - make format
 
 {% endif %}
-{% if  GITLAB_JOBS["terraform-validate"]  %}
-terraform-validate:
-  needs: []
-  extends: .terraform-base
-  allow_failure: true
-  before_script:
-    - . ./creds.env
-  stage: quality-checks
-  script:
-    - make validate
-
-{% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 terraform-terrascan:
   needs: []
@@ -294,7 +271,7 @@ terraform-terrascan:
   allow_failure: true
   stage: quality-checks
   script:
-    - terrascan scan -i terraform --verbose --config-path=./.terrascan_config.toml  {% for plan_name in plans_install %} --iac-dir={{ plan_name }}{% endfor %}
+    - terrascan scan -i terraform --verbose --config-path=./.config/.terrascan_config.toml  {% for plan_name in plans_apply %} --iac-dir={{ plan_name }}{% endfor %}
 
 {% endif %}
 {% if  GITLAB_JOBS["md-lint"]  %}
@@ -372,20 +349,68 @@ driftctl:
 
 {% endif %}
 ########################################################################################################################
+# VALIDATE
+########################################################################################################################
+.validate_job: &validate_job
+  extends: .terraform-base
+  stage: quality-checks
+  needs: [aws-creds,terraform-prepare]
+  allow_failure: false
+  before_script:
+    - . ./creds.env
+{% for plan_name in plans_apply +%}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+validate_{{ slug }}:
+  <<: *validate_job
+  script:
+    - make init_{{ slug }}
+    - make validate_{{ slug }}
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - {{ plan_name }}/.terraform
+  only:
+    changes:
+      - {{ plan_name }}/**/*
+    variables:
+      - $BUILD_TYPE == "FORCE"
+{% endfor %}
+
+{% if  GITLAB_JOBS["plan_all"]  %}
+validate_all:
+  <<: *validate_job
+  script:
+    - make init_all
+    - make validate_all
+  artifacts:
+    paths:
+      - ./**/{{ environ('PLAN_BINARY_FILE') }}
+      - ./**/{{ environ('PLAN_JSON_FILE') }}
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - ./**/.terraform
+  only:
+    variables:
+      - $BUILD_TYPE == "ALL"
+{% endif %}
+
+########################################################################################################################
 # PLAN
 ########################################################################################################################
 .plan_job: &plan_job
   extends: .terraform-base
   stage: plan
-  needs: [aws-creds]
   allow_failure: false
   before_script:
     - . ./creds.env
-{% for plan_name in plans_install +%}
+{% for plan_name in plans_apply %}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 plan_{{ slug }}:
   <<: *plan_job
+  needs: [validate_{{ slug }}]
   script:
     - make plan_{{ slug }}
   artifacts:
@@ -395,17 +420,23 @@ plan_{{ slug }}:
   only:
     changes:
       - {{ plan_name }}/**/*
+    variables:
+      - $BUILD_TYPE == "FORCE"
 {% endfor %}
 
 {% if  GITLAB_JOBS["plan_all"]  %}
 plan_all:
   <<: *plan_job
+  needs: [validate_all]
   script:
     - make plan_all
   artifacts:
     paths:
       - ./**/{{ environ('PLAN_BINARY_FILE') }}
       - ./**/{{ environ('PLAN_JSON_FILE') }}
+  only:
+    variables:
+      - $BUILD_TYPE == "ALL"
 {% endif %}
 
 ########################################################################################################################
@@ -418,14 +449,14 @@ plan_all:
   when: manual
   before_script:
     - . ./creds.env
-{% for plan_name in plans_install +%}
+{% for plan_name in plans_apply +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 apply_{{ slug }}:
   <<: *apply_job
   needs: [plan_{{ slug }}]
   script:
-    - make install_{{ slug }}
+    - make apply_{{ slug }}
   only:
 {% if TF_APPLY_ONLY_MAIN %}
     refs:
@@ -440,11 +471,13 @@ apply_all:
   <<: *apply_job
   needs: [plan_all]
   script:
-    - make install_all
+    - make apply_all
 {% if TF_APPLY_ONLY_MAIN %}
   only:
     refs:
       - main
+    variables:
+      - $BUILD_TYPE == "ALL"
 {% endif %}
 {% endif %}
 
@@ -458,21 +491,15 @@ apply_all:
   when: manual
   before_script:
     - . ./creds.env
-  only:
-    variables:
-      - $PHASE == "DESTROY"
 {% for plan_name in plans_delete +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
-delete_{{ slug}}:
+delete_{{ slug }}:
   <<: *delete_job
+  needs: [plan_{{ slug }}]
   script:
     - make delete_{{ slug }}
+  only:
+    variables:
+      - $PHASE == "DESTROY"
 {% endfor %}
-
-{% if  GITLAB_JOBS["delete_all"]  %}
-delete_all:
-  <<: *delete_job
-  script:
-    - make delete_all
-{% endif %}
