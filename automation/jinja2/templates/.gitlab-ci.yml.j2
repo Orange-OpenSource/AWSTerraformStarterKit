@@ -431,7 +431,7 @@ apply_{{ slug }}:
 {% if  GITLAB_JOBS["apply_all"]  %}
 apply_all:
   <<: *apply_job
-  needs: [plan_all]
+  needs: [aws-creds, plan_all]
   script:
     - make install_all
 {% if TF_APPLY_ONLY_MAIN %}
