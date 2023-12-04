@@ -4,13 +4,13 @@
 ########################################################################################################################
 PROJECT_NAME: starterkit
 COMPOSE_PROJECT_NAME: starterkit
-REGION: eu-west-3
+REGION: eu-central-1
 # Name of the output of the terraform plan
 PLAN_BINARY_FILE: tfplan.binary
 PLAN_JSON_FILE: tfplan.json
 # Relative path to project directory from this file directory.
-PROJECT_ROOT_DIR: 
-PROJECT_DIR: 
+PROJECT_ROOT_DIR: ""
+PROJECT_DIR: ""
 
 ########################################################################################################################
 # Docker Compose image tags to use
@@ -80,10 +80,10 @@ TF_LOG_PATH: /tmp/terraform_logs
 # Terraform S3 Backend Configuration
 ########################################################################################################################
 # Leave empty if you want to customize the Terraform backend config into the Terraform plans
-TF_VAR_backend_bucket_name: <AWS_S3_BUCKET_NAME>
-TF_VAR_backend_bucket_region: <AWS_REGION_CODE>
-TF_VAR_backend_dynamodb_table: <AWS_DYNAMODB_TABLE_NAME>
-TF_VAR_backend_bucket_access_role: arn:aws:iam::<AWS_ACCOUNT_ID>:role/<AWS_IAM_ROLE_NAME>
+TF_VAR_backend_bucket_name: awsterraformstarterkit-test-454435098043
+TF_VAR_backend_bucket_region: eu-central-1
+TF_VAR_backend_dynamodb_table: awsterraformstartkit-test-lock
+TF_VAR_backend_bucket_access_role: arn:aws:iam::454435098043:role/Terraform
 
 # Customize Terraform backend bucket key
 # True: set the key in the Terraform plan remote state confgirutation
@@ -93,8 +93,8 @@ CUSTOM_BACKEND_BUCKET_KEY: False
 ########################################################################################################################
 # LOCAL DEVELOPMENT
 ########################################################################################################################
-LOCAL_ROLE_NAME: <AWS_IAM_ROLE_NAME>
-TF_VAR_assume_role: <AWS_IAM_ROLE_NAME>
+LOCAL_ROLE_NAME: Terraform
+TF_VAR_assume_role: Terraform
 
 ########################################################################################################################
 # PLANS
@@ -105,7 +105,7 @@ plans:
 
 # AWS Account ID in which your plan are deployed and containing the backend bucket
 # SSO Account
-ACCOUNT_ID: <AWS_ACCOUNT_ID>
+ACCOUNT_ID: 454435098043
 
 ########################################################################################################################
 # PROXY

@@ -19,9 +19,9 @@ services:
     volumes:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
-      - ./:/workdir
+      - ./${PROJECT_ROOT_DIR}:/project
       - $HOME/.ssh:$HOME/.ssh
       - $HOME/.terraformrc:$HOME/.terraformrc
       - $HOME/.terraform.d:$HOME/.terraform.d
-    working_dir: /workdir
+    working_dir: ${DOCKER_WORKDIR}
     entrypoint: [ "tail", "-f", "/dev/null" ]
