@@ -198,7 +198,7 @@ endif
 endif
 
 terraform_lint:
-	$(TFLINT_RUN) ${CURRENT_DIR}
+	$(TFLINT_RUN) --chdir ${CURRENT_DIR}
 
 # Terraform commands to delete a stack layer
 terraform_destroy_commands:
