@@ -329,7 +329,7 @@ apply_terraform_demo:
   <<: *apply_job
   needs:
     - aws-creds
-    - plan_terraform_demo]
+    - plan_terraform_demo
   script:
     - make install_terraform_demo
   only:

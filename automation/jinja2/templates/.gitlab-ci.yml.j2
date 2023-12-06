@@ -436,7 +436,7 @@ apply_{{ slug }}:
   <<: *apply_job
   needs:
     - aws-creds
-    - plan_{{ slug }}]
+    - plan_{{ slug }}
   script:
     - make install_{{ slug }}
   only:
