@@ -19,7 +19,7 @@ variables:
   {% if  TF_TOKEN_MODULE_ACCESS %}
   {{ TF_TOKEN_MODULE_ACCESS_KEY }}: {{ TF_TOKEN_MODULE_ACCESS_VALUE }}
   {% endif %}
-  TF_PLUGIN_CACHE_DIR: .terraform.d/plugin-cache
+  TF_PLUGIN_CACHE_DIR: $CI_PROJECT_DIR/.terraform.d/plugin-cache
 
   # Docker Image Tag
   TFLINT_IMAGE_TAG: {{ environ('TFLINT_IMAGE_TAG') }}
