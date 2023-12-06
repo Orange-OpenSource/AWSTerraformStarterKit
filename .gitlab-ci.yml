@@ -16,11 +16,11 @@ variables:
   CICD_MODE: "true"
   GIT_SUBMODULE_STRATEGY: "recursive"
   PRINT_DEBUG: "false"
-  TF_PLUGIN_CACHE_DIR: .terraform.d/plugin-cache
+  TF_PLUGIN_CACHE_DIR: $CI_PROJECT_DIR/.terraform.d/plugin-cache
 
   # Docker Image Tag
-  TFLINT_IMAGE_TAG: v0.39.3
-  PRECOMMIT_IMAGE_TAG: v1.74.1
+  TFLINT_IMAGE_TAG: v0.49.0
+  PRECOMMIT_IMAGE_TAG: v1.83.6
   TFENV_IMAGE_TAG: latest
   DRIFTCTL_IMAGE_TAG: latest
 
