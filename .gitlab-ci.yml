@@ -60,6 +60,10 @@ stages:
 .aws_get_creds: &aws_get_creds
   script: |
     #!/usr/bin/env bash
+    echo CI_MERGE_REQUEST_SOURCE_BRANCH_NAME = $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
+    echo CI_DEFAULT_BRANCH = $CI_DEFAULT_BRANCH
+    echo CI_COMMIT_BRANCH = $CI_COMMIT_BRANCH
+    echo CI_DEFAULT_BRANCH = $CI_DEFAULT_BRANCH
     echo "Getting temporary credentials associated to assume role"
     STS_CREDS=$(aws sts assume-role --role-arn arn:aws:iam::454435098043:role/Terraform --role-session-name ${CI_COMMIT_SHA})
     AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
