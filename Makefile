@@ -358,9 +358,17 @@ init_terraform_demo: ## Init AWS terraform/demo layer
 init_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_init_commands
 
+validate_terraform_demo: ## Validate AWS terraform/demo layer
+validate_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_validate
+
 plan_terraform_demo: ## Plan AWS terraform/demo layer
 plan_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_plan_commands
+
+apply_terraform_demo: ## Apply AWS terraform/demo layer
+apply_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_apply_commands
 
 install_terraform_demo: ## Install AWS terraform/demo layer
 install_terraform_demo:
