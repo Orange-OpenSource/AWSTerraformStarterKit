@@ -1,0 +1,374 @@
+---
+variables:
+  PHASE: BUILD
+  CICD_MODE: "true"
+  GIT_SUBMODULE_STRATEGY: "recursive"
+  PRINT_DEBUG: "false"
+
+  # Docker Image Tag
+  TFLINT_IMAGE_TAG: v0.39.3
+  PRECOMMIT_IMAGE_TAG: v1.74.1
+  TFENV_IMAGE_TAG: latest
+  DRIFTCTL_IMAGE_TAG: latest
+
+  # NEED TO BE CHANGED FOR EACH PROJECT
+  PROJECT_NAME: starterkit
+  REGION: eu-central-1
+  TF_VAR_assume_role: Terraform
+  TF_VAR_backend_bucket_name: awsterraformstarterkit-test-454435098043
+  TF_VAR_backend_bucket_region: eu-central-1
+  TF_VAR_backend_dynamodb_table: awsterraformstartkit-test-lock
+  TF_VAR_backend_bucket_access_role: "arn:aws:iam::454435098043:role/Terraform"
+  CUSTOM_BACKEND_BUCKET_KEY: auto
+ 
+  PLAN_BINARY_FILE: tfplan.binary
+  PLAN_JSON_FILE: tfplan.json
+  ACCOUNT_ID: 454435098043
+  CICD_ROLE_NAME: Terraform
+
+
+stages:
+  - aws-creds
+  - quality-checks
+  - drift
+  - plan
+  - tests
+  - apply
+  - delete
+  - clean-cache
+
+########################################################################################################################
+# FUNCTIONS
+########################################################################################################################
+.aws-cli:
+  before_script:
+    - yum install -y jq
+  image:
+    name: amazon/aws-cli:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  tags:
+    - shared
+
+.aws_get_creds: &aws_get_creds
+  script: |
+    #!/usr/bin/env bash
+    echo "Getting temporary credentials associated to assume role"
+    STS_CREDS=$(aws sts assume-role --role-arn arn:aws:iam::454435098043:role/Terraform --role-session-name ${CI_COMMIT_SHA})
+    AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
+    AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
+    AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
+    echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
+    echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
+    echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
+
+.terraform-base:
+  before_script:
+    - rm -rf .terraform
+  image:
+    name: marmarama/tfenv:$TFENV_IMAGE_TAG
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+  tags:
+    - shared
+
+.terraform-trivy:
+  before_script:
+    - rm -rf .terraform
+    - apk --no-cache --update  add make
+  image:
+    name: aquasec/trivy:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+  tags:
+    - shared
+
+.terraform-lint:
+  image:
+    name: ghcr.io/terraform-linters/tflint:${TFLINT_IMAGE_TAG}
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - apk --no-cache --update  add make
+  tags:
+    - shared
+
+.shelllint:
+  image:
+    name: pipelinecomponents/shellcheck:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  tags:
+    - shared
+
+.precommit:
+  image:
+    name: ghcr.io/antonbabenko/pre-commit-terraform:${PRECOMMIT_IMAGE_TAG}
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  tags:
+    - shared
+
+.yamllint:
+  image:
+    name: pipelinecomponents/yamllint:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - apk --no-cache --update  add make
+  tags:
+    - shared
+
+.terraform-terrascan:
+  image:
+    name: tenable/terrascan:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  tags:
+    - shared
+
+.md_lint:
+  image:
+    name: pipelinecomponents/markdownlint:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/bin'
+  before_script:
+    - apk --no-cache --update  add make
+  tags:
+    - shared
+
+########################################################################################################################
+# COMMONS
+########################################################################################################################
+aws-creds:
+  extends: .aws-cli
+  stage: aws-creds
+  <<: *aws_get_creds
+  artifacts:
+    reports:
+      dotenv: creds.env
+
+########################################################################################################################
+# QUALITY CHECKS
+########################################################################################################################
+terraform-lint:
+  needs: []
+  extends: .terraform-lint
+  allow_failure: true
+  stage: quality-checks
+  script:
+    - make lint
+
+precommit:
+  needs: []
+  extends: .precommit
+  allow_failure: true
+  stage: quality-checks
+  before_script:
+    - apk --no-cache --update  add make
+  script:
+    - make precommit
+
+terraform-format:
+  needs: []
+  extends: .terraform-base
+  allow_failure: true
+  stage: quality-checks
+  script:
+    - make format
+
+terraform-validate:
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
+  extends: .terraform-base
+  allow_failure: true
+  stage: quality-checks
+  script:
+    - make validate
+
+terraform-terrascan:
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
+  extends: .terraform-terrascan
+  allow_failure: true
+  stage: quality-checks
+  script:
+    - terrascan scan -i terraform --verbose --config-path=./.terrascan_config.toml   --iac-dir=terraform/demo
+md-lint:
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
+  extends: .md_lint
+  allow_failure: true
+  stage: quality-checks
+  script:
+    - make markdown_lint
+
+shell-lint:
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
+  extends: .shelllint
+  allow_failure: true
+  before_script:
+    - apk --no-cache --update  add make
+  stage: quality-checks
+  script:
+    - make shell_lint
+
+yaml-lint:
+  needs: []
+  extends: .yamllint
+  allow_failure: true
+  stage: quality-checks
+  script:
+    - make yaml_lint
+
+terraform-trivy:
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
+  extends: .terraform-trivy
+  allow_failure: true
+  stage: quality-checks
+  script:
+    - make trivy
+
+########################################################################################################################
+# DRIFT Detection
+########################################################################################################################
+driftctl:
+  stage: drift
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
+  allow_failure: true
+  image:
+    name: snyk/driftctl:$DRIFTCTL_IMAGE_TAG
+    entrypoint: [""]
+  variables:
+    AWS_DEFAULT_REGION: $REGION
+    ROLE_TO_ASSUME: ${TF_VAR_backend_bucket_access_role}
+    AWS_ROLE_SESSION_NAME: "sessiondrifctl"
+  before_script:
+    - apk add --no-cache aws-cli
+    - apk add --no-cache jq
+  script: |
+    #!/usr/bin/env bash
+    echo "Getting temporary credentials associated to assume role"
+    aws sts get-caller-identity
+    STS_CREDS=$(aws sts assume-role --role-arn ${ROLE_TO_ASSUME} --role-session-name ${AWS_ROLE_SESSION_NAME})
+    AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
+    AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
+    AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
+    aws sts get-caller-identity
+    driftctl scan --only-managed  --from tfstate+s3://"${TF_VAR_backend_bucket_name}"/*.tfstate
+
+########################################################################################################################
+# PLAN
+########################################################################################################################
+.plan_job: &plan_job
+  extends: .terraform-base
+  stage: plan
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
+  allow_failure: false
+
+plan_terraform_demo:
+  <<: *plan_job
+  script:
+    - make plan_terraform_demo
+  artifacts:
+    paths:
+      - terraform/demo/tfplan.binary
+      - terraform/demo/tfplan.json
+  only:
+    changes:
+      - terraform/demo/**/*
+
+plan_all:
+  <<: *plan_job
+  script:
+    - make plan_all
+  artifacts:
+    paths:
+      - ./**/tfplan.binary
+      - ./**/tfplan.json
+
+########################################################################################################################
+# APPLY
+########################################################################################################################
+.apply_job: &apply_job
+  extends: .terraform-base
+  stage: apply
+  allow_failure: false
+  when: manual
+  dependencies:
+    - aws-creds
+
+apply_terraform_demo:
+  <<: *apply_job
+  needs:
+    - aws-creds
+    - plan_terraform_demo]
+  script:
+    - make install_terraform_demo
+  only:
+    refs:
+      - main
+    changes:
+      - terraform/demo/**/*
+
+apply_all:
+  <<: *apply_job
+  needs: [aws-creds, plan_all]
+  script:
+    - make install_all
+  only:
+    refs:
+      - main
+
+########################################################################################################################
+# DELETE
+########################################################################################################################
+.delete_job: &delete_job
+  extends: .terraform-base
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
+  allow_failure: false
+  stage: delete
+  when: manual
+  only:
+    variables:
+      - $PHASE == "DESTROY"
+
+delete_terraform_demo:
+  <<: *delete_job
+  script:
+    - make delete_terraform_demo
+
+delete_all:
+  <<: *delete_job
+  script:
+    - make delete_all
