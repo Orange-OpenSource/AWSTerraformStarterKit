@@ -77,6 +77,9 @@ stages:
     echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
     echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
     echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
+  artifacts:
+    reports:
+      dotenv: creds.env
 
 .terraform-base:
   before_script:
@@ -214,9 +217,6 @@ aws-creds:
   extends: .aws-cli
   stage: aws-creds
   <<: *aws_get_creds
-  artifacts:
-    reports:
-      dotenv: creds.env
 
 {% endif %}
 {% if  GITLAB_JOBS["terraform-compliance"]  %}
