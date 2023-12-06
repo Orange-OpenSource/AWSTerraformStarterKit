@@ -69,7 +69,7 @@ TERRAFORM_INIT = init --upgrade $(TERRAFORM_INIT_BACKEND_CONFIG_BUCKET) $(TERRAF
 ifdef CICD_MODE
 	TFENV_EXEC ?= $(shell which tfenv)
 	TERRAFORM_EXEC ?= $(shell which terraform)
-	TFLINT_RUN ?= $(shell which tflint) --config .config/.tflint.hcl
+	TFLINT_RUN ?= $(shell which tflint) --config $(shell pwd)/.config/.tflint.hcl
 	PRECOMMIT_RUN ?= $(shell which pre-commit)
 	DOTENV_LINTER ?= $(shell which dotenv-linter)
 	SHELL_LINT ?= $(shell which shellcheck)
@@ -81,7 +81,7 @@ ifdef CICD_MODE
 else
 	TFENV_EXEC = $(DOCKER_COMPOSE) exec terraform
 	TERRAFORM_EXEC = $(DOCKER_COMPOSE) exec terraform
-	TFLINT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm lint --config ./.config/.tflint.hcl
+	TFLINT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm lint --config /workdir/.config/.tflint.hcl
 	PRECOMMIT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm precommit
 	DOTENV_LINTER = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm dotenv-linter
 	SHELL_LINT = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm shell_lint shellcheck
