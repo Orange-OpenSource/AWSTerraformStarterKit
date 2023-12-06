@@ -57,7 +57,6 @@ variables:
 cache:
   key: $CI_COMMIT_REF_SLUG
   paths:
-    - creds.env
     - .terraform.d/plugin-cache/
 
 stages:
@@ -94,9 +93,12 @@ stages:
     AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
     AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
     AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
-    echo "export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
-    echo "export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
-    echo "export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
+    echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
+    echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
+    echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
+  artifacts:
+    reports:
+      dotenv: creds.env
 
 .terraform-base: &terraform_base
   image:
@@ -113,7 +115,6 @@ stages:
 .terraform-trivy:
   before_script:
     - rm -rf .terraform
-    - . ./creds.env
     - apk --no-cache --update  add make
   image:
     name: aquasec/trivy:latest
@@ -149,7 +150,6 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   before_script:
-    - . ./creds.env
     - apk --no-cache --update  add make
   tags:
   {% for runner in runners %}
@@ -192,8 +192,6 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-  before_script:
-    - . ./creds.env
   tags:
   {% for runner in runners %}
     - {{ runner }}
@@ -209,7 +207,6 @@ stages:
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/bin'
   before_script:
     - apk --no-cache --update  add make
-    - . ./creds.env
   tags:
   {% for runner in runners %}
     - {{ runner }}
@@ -269,7 +266,10 @@ terraform-format:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 terraform-terrascan:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .terraform-terrascan
   allow_failure: true
   stage: quality-checks
@@ -279,7 +279,10 @@ terraform-terrascan:
 {% endif %}
 {% if  GITLAB_JOBS["md-lint"]  %}
 md-lint:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .md_lint
   allow_failure: true
   stage: quality-checks
@@ -289,7 +292,10 @@ md-lint:
 {% endif %}
 {% if  GITLAB_JOBS["shell-lint"]  %}
 shell-lint:
-  needs: [aws-creds]
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .shelllint
   allow_failure: true
   stage: quality-checks
@@ -309,7 +315,10 @@ yaml-lint:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-trivy"]  %}
 terraform-trivy:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .terraform-trivy
   allow_failure: true
   stage: quality-checks
@@ -323,7 +332,10 @@ terraform-trivy:
 ########################################################################################################################
 driftctl:
   stage: drift
-  needs: [aws-creds]
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   allow_failure: true
   image:
     name: snyk/driftctl:$DRIFTCTL_IMAGE_TAG
@@ -333,7 +345,6 @@ driftctl:
     ROLE_TO_ASSUME: ${TF_VAR_backend_bucket_access_role}
     AWS_ROLE_SESSION_NAME: "sessiondrifctl"
   before_script:
-    - . ./creds.env
     - apk add --no-cache aws-cli
     - apk add --no-cache jq
   script: |
@@ -354,10 +365,12 @@ driftctl:
 .validate_job: &validate_job
   extends: .terraform-base
   stage: quality-checks
-  needs: [aws-creds,terraform-prepare]
+  needs: 
+    - aws-creds
+    - terraform-prepare
+  dependencies:
+    - aws-creds
   allow_failure: false
-  before_script:
-    - . ./creds.env
 {% for plan_name in plans_apply +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
@@ -403,14 +416,16 @@ validate_all:
   extends: .terraform-base
   stage: plan
   allow_failure: false
-  before_script:
-    - . ./creds.env
 {% for plan_name in plans_apply %}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 plan_{{ slug }}:
   <<: *plan_job
-  needs: [validate_{{ slug }}]
+  needs:
+    - aws-creds
+    - validate_{{ slug }}
+  dependencies:
+    - aws-creds
   script:
     - make plan_{{ slug }}
   artifacts:
@@ -447,14 +462,16 @@ plan_all:
   stage: apply
   allow_failure: false
   when: manual
-  before_script:
-    - . ./creds.env
 {% for plan_name in plans_apply +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 apply_{{ slug }}:
   <<: *apply_job
-  needs: [plan_{{ slug }}]
+  needs:
+    - aws-creds
+    - plan_{{ slug }}
+  dependencies:
+    - aws-creds
   script:
     - make apply_{{ slug }}
   only:
@@ -489,14 +506,16 @@ apply_all:
   allow_failure: false
   stage: delete
   when: manual
-  before_script:
-    - . ./creds.env
 {% for plan_name in plans_delete +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 delete_{{ slug }}:
   <<: *delete_job
-  needs: [plan_{{ slug }}]
+  needs:
+    - aws-creds
+    - plan_{{ slug }}
+  dependencies:
+    - aws-creds
   script:
     - make delete_{{ slug }}
   only:
