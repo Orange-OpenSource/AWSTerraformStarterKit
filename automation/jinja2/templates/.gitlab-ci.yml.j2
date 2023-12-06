@@ -148,6 +148,9 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - . ./creds.env
+    - apk --no-cache --update  add make
   tags:
   {% for runner in runners %}
     - {{ runner }}
@@ -286,12 +289,9 @@ md-lint:
 {% endif %}
 {% if  GITLAB_JOBS["shell-lint"]  %}
 shell-lint:
-  needs: []
+  needs: [aws-creds]
   extends: .shelllint
   allow_failure: true
-  before_script:
-    - . ./creds.env
-    - apk --no-cache --update  add make
   stage: quality-checks
   script:
     - make shell_lint
@@ -502,4 +502,5 @@ delete_{{ slug }}:
   only:
     variables:
       - $PHASE == "DESTROY"
+      - $BUILD_TYPE == "FORCE"
 {% endfor %}
