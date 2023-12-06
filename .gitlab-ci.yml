@@ -55,7 +55,7 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   tags:
-    - aws
+    - shared
 
 .aws_get_creds: &aws_get_creds
   script: |
@@ -78,7 +78,7 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
   tags:
-    - aws
+    - shared
 
 .terraform-trivy:
   before_script:
@@ -91,7 +91,7 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
   tags:
-    - aws
+    - shared
 
 .terraform-lint:
   image:
@@ -102,7 +102,7 @@ stages:
   before_script:
     - apk --no-cache --update  add make
   tags:
-    - aws
+    - shared
 
 .shelllint:
   image:
@@ -111,7 +111,7 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   tags:
-    - aws
+    - shared
 
 .precommit:
   image:
@@ -120,7 +120,7 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   tags:
-    - aws
+    - shared
 
 .yamllint:
   image:
@@ -131,7 +131,7 @@ stages:
   before_script:
     - apk --no-cache --update  add make
   tags:
-    - aws
+    - shared
 
 .terraform-terrascan:
   image:
@@ -142,7 +142,7 @@ stages:
   before_script:
     - . ./creds.env
   tags:
-    - aws
+    - shared
 
 .md_lint:
   image:
@@ -154,7 +154,7 @@ stages:
     - apk --no-cache --update  add make
     - . ./creds.env
   tags:
-    - aws
+    - shared
 
 ########################################################################################################################
 # COMMONS
