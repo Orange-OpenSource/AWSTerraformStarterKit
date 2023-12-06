@@ -43,7 +43,6 @@ variables:
 cache:
   key: $CI_COMMIT_REF_SLUG
   paths:
-    - creds.env
     - .terraform.d/plugin-cache/
 
 stages:
@@ -78,9 +77,12 @@ stages:
     AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
     AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
     AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
-    echo "export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
-    echo "export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
-    echo "export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
+    echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
+    echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
+    echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
+  artifacts:
+    reports:
+      dotenv: creds.env
 
 .terraform-base: &terraform_base
   image:
@@ -94,7 +96,6 @@ stages:
 .terraform-trivy:
   before_script:
     - rm -rf .terraform
-    - . ./creds.env
     - apk --no-cache --update  add make
   image:
     name: aquasec/trivy:latest
@@ -122,7 +123,6 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   before_script:
-    - . ./creds.env
     - apk --no-cache --update  add make
   tags:
     - shared
@@ -153,8 +153,6 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-  before_script:
-    - . ./creds.env
   tags:
     - shared
 
@@ -166,7 +164,6 @@ stages:
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/bin'
   before_script:
     - apk --no-cache --update  add make
-    - . ./creds.env
   tags:
     - shared
 
@@ -196,7 +193,11 @@ terraform-lint:
     - make lint
 
 precommit:
-  needs: []
+  needs:
+    - aws-creds
+    - terraform-prepare
+  dependencies:
+    - aws-creds
   extends: .precommit
   allow_failure: true
   stage: quality-checks
@@ -214,14 +215,20 @@ terraform-format:
     - make format
 
 terraform-terrascan:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .terraform-terrascan
   allow_failure: true
   stage: quality-checks
   script:
     - terrascan scan -i terraform --verbose --config-path=./.config/.terrascan_config.toml   --iac-dir=terraform/demo
 md-lint:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .md_lint
   allow_failure: true
   stage: quality-checks
@@ -229,7 +236,10 @@ md-lint:
     - make markdown_lint
 
 shell-lint:
-  needs: [aws-creds]
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .shelllint
   allow_failure: true
   stage: quality-checks
@@ -245,7 +255,10 @@ yaml-lint:
     - make yaml_lint
 
 terraform-trivy:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .terraform-trivy
   allow_failure: true
   stage: quality-checks
@@ -257,7 +270,10 @@ terraform-trivy:
 ########################################################################################################################
 driftctl:
   stage: drift
-  needs: [aws-creds]
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   allow_failure: true
   image:
     name: snyk/driftctl:$DRIFTCTL_IMAGE_TAG
@@ -267,7 +283,6 @@ driftctl:
     ROLE_TO_ASSUME: ${TF_VAR_backend_bucket_access_role}
     AWS_ROLE_SESSION_NAME: "sessiondrifctl"
   before_script:
-    - . ./creds.env
     - apk add --no-cache aws-cli
     - apk add --no-cache jq
   script: |
@@ -287,10 +302,12 @@ driftctl:
 .validate_job: &validate_job
   extends: .terraform-base
   stage: quality-checks
-  needs: [aws-creds,terraform-prepare]
+  needs: 
+    - aws-creds
+    - terraform-prepare
+  dependencies:
+    - aws-creds
   allow_failure: false
-  before_script:
-    - . ./creds.env
 
 validate_terraform_demo:
   <<: *validate_job
@@ -331,11 +348,13 @@ validate_all:
   extends: .terraform-base
   stage: plan
   allow_failure: false
-  before_script:
-    - . ./creds.env
 plan_terraform_demo:
   <<: *plan_job
-  needs: [validate_terraform_demo]
+  needs:
+    - aws-creds
+    - validate_terraform_demo
+  dependencies:
+    - aws-creds
   script:
     - make plan_terraform_demo
   artifacts:
@@ -369,12 +388,14 @@ plan_all:
   stage: apply
   allow_failure: false
   when: manual
-  before_script:
-    - . ./creds.env
 
 apply_terraform_demo:
   <<: *apply_job
-  needs: [plan_terraform_demo]
+  needs:
+    - aws-creds
+    - plan_terraform_demo
+  dependencies:
+    - aws-creds
   script:
     - make apply_terraform_demo
   only:
@@ -402,12 +423,14 @@ apply_all:
   allow_failure: false
   stage: delete
   when: manual
-  before_script:
-    - . ./creds.env
 
 delete_terraform_demo:
   <<: *delete_job
-  needs: [plan_terraform_demo]
+  needs:
+    - aws-creds
+    - plan_terraform_demo
+  dependencies:
+    - aws-creds
   script:
     - make delete_terraform_demo
   only:
