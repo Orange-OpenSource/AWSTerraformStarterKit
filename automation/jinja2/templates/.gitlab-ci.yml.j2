@@ -93,7 +93,6 @@ stages:
 
 {% if  GITLAB_JOBS["terraform-trivy"]  %}
 .terraform-trivy:
-  dependencies: [aws-creds]
   before_script:
     - rm -rf .terraform
     - apk --no-cache --update  add make
@@ -166,7 +165,6 @@ stages:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-compliance"]  %}
 .terraform-compliance:
-  dependencies: [aws-creds]
   image:
     name: eerkunt/terraform-compliance:latest
     entrypoint:
@@ -182,7 +180,6 @@ stages:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 .terraform-terrascan:
-  dependencies: [aws-creds]
   image:
     name: tenable/terrascan:latest
     entrypoint:
@@ -196,7 +193,6 @@ stages:
 {% endif %}
 {% if  GITLAB_JOBS["md-lint"]  %}
 .md_lint:
-  dependencies: [aws-creds]
   image:
     name: pipelinecomponents/markdownlint:latest
     entrypoint:
@@ -228,7 +224,11 @@ aws-creds:
 # TESTS
 ########################################################################################################################
 terraform-compliance:
-  needs: [plan_all]
+  needs:
+    - aws-creds
+    - plan_all
+  dependencies:
+    - aws-creds
   extends: .terraform-compliance
   allow_failure: true
   stage: tests
@@ -273,10 +273,12 @@ terraform-format:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-validate"]  %}
 terraform-validate:
-  needs: [aws-creds]
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .terraform-base
   allow_failure: true
-  dependencies: [aws-creds]
   stage: quality-checks
   script:
     - make validate
@@ -284,7 +286,10 @@ terraform-validate:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 terraform-terrascan:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .terraform-terrascan
   allow_failure: true
   stage: quality-checks
@@ -294,7 +299,10 @@ terraform-terrascan:
 {% endif %}
 {% if  GITLAB_JOBS["md-lint"]  %}
 md-lint:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .md_lint
   allow_failure: true
   stage: quality-checks
@@ -304,10 +312,12 @@ md-lint:
 {% endif %}
 {% if  GITLAB_JOBS["shell-lint"]  %}
 shell-lint:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .shelllint
   allow_failure: true
-  dependencies: [aws-creds]
   before_script:
     - apk --no-cache --update  add make
   stage: quality-checks
@@ -327,7 +337,10 @@ yaml-lint:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-trivy"]  %}
 terraform-trivy:
-  needs: []
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   extends: .terraform-trivy
   allow_failure: true
   stage: quality-checks
@@ -341,7 +354,10 @@ terraform-trivy:
 ########################################################################################################################
 driftctl:
   stage: drift
-  needs: [aws-creds]
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   allow_failure: true
   image:
     name: snyk/driftctl:$DRIFTCTL_IMAGE_TAG
@@ -350,7 +366,6 @@ driftctl:
     AWS_DEFAULT_REGION: $REGION
     ROLE_TO_ASSUME: ${TF_VAR_backend_bucket_access_role}
     AWS_ROLE_SESSION_NAME: "sessiondrifctl"
-  dependencies: [aws-creds]
   before_script:
     - apk add --no-cache aws-cli
     - apk add --no-cache jq
@@ -372,9 +387,11 @@ driftctl:
 .plan_job: &plan_job
   extends: .terraform-base
   stage: plan
-  needs: [aws-creds]
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   allow_failure: false
-  dependencies: [aws-creds]
 {% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
@@ -410,13 +427,16 @@ plan_all:
   stage: apply
   allow_failure: false
   when: manual
-  dependencies: [aws-creds]
+  dependencies:
+    - aws-creds
 {% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 apply_{{ slug }}:
   <<: *apply_job
-  needs: [aws-creds, plan_{{ slug }}]
+  needs:
+    - aws-creds
+    - plan_{{ slug }}]
   script:
     - make install_{{ slug }}
   only:
@@ -446,10 +466,13 @@ apply_all:
 ########################################################################################################################
 .delete_job: &delete_job
   extends: .terraform-base
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   allow_failure: false
   stage: delete
   when: manual
-  dependencies: [aws-creds]
   only:
     variables:
       - $PHASE == "DESTROY"
