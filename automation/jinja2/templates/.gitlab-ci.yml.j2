@@ -244,7 +244,11 @@ terraform-lint:
 {% endif %}
 {% if  GITLAB_JOBS["precommit"]  %}
 precommit:
-  needs: []
+  needs:
+    - aws-creds
+    - terraform-prepare
+  dependencies:
+    - aws-creds
   extends: .precommit
   allow_failure: true
   stage: quality-checks
