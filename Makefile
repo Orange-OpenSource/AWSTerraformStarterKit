@@ -74,7 +74,7 @@ ifdef CICD_MODE
 	DOTENV_LINTER ?= $(shell which dotenv-linter)
 	SHELL_LINT ?= $(shell which shellcheck)
 	YAML_LINT ?= $(shell which yamllint)
-	MD_LINT ?= $(shell which mdl) --style config/.mdl_style.rb
+	MD_LINT ?= $(shell which mdl) --style .config/.mdl_style.rb
 	TRIVY_RUN ?= $(shell which trivy)
 	TERRASCAN_RUN ?= $(shell which terrascan)
 	TERRAFORM_DOCS ?= $(shell which terraform-docs)
