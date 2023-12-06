@@ -14,17 +14,17 @@ variables:
   # NEED TO BE CHANGED FOR EACH PROJECT
   PROJECT_NAME: starterkit
   REGION: eu-central-1
-  TF_VAR_assume_role: XXXXXX-CiCd-CrossAccountRole
+  TF_VAR_assume_role: Terraform
   TF_VAR_backend_bucket_name: awsterraformstarterkit-test-454435098043
   TF_VAR_backend_bucket_region: eu-central-1
   TF_VAR_backend_dynamodb_table: awsterraformstartkit-test-lock
-  TF_VAR_backend_bucket_access_role: "arn:aws:iam::454435098043:role/XXXXXX-CiCd-CrossAccountRole"
+  TF_VAR_backend_bucket_access_role: "arn:aws:iam::454435098043:role/Terraform"
   CUSTOM_BACKEND_BUCKET_KEY: auto
  
   PLAN_BINARY_FILE: tfplan.binary
   PLAN_JSON_FILE: tfplan.json
   ACCOUNT_ID: 454435098043
-  CICD_ROLE_NAME: XXXXXX-CiCd-CrossAccountRole
+  CICD_ROLE_NAME: Terraform
 
 
 
@@ -55,14 +55,13 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   tags:
-    - shared
+    - aws
 
 .aws_get_creds: &aws_get_creds
   script: |
     #!/usr/bin/env bash
     echo "Getting temporary credentials associated to assume role"
-    aws sts get-caller-identity
-    STS_CREDS=$(aws sts assume-role --role-arn arn:aws:iam::123546789123:role/XXXXXX-CiCd-CrossAccountRole --role-session-name ${CI_COMMIT_SHA})
+    STS_CREDS=$(aws sts assume-role --role-arn arn:aws:iam::454435098043:role/Terraform --role-session-name ${CI_COMMIT_SHA})
     AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
     AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
     AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
@@ -79,7 +78,7 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
   tags:
-    - shared
+    - aws
 
 .terraform-trivy:
   before_script:
@@ -92,7 +91,7 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
   tags:
-    - shared
+    - aws
 
 .terraform-lint:
   image:
@@ -103,7 +102,7 @@ stages:
   before_script:
     - apk --no-cache --update  add make
   tags:
-    - shared
+    - aws
 
 .shelllint:
   image:
@@ -112,7 +111,7 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   tags:
-    - shared
+    - aws
 
 .precommit:
   image:
@@ -121,7 +120,7 @@ stages:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   tags:
-    - shared
+    - aws
 
 .yamllint:
   image:
@@ -132,7 +131,7 @@ stages:
   before_script:
     - apk --no-cache --update  add make
   tags:
-    - shared
+    - aws
 
 .terraform-terrascan:
   image:
@@ -143,7 +142,7 @@ stages:
   before_script:
     - . ./creds.env
   tags:
-    - shared
+    - aws
 
 .md_lint:
   image:
@@ -155,7 +154,7 @@ stages:
     - apk --no-cache --update  add make
     - . ./creds.env
   tags:
-    - shared
+    - aws
 
 ########################################################################################################################
 # COMMONS
