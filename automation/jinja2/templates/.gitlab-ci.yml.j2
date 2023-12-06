@@ -623,4 +623,5 @@ delete_{{ slug }}:
   only:
     variables:
       - $PHASE == "DESTROY"
+      - $BUILD_TYPE == "FORCE"
 {% endfor %}
