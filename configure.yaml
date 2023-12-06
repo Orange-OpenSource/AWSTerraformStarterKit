@@ -1,0 +1,111 @@
+########################################################################################################################
+# ENV Variables used for local development
+# Use the command $make dotenv_linter to validate this file
+########################################################################################################################
+PROJECT_NAME: starterkit
+COMPOSE_PROJECT_NAME: starterkit
+REGION: eu-central-1
+# Name of the output of the terraform plan
+PLAN_BINARY_FILE: tfplan.binary
+PLAN_JSON_FILE: tfplan.json
+
+########################################################################################################################
+# Docker Compose image tags to use
+########################################################################################################################
+TFENV_IMAGE_TAG: latest
+TFLINT_IMAGE_TAG: v0.39.3
+PRECOMMIT_IMAGE_TAG: v1.74.1
+DRIFTCTL_IMAGE_TAG: latest
+DOTENV_LINTER_IMAGE_TAG: latest
+MARKDOWN_LINTER_IMAGE_TAG: latest
+SHELL_LINTER_IMAGE_TAG: latest
+YAML_LINTER_IMAGE_TAG: latest
+POWERSHELL_LINTER_IMAGE_TAG: latest
+JSON_LINTER_IMAGE_TAG: latest
+TRIVY_IMAGE_TAG: latest
+TERRASCAN_IMAGE_TAG: latest
+
+########################################################################################################################
+# GITLAB CI
+# Use to validate the .gitlab-ci.yml file with the command $make gitlab_linter
+########################################################################################################################
+GENERATE_GITLAB_CI: True
+
+CICD_RUNNER_TAGS:
+     - aws
+
+GITLAB_JOBS:
+    aws-creds: True
+    terraform-lint: True
+    precommit: True
+    terraform-format: True
+    terraform-validate: True
+    terraform-terrascan: True
+    md-lint: True
+    shell-lint: True
+    yaml-lint: True
+    terraform-trivy: True
+    driftctl: True
+    plan_all: True
+    apply_all: True
+    delete_all: True
+
+CICD_ROLE_NAME: XXXXXX-CiCd-CrossAccountRole
+CICD_ACCOUNT_ID: 123546789123
+
+# Run Terraform apply only on main branch
+TF_APPLY_ONLY_MAIN: True
+
+# Set Terraform Token key and value to access Terraform Modules stored into private GitLab repo
+TF_TOKEN_MODULE_ACCESS: False
+TF_TOKEN_MODULE_ACCESS_KEY:
+TF_TOKEN_MODULE_ACCESS_VALUE:
+
+########################################################################################################################
+# CUSTOM ENV
+########################################################################################################################
+#CUSTOM_ENV:
+#  MYAPI: test
+
+########################################################################################################################
+# Terraform Logs
+########################################################################################################################
+TF_LOG: TRACE
+TF_LOG_PATH: /tmp/terraform_logs
+
+########################################################################################################################
+# Terraform S3 Backend Configuration
+########################################################################################################################
+# Leave empty if you want to customize the Terraform backend config into the Terraform plans
+TF_VAR_backend_bucket_name: awsterraformstarterkit-test-454435098043
+TF_VAR_backend_bucket_region: eu-west-1
+TF_VAR_backend_dynamodb_table: awsterraformstartkit-test-lock
+TF_VAR_backend_bucket_access_role: arn:aws:iam::454435098043:role/Terraform
+
+# Customize Terraform backend bucket key
+# True: set the key in the Terraform plan remote state confgirutation
+# False: Terraform backend bucket key is automatically generated
+CUSTOM_BACKEND_BUCKET_KEY: False
+
+########################################################################################################################
+# LOCAL DEVELOPMENT
+########################################################################################################################
+LOCAL_ROLE_NAME: Terraform
+TF_VAR_assume_role: Terraform
+
+########################################################################################################################
+# PLANS
+########################################################################################################################
+# List the folder for each Terraform Plan to install, respect the order of installation
+plans:
+  - terraform/demo
+
+# AWS Account ID in which your plan are deployed and containing the backend bucket
+# SSO Account
+ACCOUNT_ID: 454435098043
+
+########################################################################################################################
+# PROXY
+########################################################################################################################
+HTTP_PROXY: ""
+HTTPS_PROXY: ""
