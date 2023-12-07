@@ -40,11 +40,6 @@ variables:
   CICD_ROLE_NAME: Terraform
 
 
-cache:
-  key: $CI_COMMIT_REF_SLUG
-  paths:
-    - .terraform.d/plugin-cache/
-
 stages:
   - prepare
   - quality-checks
@@ -90,6 +85,10 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
   tags:
     - shared
 
