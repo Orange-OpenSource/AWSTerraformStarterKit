@@ -493,7 +493,7 @@ apply_all:
   rules:
     - if: $BUILD_TYPE != "ALL"
       when: never
-    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "{{ GIT_MAIN_BRANCH }}" || $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}"
 {% endif %}
 {% endif %}
 
