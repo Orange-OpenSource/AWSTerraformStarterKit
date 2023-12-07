@@ -318,11 +318,10 @@ validate_terraform_demo:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
       - terraform/demo/.terraform
-  only:
-    changes:
+  rules:
+    - changes:
       - terraform/demo/**/*
-    variables:
-      - $BUILD_TYPE == "FORCE"
+     - if: $BUILD_TYPE == "FORCE"
 
 validate_all:
   <<: *validate_job
@@ -337,9 +336,8 @@ validate_all:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
       - ./**/.terraform
-  only:
-    variables:
-      - $BUILD_TYPE == "ALL"
+  rules:
+    - if: $BUILD_TYPE == "ALL"
 
 ########################################################################################################################
 # PLAN
@@ -361,11 +359,10 @@ plan_terraform_demo:
     paths:
       - terraform/demo/tfplan.binary
       - terraform/demo/tfplan.json
-  only:
-    changes:
+  rules:
+    - changes:
       - terraform/demo/**/*
-    variables:
-      - $BUILD_TYPE == "FORCE"
+    - if: $BUILD_TYPE == "FORCE"
 
 plan_all:
   <<: *plan_job
@@ -376,9 +373,8 @@ plan_all:
     paths:
       - ./**/tfplan.binary
       - ./**/tfplan.json
-  only:
-    variables:
-      - $BUILD_TYPE == "ALL"
+  rules:
+    - if: $BUILD_TYPE == "ALL"
 
 ########################################################################################################################
 # APPLY
@@ -398,22 +394,21 @@ apply_terraform_demo:
     - aws-creds
   script:
     - make apply_terraform_demo
-  only:
-    refs:
-      - main
-    changes:
+  rules:
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "main" || $CI_COMMIT_BRANCH == "main"
+      changes:
       - terraform/demo/**/*
+    - if: $CI_COMMIT_BRANCH == "main" && $BUILD_TYPE == "FORCE"
 
 apply_all:
   <<: *apply_job
   needs: [plan_all]
   script:
     - make apply_all
-  only:
-    refs:
-      - main
-    variables:
-      - $BUILD_TYPE == "ALL"
+  rules:
+    - if: $BUILD_TYPE != "ALL"
+      when: never
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "main" || $CI_COMMIT_BRANCH == "main"
 
 ########################################################################################################################
 # DELETE
@@ -423,6 +418,8 @@ apply_all:
   allow_failure: false
   stage: delete
   when: manual
+  rules:
+    - if: $PHASE == "DESTROY" && $BUILD_TYPE == "FORCE"
 
 delete_terraform_demo:
   <<: *delete_job
@@ -433,7 +430,3 @@ delete_terraform_demo:
     - aws-creds
   script:
     - make delete_terraform_demo
-  only:
-    variables:
-      - $PHASE == "DESTROY"
-      - $BUILD_TYPE == "FORCE"
