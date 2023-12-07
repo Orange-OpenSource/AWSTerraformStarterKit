@@ -319,14 +319,16 @@ validate_terraform_demo:
     paths:
       - terraform/demo/.terraform
   rules:
-    - changes:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
       - terraform/demo/**/*
-    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - if: $CI_OPEN_MERGE_REQUESTS
       changes:
         paths:
           - terraform/demo/**/*
-        compare_to: "refs/heads/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        compare_to: "refs/heads/main"
     - if: $BUILD_TYPE == "FORCE"
+    - when: never
 
 validate_all:
   <<: *validate_job
@@ -355,7 +357,8 @@ plan_terraform_demo:
   <<: *plan_job
   needs:
     - aws-creds
-    - validate_terraform_demo
+    - job: validate_terraform_demo
+      optional: true
   dependencies:
     - aws-creds
   script:
@@ -365,18 +368,22 @@ plan_terraform_demo:
       - terraform/demo/tfplan.binary
       - terraform/demo/tfplan.json
   rules:
-    - changes:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
       - terraform/demo/**/*
-    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - if: $CI_OPEN_MERGE_REQUESTS
       changes:
         paths:
           - terraform/demo/**/*
-        compare_to: "refs/heads/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        compare_to: "refs/heads/main"
     - if: $BUILD_TYPE == "FORCE"
+    - when: never
 
 plan_all:
   <<: *plan_job
-  needs: [validate_all]
+  needs:
+    - job: validate_all
+      optional: true
   script:
     - make plan_all
   artifacts:
@@ -399,20 +406,24 @@ apply_terraform_demo:
   <<: *apply_job
   needs:
     - aws-creds
-    - plan_terraform_demo
+    - job: plan_terraform_demo
+      optional: true
   dependencies:
     - aws-creds
   script:
     - make apply_terraform_demo
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
       changes:
       - terraform/demo/**/*
     - if: $CI_COMMIT_BRANCH == "main" && $BUILD_TYPE == "FORCE"
+    - when: never
 
 apply_all:
   <<: *apply_job
-  needs: [plan_all]
+  needs:
+    - job: plan_all
+      optional: true
   script:
     - make apply_all
   rules:
@@ -433,7 +444,8 @@ delete_terraform_demo:
   <<: *delete_job
   needs:
     - aws-creds
-    - plan_terraform_demo
+    - job: plan_terraform_demo
+      optional: true
   dependencies:
     - aws-creds
   script:
