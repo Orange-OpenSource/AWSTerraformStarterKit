@@ -173,6 +173,10 @@ aws-creds:
 terraform-prepare:
   stage: prepare
   <<: *terraform_base
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
   script:
   - mkdir -p $TF_PLUGIN_CACHE_DIR
 
