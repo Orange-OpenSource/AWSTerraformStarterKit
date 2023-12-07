@@ -373,7 +373,7 @@ plan_terraform_demo:
       changes:
         paths:
           - terraform/demo/**/*
-        compare_to: 'refs/heads/{{ CI_MERGE_REQUEST_TARGET_BRANCH_NAME }}'
+        compare_to: "refs/heads/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
     - if: $BUILD_TYPE == "FORCE"
 
 plan_all:
