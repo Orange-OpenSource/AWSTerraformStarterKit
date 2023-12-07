@@ -390,7 +390,7 @@ validate_{{ slug }}:
   rules:
     - changes:
       - {{ plan_name }}/**/*
-     - if: $BUILD_TYPE == "FORCE"
+    - if: $BUILD_TYPE == "FORCE"
 {% endfor %}
 
 {% if  GITLAB_JOBS["plan_all"]  %}

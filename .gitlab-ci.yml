@@ -321,7 +321,7 @@ validate_terraform_demo:
   rules:
     - changes:
       - terraform/demo/**/*
-     - if: $BUILD_TYPE == "FORCE"
+    - if: $BUILD_TYPE == "FORCE"
 
 validate_all:
   <<: *validate_job
