@@ -85,10 +85,6 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
-  cache:
-    key: tf-$CI_COMMIT_REF_SLUG
-    paths:
-      - .terraform.d/plugin-cache/
   tags:
     - shared
 
@@ -316,6 +312,7 @@ validate_terraform_demo:
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
+      - .terraform.d/plugin-cache/
       - terraform/demo/.terraform
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"
@@ -341,6 +338,7 @@ validate_all:
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
+      - .terraform.d/plugin-cache/
       - ./**/.terraform
   rules:
     - if: $BUILD_TYPE == "ALL"
@@ -360,6 +358,11 @@ plan_terraform_demo:
       optional: true
   dependencies:
     - aws-creds
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo/.terraform
   script:
     - make plan_terraform_demo
   artifacts:
@@ -385,6 +388,11 @@ plan_all:
       optional: true
   script:
     - make plan_all
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/8
+      - ./**/.terraform
   artifacts:
     paths:
       - ./**/tfplan.binary
@@ -409,6 +417,11 @@ apply_terraform_demo:
       optional: true
   dependencies:
     - aws-creds
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo/.terraform
   script:
     - make apply_terraform_demo
   rules:
@@ -423,6 +436,11 @@ apply_all:
   needs:
     - job: plan_all
       optional: true
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - ./**/.terraform
   script:
     - make apply_all
   rules:
@@ -447,5 +465,10 @@ delete_terraform_demo:
       optional: true
   dependencies:
     - aws-creds
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo/.terraform
   script:
     - make delete_terraform_demo
