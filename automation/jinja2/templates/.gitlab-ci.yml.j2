@@ -390,6 +390,11 @@ validate_{{ slug }}:
   rules:
     - changes:
       - {{ plan_name }}/**/*
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+      changes:
+        paths:
+          - {{ plan_name }}/**/*
+        compare_to: "refs/heads/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
     - if: $BUILD_TYPE == "FORCE"
 {% endfor %}
 
@@ -437,6 +442,11 @@ plan_{{ slug }}:
   rules:
     - changes:
       - {{ plan_name }}/**/*
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+      changes:
+        paths:
+          - {{ plan_name }}/**/*
+        compare_to: "refs/heads/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
     - if: $BUILD_TYPE == "FORCE"
 {% endfor %}
 
@@ -476,7 +486,7 @@ apply_{{ slug }}:
     - make apply_{{ slug }}
   rules:
 {% if TF_APPLY_ONLY_MAIN %}
-    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "{{ GIT_MAIN_BRANCH }}" || $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}"
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}"
       changes:
       - {{ plan_name }}/**/*
     - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}" && $BUILD_TYPE == "FORCE"
@@ -491,9 +501,7 @@ apply_all:
     - make apply_all
 {% if TF_APPLY_ONLY_MAIN %}
   rules:
-    - if: $BUILD_TYPE != "ALL"
-      when: never
-    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "{{ GIT_MAIN_BRANCH }}" || $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}"
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}" && $BUILD_TYPE == "ALL"
 {% endif %}
 {% endif %}
 
