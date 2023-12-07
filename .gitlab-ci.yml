@@ -326,7 +326,7 @@ validate_terraform_demo:
       changes:
         paths:
           - terraform/demo/**/*
-        compare_to: "refs/heads/main"
+        compare_to: "refs/heads/master"
     - if: $BUILD_TYPE == "FORCE"
     - when: never
 
@@ -375,7 +375,7 @@ plan_terraform_demo:
       changes:
         paths:
           - terraform/demo/**/*
-        compare_to: "refs/heads/main"
+        compare_to: "refs/heads/master"
     - if: $BUILD_TYPE == "FORCE"
     - when: never
 
@@ -413,10 +413,10 @@ apply_terraform_demo:
   script:
     - make apply_terraform_demo
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "push"
       changes:
       - terraform/demo/**/*
-    - if: $CI_COMMIT_BRANCH == "main" && $BUILD_TYPE == "FORCE"
+    - if: $CI_COMMIT_BRANCH == "master" && $BUILD_TYPE == "FORCE"
     - when: never
 
 apply_all:
@@ -427,7 +427,7 @@ apply_all:
   script:
     - make apply_all
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" && $BUILD_TYPE == "ALL"
+    - if: $CI_COMMIT_BRANCH == "master" && $BUILD_TYPE == "ALL"
 
 ########################################################################################################################
 # DELETE
