@@ -320,13 +320,12 @@ validate_terraform_demo:
       - terraform/demo/.terraform
   rules:
     - changes:
-        paths:
-          - terraform/demo/**/*
+      - terraform/demo/**/*
     - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
       changes:
         paths:
           - terraform/demo/**/*
-        compare_to: 'refs/heads/{{ CI_MERGE_REQUEST_TARGET_BRANCH_NAME }}'
+        compare_to: "refs/heads/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
     - if: $BUILD_TYPE == "FORCE"
 
 validate_all:
@@ -367,8 +366,7 @@ plan_terraform_demo:
       - terraform/demo/tfplan.json
   rules:
     - changes:
-        paths:
-          - terraform/demo/**/*
+      - terraform/demo/**/*
     - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
       changes:
         paths:
@@ -418,7 +416,7 @@ apply_all:
   script:
     - make apply_all
   rules:
-    - if: $BUILD_TYPE != "ALL" && $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "main" && $BUILD_TYPE == "ALL"
 
 ########################################################################################################################
 # DELETE
