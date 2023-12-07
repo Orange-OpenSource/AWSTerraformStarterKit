@@ -387,11 +387,10 @@ validate_{{ slug }}:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
       - {{ plan_name }}/.terraform
-  only:
-    changes:
+  rules:
+    - changes:
       - {{ plan_name }}/**/*
-    variables:
-      - $BUILD_TYPE == "FORCE"
+     - if: $BUILD_TYPE == "FORCE"
 {% endfor %}
 
 {% if  GITLAB_JOBS["plan_all"]  %}
@@ -408,9 +407,8 @@ validate_all:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
       - ./**/.terraform
-  only:
-    variables:
-      - $BUILD_TYPE == "ALL"
+  rules:
+    - if: $BUILD_TYPE == "ALL"
 {% endif %}
 
 ########################################################################################################################
@@ -436,11 +434,10 @@ plan_{{ slug }}:
     paths:
       - {{ plan_name }}/{{ environ('PLAN_BINARY_FILE') }}
       - {{ plan_name }}/{{ environ('PLAN_JSON_FILE') }}
-  only:
-    changes:
+  rules:
+    - changes:
       - {{ plan_name }}/**/*
-    variables:
-      - $BUILD_TYPE == "FORCE"
+    - if: $BUILD_TYPE == "FORCE"
 {% endfor %}
 
 {% if  GITLAB_JOBS["plan_all"]  %}
@@ -453,9 +450,8 @@ plan_all:
     paths:
       - ./**/{{ environ('PLAN_BINARY_FILE') }}
       - ./**/{{ environ('PLAN_JSON_FILE') }}
-  only:
-    variables:
-      - $BUILD_TYPE == "ALL"
+  rules:
+    - if: $BUILD_TYPE == "ALL"
 {% endif %}
 
 ########################################################################################################################
@@ -478,13 +474,13 @@ apply_{{ slug }}:
     - aws-creds
   script:
     - make apply_{{ slug }}
-  only:
+  rules:
 {% if TF_APPLY_ONLY_MAIN %}
-    refs:
-      - main
-{% endif %}
-    changes:
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "{{ GIT_MAIN_BRANCH }}" || $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}"
+      changes:
       - {{ plan_name }}/**/*
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}" && $BUILD_TYPE == "FORCE"
+{% endif %}
 {% endfor %}
 
 {% if  GITLAB_JOBS["apply_all"]  %}
@@ -494,11 +490,8 @@ apply_all:
   script:
     - make apply_all
 {% if TF_APPLY_ONLY_MAIN %}
-  only:
-    refs:
-      - main
-    variables:
-      - $BUILD_TYPE == "ALL"
+  rules:
+    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $BUILD_TYPE == "ALL"
 {% endif %}
 {% endif %}
 
@@ -510,6 +503,8 @@ apply_all:
   allow_failure: false
   stage: delete
   when: manual
+  rules:
+    - if: $PHASE == "DESTROY" && $BUILD_TYPE == "FORCE"
 {% for plan_name in plans_delete +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
@@ -522,8 +517,4 @@ delete_{{ slug }}:
     - aws-creds
   script:
     - make delete_{{ slug }}
-  only:
-    variables:
-      - $PHASE == "DESTROY"
-      - $BUILD_TYPE == "FORCE"
 {% endfor %}
