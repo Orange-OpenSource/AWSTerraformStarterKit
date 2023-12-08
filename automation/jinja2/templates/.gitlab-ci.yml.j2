@@ -54,6 +54,11 @@ variables:
   {%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
   {%- set runners = environ('CICD_RUNNER_TAGS').split(',') %}
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' # only on pull request
+    - if: $CI_COMMIT_BRANCH == '{{ GIT_MAIN_BRANCH }}' # only main branch
+
 stages:
   - prepare
   - quality-checks
@@ -392,7 +397,7 @@ validate_{{ slug }}:
     - if: $CI_PIPELINE_SOURCE == "push"
       changes:
       - {{ plan_name }}/**/*
-    - if: $CI_OPEN_MERGE_REQUESTS
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         paths:
           - {{ plan_name }}/**/*
@@ -406,7 +411,7 @@ validate_all:
   <<: *validate_job
   script:
     - make init_all
-    - make validate_all
+    - make validate
   artifacts:
     paths:
       - ./**/{{ environ('PLAN_BINARY_FILE') }}
@@ -446,7 +451,6 @@ plan_{{ slug }}:
       - {{ plan_name }}/.terraform
       - {{ plan_name }}/.terraform.lock.hcl
   script:
-    - make init_{{ slug }}
     - make plan_{{ slug }}
   artifacts:
     paths:
@@ -456,7 +460,7 @@ plan_{{ slug }}:
     - if: $CI_PIPELINE_SOURCE == "push"
       changes:
       - {{ plan_name }}/**/*
-    - if: $CI_OPEN_MERGE_REQUESTS
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         paths:
           - {{ plan_name }}/**/*
