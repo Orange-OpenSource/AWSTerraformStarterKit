@@ -371,6 +371,7 @@ plan_terraform_demo:
       - terraform/demo/.terraform
       - terraform/demo/.terraform.lock.hcl
   script:
+    - make init_terraform_demo
     - make plan_terraform_demo
   artifacts:
     paths:
