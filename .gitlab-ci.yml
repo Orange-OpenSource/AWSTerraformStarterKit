@@ -318,6 +318,7 @@ validate_terraform_demo:
   script:
     - make init_terraform_demo
     - make validate_terraform_demo
+    - tree -a .
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
@@ -376,6 +377,8 @@ plan_terraform_demo:
       - terraform/demo/.terraform
       - terraform/demo/.terraform.lock.hcl
   script:
+    - tree -a .
+    - printenv | grep ^AWS_
     - make plan_terraform_demo
   artifacts:
     paths:
