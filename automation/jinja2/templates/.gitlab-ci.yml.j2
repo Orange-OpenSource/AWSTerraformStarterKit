@@ -50,7 +50,6 @@ variables:
   {% endif %}
 
   {%- set plans_install = environ('PLAN_INSTALL_LIST').split(',') -%}
-  {%- set plans_apply = environ('PLAN_APPLY_LIST').split(',') -%}
   {%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
   {%- set runners = environ('CICD_RUNNER_TAGS').split(',') %}
 
@@ -282,7 +281,7 @@ terraform-terrascan:
   allow_failure: true
   stage: quality-checks
   script:
-    - terrascan scan -i terraform --verbose --config-path=./.config/.terrascan_config.toml  {% for plan_name in plans_apply %} --iac-dir={{ plan_name }}{% endfor %}
+    - terrascan scan -i terraform --verbose --config-path=./.config/.terrascan_config.toml  {% for plan_name in plans_install %} --iac-dir={{ plan_name }}{% endfor %}
 
 {% endif %}
 {% if  GITLAB_JOBS["md-lint"]  %}
@@ -379,7 +378,7 @@ driftctl:
   dependencies:
     - aws-creds
   allow_failure: false
-{% for plan_name in plans_apply +%}
+{% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 validate_{{ slug }}:
@@ -433,7 +432,7 @@ validate_all:
   extends: .terraform-base
   stage: plan
   allow_failure: false
-{% for plan_name in plans_apply %}
+{% for plan_name in plans_install %}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 plan_{{ slug }}:
@@ -502,7 +501,7 @@ plan_all:
   stage: apply
   allow_failure: false
   when: manual
-{% for plan_name in plans_apply +%}
+{% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
 apply_{{ slug }}:
