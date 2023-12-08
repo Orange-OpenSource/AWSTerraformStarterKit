@@ -311,6 +311,7 @@ driftctl:
 validate_terraform_demo:
   <<: *validate_job
   script:
+    - make init_terraform_demo
     - make validate_terraform_demo
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
@@ -322,7 +323,7 @@ validate_terraform_demo:
     - if: $CI_PIPELINE_SOURCE == "push"
       changes:
       - terraform/demo/**/*
-    - if: $CI_OPEN_MERGE_REQUESTS
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         paths:
           - terraform/demo/**/*
@@ -333,6 +334,7 @@ validate_terraform_demo:
 validate_all:
   <<: *validate_job
   script:
+    - make init_all
     - make validate
   artifacts:
     paths:
@@ -378,7 +380,7 @@ plan_terraform_demo:
     - if: $CI_PIPELINE_SOURCE == "push"
       changes:
       - terraform/demo/**/*
-    - if: $CI_OPEN_MERGE_REQUESTS
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         paths:
           - terraform/demo/**/*
