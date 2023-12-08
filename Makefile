@@ -127,7 +127,6 @@ endif
 terraform_validate:
 ifdef CICD_MODE
 	cd ${CURRENT_DIR} && tfenv install
-	cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 	cd ${CURRENT_DIR} && terraform validate
 else
 	$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
@@ -163,11 +162,9 @@ terraform_apply_commands:
 ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
-		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
 else
 		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${VAR_PARAMETERS}"
 endif
 endif
@@ -189,7 +186,6 @@ terraform_plan_commands:
 ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && $(TFENV_EXEC) install
-		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 		cd ${CURRENT_DIR} && terraform plan ${VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}
 		cd ${CURRENT_DIR} && terraform show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}
 else
@@ -207,7 +203,6 @@ terraform_destroy_commands:
 ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
-		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 		cd ${CURRENT_DIR} && terraform destroy ${VAR_PARAMETERS}
 else
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
