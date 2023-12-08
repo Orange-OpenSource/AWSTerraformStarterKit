@@ -388,14 +388,17 @@ plan_terraform_demo:
 plan_all:
   <<: *plan_job
   needs:
+    - aws-creds
     - job: validate_all
       optional: true
+  dependencies:
+    - aws-creds
   script:
     - make plan_all
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
-      - .terraform.d/plugin-cache/8
+      - .terraform.d/plugin-cache/
       - ./**/.terraform
   artifacts:
     paths:
@@ -421,6 +424,7 @@ apply_terraform_demo:
       optional: true
   dependencies:
     - aws-creds
+    - plan_terraform_demo
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
@@ -438,8 +442,12 @@ apply_terraform_demo:
 apply_all:
   <<: *apply_job
   needs:
+    - aws-creds
     - job: plan_all
       optional: true
+  dependencies:
+    - aws-creds
+    - plan_all
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
@@ -469,6 +477,7 @@ delete_terraform_demo:
       optional: true
   dependencies:
     - aws-creds
+    - plan_terraform_demo
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
