@@ -184,6 +184,21 @@ stages:
    {% endfor %}
 
 {% endif %}
+{% if  GITLAB_JOBS["terraform-compliance"]  %}
+.terraform-compliance:
+  image:
+    name: eerkunt/terraform-compliance:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - apt-get update && apt-get install -y make
+  tags:
+  {% for runner in runners %}
+    - {{ runner }}
+   {% endfor %}
+
+{% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 .terraform-terrascan:
   image:
@@ -271,6 +286,19 @@ terraform-format:
     - make format
 
 {% endif %}
+{% if  GITLAB_JOBS["terraform-validate"]  %}
+terraform-validate:
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
+  extends: .terraform-base
+  allow_failure: true
+  stage: quality-checks
+  script:
+    - make validate
+
+{% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 terraform-terrascan:
   needs:
@@ -305,6 +333,8 @@ shell-lint:
     - aws-creds
   extends: .shelllint
   allow_failure: true
+  before_script:
+    - apk --no-cache --update  add make
   stage: quality-checks
   script:
     - make shell_lint
@@ -560,6 +590,10 @@ apply_all:
 ########################################################################################################################
 .delete_job: &delete_job
   extends: .terraform-base
+  needs:
+    - aws-creds
+  dependencies:
+    - aws-creds
   allow_failure: false
   stage: delete
   when: manual
