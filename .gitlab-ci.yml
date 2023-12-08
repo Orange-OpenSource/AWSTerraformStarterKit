@@ -70,6 +70,9 @@ stages:
     - shared
 
 .aws_get_creds: &aws_get_creds
+  variables:
+    AWS_ACCESS_KEY_ID: $CI_AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $CI_AWS_SECRET_ACCESS_KEY
   script: |
     #!/usr/bin/env bash
     echo "Getting temporary credentials associated to assume role"
@@ -318,7 +321,6 @@ validate_terraform_demo:
   script:
     - make init_terraform_demo
     - make validate_terraform_demo
-    - ls -ahR terraform/demo/.terraform
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
@@ -377,8 +379,6 @@ plan_terraform_demo:
       - terraform/demo/.terraform
       - terraform/demo/.terraform.lock.hcl
   script:
-    - ls -ahR terraform/demo/.terraform
-    - printenv | grep ^AWS_
     - make plan_terraform_demo
   artifacts:
     paths:
