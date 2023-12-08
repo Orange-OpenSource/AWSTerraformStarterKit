@@ -54,11 +54,6 @@ variables:
   {%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
   {%- set runners = environ('CICD_RUNNER_TAGS').split(',') %}
 
-cache:
-  key: $CI_COMMIT_REF_SLUG
-  paths:
-    - .terraform.d/plugin-cache/
-
 stages:
   - prepare
   - quality-checks
@@ -226,6 +221,10 @@ aws-creds:
 terraform-prepare:
   stage: prepare
   <<: *terraform_base
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
   script:
   - mkdir -p $TF_PLUGIN_CACHE_DIR
 
@@ -386,16 +385,20 @@ validate_{{ slug }}:
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
+      - .terraform.d/plugin-cache/
       - {{ plan_name }}/.terraform
+      - {{ plan_name }}/.terraform.lock.hcl
   rules:
-    - changes:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
       - {{ plan_name }}/**/*
-    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - if: $CI_OPEN_MERGE_REQUESTS
       changes:
         paths:
           - {{ plan_name }}/**/*
-        compare_to: "refs/heads/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        compare_to: "refs/heads/{{ GIT_MAIN_BRANCH }}"
     - if: $BUILD_TYPE == "FORCE"
+    - when: never
 {% endfor %}
 
 {% if  GITLAB_JOBS["plan_all"]  %}
@@ -411,7 +414,9 @@ validate_all:
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
+      - .terraform.d/plugin-cache/
       - ./**/.terraform
+      - ./**/.terraform.lock.hcl
   rules:
     - if: $BUILD_TYPE == "ALL"
 {% endif %}
@@ -430,9 +435,16 @@ plan_{{ slug }}:
   <<: *plan_job
   needs:
     - aws-creds
-    - validate_{{ slug }}
+    - job: validate_{{ slug }}
+      optional: true
   dependencies:
     - aws-creds
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - {{ plan_name }}/.terraform
+      - {{ plan_name }}/.terraform.lock.hcl
   script:
     - make plan_{{ slug }}
   artifacts:
@@ -440,22 +452,35 @@ plan_{{ slug }}:
       - {{ plan_name }}/{{ environ('PLAN_BINARY_FILE') }}
       - {{ plan_name }}/{{ environ('PLAN_JSON_FILE') }}
   rules:
-    - changes:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
       - {{ plan_name }}/**/*
-    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - if: $CI_OPEN_MERGE_REQUESTS
       changes:
         paths:
           - {{ plan_name }}/**/*
-        compare_to: "refs/heads/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        compare_to: "refs/heads/{{ GIT_MAIN_BRANCH }}"
     - if: $BUILD_TYPE == "FORCE"
+    - when: never
 {% endfor %}
 
 {% if  GITLAB_JOBS["plan_all"]  %}
 plan_all:
   <<: *plan_job
-  needs: [validate_all]
+  needs:
+    - aws-creds
+    - job: validate_all
+      optional: true
+  dependencies:
+    - aws-creds
   script:
     - make plan_all
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - ./**/.terraform
+      - ./**/.terraform.lock.hcl
   artifacts:
     paths:
       - ./**/{{ environ('PLAN_BINARY_FILE') }}
@@ -479,24 +504,45 @@ apply_{{ slug }}:
   <<: *apply_job
   needs:
     - aws-creds
-    - plan_{{ slug }}
+    - job: plan_{{ slug }}
+      optional: true
   dependencies:
     - aws-creds
+    - plan_{{ slug }}
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - {{ plan_name }}/.terraform
+      - {{ plan_name }}/.terraform.lock.hcl
   script:
     - make apply_{{ slug }}
   rules:
 {% if TF_APPLY_ONLY_MAIN %}
-    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}"
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}" && $CI_PIPELINE_SOURCE == "push"
       changes:
       - {{ plan_name }}/**/*
     - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}" && $BUILD_TYPE == "FORCE"
+    - when: never
 {% endif %}
 {% endfor %}
 
 {% if  GITLAB_JOBS["apply_all"]  %}
 apply_all:
   <<: *apply_job
-  needs: [plan_all]
+  needs:
+    - aws-creds
+    - job: plan_all
+      optional: true
+  dependencies:
+    - aws-creds
+    - plan_all
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - ./**/.terraform
+      - ./**/.terraform.lock.hcl
   script:
     - make apply_all
 {% if TF_APPLY_ONLY_MAIN %}
@@ -522,9 +568,17 @@ delete_{{ slug }}:
   <<: *delete_job
   needs:
     - aws-creds
-    - plan_{{ slug }}
+    - job: plan_{{ slug }}
+      optional: true
   dependencies:
     - aws-creds
+    - plan_{{ slug }}
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - {{ plan_name }}/.terraform
+      - {{ plan_name }}/.terraform.lock.hcl
   script:
     - make delete_{{ slug }}
 {% endfor %}
