@@ -311,7 +311,6 @@ driftctl:
 validate_terraform_demo:
   <<: *validate_job
   script:
-    - make init_terraform_demo
     - make validate_terraform_demo
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
@@ -334,8 +333,7 @@ validate_terraform_demo:
 validate_all:
   <<: *validate_job
   script:
-    - make init_all
-    - make validate_all
+    - make validate
   artifacts:
     paths:
       - ./**/tfplan.binary
@@ -371,7 +369,6 @@ plan_terraform_demo:
       - terraform/demo/.terraform
       - terraform/demo/.terraform.lock.hcl
   script:
-    - make init_terraform_demo
     - make plan_terraform_demo
   artifacts:
     paths:
