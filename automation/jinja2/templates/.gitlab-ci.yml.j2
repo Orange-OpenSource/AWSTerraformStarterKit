@@ -50,7 +50,6 @@ variables:
   {% endif %}
 
   {%- set plans_install = environ('PLAN_INSTALL_LIST').split(',') -%}
-  {%- set plans_apply = environ('PLAN_APPLY_LIST').split(',') -%}
   {%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
   {%- set runners = environ('CICD_RUNNER_TAGS').split(',') %}
 
