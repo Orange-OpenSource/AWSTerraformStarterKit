@@ -71,6 +71,9 @@ stages:
     - shared
 
 .aws_get_creds: &aws_get_creds
+  variables:
+    AWS_ACCESS_KEY_ID: $CI_AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $CI_AWS_SECRET_ACCESS_KEY
   script: |
     #!/usr/bin/env bash
     echo "Getting temporary credentials associated to assume role"
