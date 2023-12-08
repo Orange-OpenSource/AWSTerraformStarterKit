@@ -446,6 +446,7 @@ plan_{{ slug }}:
       - {{ plan_name }}/.terraform
       - {{ plan_name }}/.terraform.lock.hcl
   script:
+    - make init_{{ slug }}
     - make plan_{{ slug }}
   artifacts:
     paths:
