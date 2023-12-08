@@ -168,10 +168,12 @@ stages:
 aws-creds:
   extends: .aws-cli
   stage: prepare
+  when: always
   <<: *aws_get_creds
 
 terraform-prepare:
   stage: prepare
+  when: always
   <<: *terraform_base
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
