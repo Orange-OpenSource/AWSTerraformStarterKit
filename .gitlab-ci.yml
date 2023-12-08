@@ -318,6 +318,7 @@ validate_terraform_demo:
     paths:
       - .terraform.d/plugin-cache/
       - terraform/demo/.terraform
+      - terraform/demo/.terraform.lock.hcl
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"
       changes:
@@ -344,6 +345,7 @@ validate_all:
     paths:
       - .terraform.d/plugin-cache/
       - ./**/.terraform
+      - ./**/.terraform.lock.hcl
   rules:
     - if: $BUILD_TYPE == "ALL"
 
@@ -367,6 +369,7 @@ plan_terraform_demo:
     paths:
       - .terraform.d/plugin-cache/
       - terraform/demo/.terraform
+      - terraform/demo/.terraform.lock.hcl
   script:
     - make plan_terraform_demo
   artifacts:
@@ -400,6 +403,7 @@ plan_all:
     paths:
       - .terraform.d/plugin-cache/
       - ./**/.terraform
+      - ./**/.terraform.lock.hcl
   artifacts:
     paths:
       - ./**/tfplan.binary
@@ -430,6 +434,7 @@ apply_terraform_demo:
     paths:
       - .terraform.d/plugin-cache/
       - terraform/demo/.terraform
+      - terraform/demo/.terraform.lock.hcl
   script:
     - make apply_terraform_demo
   rules:
@@ -453,6 +458,7 @@ apply_all:
     paths:
       - .terraform.d/plugin-cache/
       - ./**/.terraform
+      - ./**/.terraform.lock.hcl
   script:
     - make apply_all
   rules:
@@ -483,5 +489,6 @@ delete_terraform_demo:
     paths:
       - .terraform.d/plugin-cache/
       - terraform/demo/.terraform
+      - terraform/demo/.terraform.lock.hcl
   script:
     - make delete_terraform_demo
