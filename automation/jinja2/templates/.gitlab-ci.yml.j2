@@ -286,19 +286,6 @@ terraform-format:
     - make format
 
 {% endif %}
-{% if  GITLAB_JOBS["terraform-validate"]  %}
-terraform-validate:
-  needs:
-    - aws-creds
-  dependencies:
-    - aws-creds
-  extends: .terraform-base
-  allow_failure: true
-  stage: quality-checks
-  script:
-    - make validate
-
-{% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 terraform-terrascan:
   needs:
@@ -435,7 +422,7 @@ validate_{{ slug }}:
     - when: never
 {% endfor %}
 
-{% if  GITLAB_JOBS["plan_all"]  %}
+{% if  GITLAB_JOBS["terraform-validate"]  %}
 validate_all:
   <<: *validate_job
   script:
@@ -590,10 +577,6 @@ apply_all:
 ########################################################################################################################
 .delete_job: &delete_job
   extends: .terraform-base
-  needs:
-    - aws-creds
-  dependencies:
-    - aws-creds
   allow_failure: false
   stage: delete
   when: manual
@@ -618,9 +601,5 @@ delete_{{ slug }}:
       - {{ plan_name }}/.terraform
       - {{ plan_name }}/.terraform.lock.hcl
   script:
-    - make delete_{{ slug }}
-  only:
-    variables:
-      - $PHASE == "DESTROY"
-      - $BUILD_TYPE == "FORCE"
+    - make destroyauto_{{ slug }}
 {% endfor %}
