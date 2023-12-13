@@ -94,6 +94,14 @@ destroy_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_destroy_commands
 {% endfor %}
 
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+destroyauto_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer automaticaly
+destroyauto_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_destroyauto_commands
+{% endfor %}
+
 
 init_all: ## Init all AWS layers
 init_all:

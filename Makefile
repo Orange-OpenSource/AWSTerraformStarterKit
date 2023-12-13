@@ -210,6 +210,18 @@ else
 endif
 endif
 
+# Terraform commands to delete a stack layer from a binary plan
+terraform_destroyauto_commands:
+ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
+ifdef CICD_MODE
+		cd ${CURRENT_DIR} && tfenv install
+		cd ${CURRENT_DIR} && terraform apply -destroy ${VAR_PARAMETERS} ${PLAN_BINARY_FILE}
+else
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -destroy ${VAR_PARAMETERS} ${PLAN_BINARY_FILE}"
+endif
+endif
+
 ########################################################################################################################
 #  LOCAL DEV DOCKER
 ########################################################################################################################
@@ -376,6 +388,9 @@ destroy_terraform_demo: ## Uninstall AWS terraform/demo layer
 destroy_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_destroy_commands
 
+destroyauto_terraform_demo: ## Uninstall AWS terraform/demo layer automatically
+destroyauto_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_destroyauto_commands
 
 init_all: ## Init all AWS layers
 init_all:
