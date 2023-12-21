@@ -56,7 +56,7 @@ variables:
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' # only on pull request
-    - if: $CI_COMMIT_BRANCH == '{{ GIT_MAIN_BRANCH }}' # only main branch
+    - if: $CI_COMMIT_BRANCH == '{{ GIT_MAIN_BRANCH | default('main') }}' # only main branch
 
 stages:
   - prepare
@@ -417,7 +417,7 @@ validate_{{ slug }}:
       changes:
         paths:
           - {{ plan_name }}/**/*
-        compare_to: "refs/heads/{{ GIT_MAIN_BRANCH }}"
+        compare_to: "refs/heads/{{ GIT_MAIN_BRANCH | default('main') }}"
     - if: $BUILD_TYPE == "FORCE"
     - when: never
 {% endfor %}
@@ -480,7 +480,7 @@ plan_{{ slug }}:
       changes:
         paths:
           - {{ plan_name }}/**/*
-        compare_to: "refs/heads/{{ GIT_MAIN_BRANCH }}"
+        compare_to: "refs/heads/{{ GIT_MAIN_BRANCH | default('main') }}"
     - if: $BUILD_TYPE == "FORCE"
     - when: never
 {% endfor %}
@@ -540,10 +540,10 @@ apply_{{ slug }}:
     - make apply_{{ slug }}
   rules:
 {% if TF_APPLY_ONLY_MAIN %}
-    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}" && $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH | default('main') }}" && $CI_PIPELINE_SOURCE == "push"
       changes:
       - {{ plan_name }}/**/*
-    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}" && $BUILD_TYPE == "FORCE"
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH | default('main') }}" && $BUILD_TYPE == "FORCE"
     - when: never
 {% endif %}
 {% endfor %}
@@ -568,7 +568,7 @@ apply_all:
     - make apply_all
 {% if TF_APPLY_ONLY_MAIN %}
   rules:
-    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH }}" && $BUILD_TYPE == "ALL"
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH | default('main') }}" && $BUILD_TYPE == "ALL"
 {% endif %}
 {% endif %}
 
