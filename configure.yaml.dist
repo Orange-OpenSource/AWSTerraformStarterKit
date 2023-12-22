@@ -16,8 +16,8 @@ PROJECT_DIR:
 # Docker Compose image tags to use
 ########################################################################################################################
 TFENV_IMAGE_TAG: latest
-TFLINT_IMAGE_TAG: v0.39.3
-PRECOMMIT_IMAGE_TAG: v1.74.1
+TFLINT_IMAGE_TAG: v0.49.0
+PRECOMMIT_IMAGE_TAG: v1.83.6
 DRIFTCTL_IMAGE_TAG: latest
 DOTENV_LINTER_IMAGE_TAG: latest
 MARKDOWN_LINTER_IMAGE_TAG: latest
@@ -57,6 +57,7 @@ CICD_ROLE_NAME: XXXXXX-CiCd-CrossAccountRole
 CICD_ACCOUNT_ID: 123546789123
 
 # Run Terraform apply only on main branch
+GIT_MAIN_BRANCH: main
 TF_APPLY_ONLY_MAIN: True
 
 # Set Terraform Token key and value to access Terraform Modules stored into private GitLab repo

@@ -73,6 +73,14 @@ plan_{{ slug }}:
 {% for plan_name in plans_install %}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
+apply_{{ slug }}: ## Apply AWS {{ plan_name }} layer
+apply_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_apply_commands
+{% endfor %}
+
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
 install_{{ slug }}: ## Install AWS {{ plan_name }} layer
 install_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_install_commands
@@ -84,6 +92,14 @@ install_{{ slug }}:
 destroy_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer
 destroy_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_destroy_commands
+{% endfor %}
+
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
+destroyauto_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer automaticaly
+destroyauto_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_destroyauto_commands
 {% endfor %}
 
 

@@ -1,12 +1,25 @@
 ---
 variables:
-  PHASE: BUILD
+  PHASE:
+    value: BUILD
+    options:
+      - BUILD
+      - DESTROY
+    description: When set to DESTROY plan and delete 
+  BUILD_TYPE:
+    value: CHANGES
+    options:
+      - CHANGES
+      - FORCE
+      - ALL
+    description: When set to CHANGES only changes are built, when set to ALL all plan are plan build
   CICD_MODE: "true"
   GIT_SUBMODULE_STRATEGY: "recursive"
   PRINT_DEBUG: "false"
   {% if  TF_TOKEN_MODULE_ACCESS %}
   {{ TF_TOKEN_MODULE_ACCESS_KEY }}: {{ TF_TOKEN_MODULE_ACCESS_VALUE }}
   {% endif %}
+  TF_PLUGIN_CACHE_DIR: $CI_PROJECT_DIR/.terraform.d/plugin-cache
 
   # Docker Image Tag
   TFLINT_IMAGE_TAG: {{ environ('TFLINT_IMAGE_TAG') }}
@@ -40,8 +53,13 @@ variables:
   {%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
   {%- set runners = environ('CICD_RUNNER_TAGS').split(',') %}
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' # only on pull request
+    - if: $CI_COMMIT_BRANCH == '{{ GIT_MAIN_BRANCH | default('main') }}' # only main branch
+
 stages:
-  - aws-creds
+  - prepare
   - quality-checks
   - drift
   - plan
@@ -81,9 +99,7 @@ stages:
     reports:
       dotenv: creds.env
 
-.terraform-base:
-  before_script:
-    - rm -rf .terraform
+.terraform-base: &terraform_base
   image:
     name: marmarama/tfenv:$TFENV_IMAGE_TAG
     entrypoint:
@@ -132,6 +148,8 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - apk --no-cache --update  add make
   tags:
   {% for runner in runners %}
     - {{ runner }}
@@ -215,27 +233,20 @@ stages:
 {% if  GITLAB_JOBS["aws-creds"]  %}
 aws-creds:
   extends: .aws-cli
-  stage: aws-creds
+  stage: prepare
   <<: *aws_get_creds
 
 {% endif %}
-{% if  GITLAB_JOBS["terraform-compliance"]  %}
-########################################################################################################################
-# TESTS
-########################################################################################################################
-terraform-compliance:
-  needs:
-    - aws-creds
-    - plan_all
-  dependencies:
-    - aws-creds
-  extends: .terraform-compliance
-  allow_failure: true
-  stage: tests
+terraform-prepare:
+  stage: prepare
+  <<: *terraform_base
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
   script:
-    - make terraform_compliance
+  - mkdir -p $TF_PLUGIN_CACHE_DIR
 
-{% endif %}
 ########################################################################################################################
 # QUALITY CHECKS
 ########################################################################################################################
@@ -251,7 +262,11 @@ terraform-lint:
 {% endif %}
 {% if  GITLAB_JOBS["precommit"]  %}
 precommit:
-  needs: []
+  needs:
+    - aws-creds
+    - terraform-prepare
+  dependencies:
+    - aws-creds
   extends: .precommit
   allow_failure: true
   stage: quality-checks
@@ -271,19 +286,6 @@ terraform-format:
     - make format
 
 {% endif %}
-{% if  GITLAB_JOBS["terraform-validate"]  %}
-terraform-validate:
-  needs:
-    - aws-creds
-  dependencies:
-    - aws-creds
-  extends: .terraform-base
-  allow_failure: true
-  stage: quality-checks
-  script:
-    - make validate
-
-{% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 terraform-terrascan:
   needs:
@@ -294,7 +296,7 @@ terraform-terrascan:
   allow_failure: true
   stage: quality-checks
   script:
-    - terrascan scan -i terraform --verbose --config-path=./.terrascan_config.toml  {% for plan_name in plans_install %} --iac-dir={{ plan_name }}{% endfor %}
+    - terrascan scan -i terraform --verbose --config-path=./.config/.terrascan_config.toml  {% for plan_name in plans_install %} --iac-dir={{ plan_name }}{% endfor %}
 
 {% endif %}
 {% if  GITLAB_JOBS["md-lint"]  %}
@@ -382,41 +384,130 @@ driftctl:
 
 {% endif %}
 ########################################################################################################################
-# PLAN
+# VALIDATE
 ########################################################################################################################
-.plan_job: &plan_job
+.validate_job: &validate_job
   extends: .terraform-base
-  stage: plan
-  needs:
+  stage: quality-checks
+  needs: 
     - aws-creds
+    - terraform-prepare
   dependencies:
     - aws-creds
   allow_failure: false
 {% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
+validate_{{ slug }}:
+  <<: *validate_job
+  script:
+    - make init_{{ slug }}
+    - make validate_{{ slug }}
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - {{ plan_name }}/.terraform
+      - {{ plan_name }}/.terraform.lock.hcl
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
+      - {{ plan_name }}/**/*
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - {{ plan_name }}/**/*
+        compare_to: "refs/heads/{{ GIT_MAIN_BRANCH | default('main') }}"
+    - if: $BUILD_TYPE == "FORCE"
+    - when: never
+{% endfor %}
+
+{% if  GITLAB_JOBS["terraform-validate"]  %}
+validate_all:
+  <<: *validate_job
+  script:
+    - make init_all
+    - make validate
+  artifacts:
+    paths:
+      - ./**/{{ environ('PLAN_BINARY_FILE') }}
+      - ./**/{{ environ('PLAN_JSON_FILE') }}
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - ./**/.terraform
+      - ./**/.terraform.lock.hcl
+  rules:
+    - if: $BUILD_TYPE == "ALL"
+{% endif %}
+
+########################################################################################################################
+# PLAN
+########################################################################################################################
+.plan_job: &plan_job
+  extends: .terraform-base
+  stage: plan
+  allow_failure: false
+{% for plan_name in plans_install %}
+{% set path = plan_name.split('/') %}
+{% set slug = plan_name.replace('/',"_") %}
 plan_{{ slug }}:
   <<: *plan_job
+  needs:
+    - aws-creds
+    - job: validate_{{ slug }}
+      optional: true
+  dependencies:
+    - aws-creds
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - {{ plan_name }}/.terraform
+      - {{ plan_name }}/.terraform.lock.hcl
   script:
     - make plan_{{ slug }}
   artifacts:
     paths:
       - {{ plan_name }}/{{ environ('PLAN_BINARY_FILE') }}
       - {{ plan_name }}/{{ environ('PLAN_JSON_FILE') }}
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
       - {{ plan_name }}/**/*
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - {{ plan_name }}/**/*
+        compare_to: "refs/heads/{{ GIT_MAIN_BRANCH | default('main') }}"
+    - if: $BUILD_TYPE == "FORCE"
+    - when: never
 {% endfor %}
 
 {% if  GITLAB_JOBS["plan_all"]  %}
 plan_all:
   <<: *plan_job
+  needs:
+    - aws-creds
+    - job: validate_all
+      optional: true
+  dependencies:
+    - aws-creds
   script:
     - make plan_all
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - ./**/.terraform
+      - ./**/.terraform.lock.hcl
   artifacts:
     paths:
       - ./**/{{ environ('PLAN_BINARY_FILE') }}
       - ./**/{{ environ('PLAN_JSON_FILE') }}
+  rules:
+    - if: $BUILD_TYPE == "ALL"
 {% endif %}
 
 ########################################################################################################################
@@ -427,8 +518,6 @@ plan_all:
   stage: apply
   allow_failure: false
   when: manual
-  dependencies:
-    - aws-creds
 {% for plan_name in plans_install +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
@@ -436,28 +525,50 @@ apply_{{ slug }}:
   <<: *apply_job
   needs:
     - aws-creds
+    - job: plan_{{ slug }}
+      optional: true
+  dependencies:
+    - aws-creds
     - plan_{{ slug }}
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - {{ plan_name }}/.terraform
+      - {{ plan_name }}/.terraform.lock.hcl
   script:
-    - make install_{{ slug }}
-  only:
+    - make apply_{{ slug }}
+  rules:
 {% if TF_APPLY_ONLY_MAIN %}
-    refs:
-      - main
-{% endif %}
-    changes:
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH | default('main') }}" && $CI_PIPELINE_SOURCE == "push"
+      changes:
       - {{ plan_name }}/**/*
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH | default('main') }}" && $BUILD_TYPE == "FORCE"
+    - when: never
+{% endif %}
 {% endfor %}
 
 {% if  GITLAB_JOBS["apply_all"]  %}
 apply_all:
   <<: *apply_job
-  needs: [aws-creds, plan_all]
+  needs:
+    - aws-creds
+    - job: plan_all
+      optional: true
+  dependencies:
+    - aws-creds
+    - plan_all
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - ./**/.terraform
+      - ./**/.terraform.lock.hcl
   script:
-    - make install_all
+    - make apply_all
 {% if TF_APPLY_ONLY_MAIN %}
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_COMMIT_BRANCH == "{{ GIT_MAIN_BRANCH | default('main') }}" && $BUILD_TYPE == "ALL"
 {% endif %}
 {% endif %}
 
@@ -466,28 +577,29 @@ apply_all:
 ########################################################################################################################
 .delete_job: &delete_job
   extends: .terraform-base
-  needs:
-    - aws-creds
-  dependencies:
-    - aws-creds
   allow_failure: false
   stage: delete
   when: manual
-  only:
-    variables:
-      - $PHASE == "DESTROY"
+  rules:
+    - if: $PHASE == "DESTROY" && $BUILD_TYPE == "FORCE"
 {% for plan_name in plans_delete +%}
 {% set path = plan_name.split('/') %}
 {% set slug = plan_name.replace('/',"_") %}
-delete_{{ slug}}:
+delete_{{ slug }}:
   <<: *delete_job
+  needs:
+    - aws-creds
+    - job: plan_{{ slug }}
+      optional: true
+  dependencies:
+    - aws-creds
+    - plan_{{ slug }}
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - {{ plan_name }}/.terraform
+      - {{ plan_name }}/.terraform.lock.hcl
   script:
-    - make delete_{{ slug }}
+    - make destroyauto_{{ slug }}
 {% endfor %}
-
-{% if  GITLAB_JOBS["delete_all"]  %}
-delete_all:
-  <<: *delete_job
-  script:
-    - make delete_all
-{% endif %}
