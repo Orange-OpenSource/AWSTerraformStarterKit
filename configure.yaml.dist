@@ -8,6 +8,9 @@ REGION: eu-west-3
 # Name of the output of the terraform plan
 PLAN_BINARY_FILE: tfplan.binary
 PLAN_JSON_FILE: tfplan.json
+# Relative path to project directory from this file directory.
+PROJECT_ROOT_DIR: 
+PROJECT_DIR: 
 
 ########################################################################################################################
 # Docker Compose image tags to use

@@ -111,7 +111,7 @@ ifdef CICD_MODE
 		-var="module_path=${CURRENT_DIR}" \
 		#-var="backend_bucket_key=${CURRENT_DIR}"
 else
-	VAR_PARAMETERS := -var-file=/workdir/terraform/common.tfvars \
+	VAR_PARAMETERS := -var-file=${DOCKER_WORKDIR}/terraform/common.tfvars \
 		-var-file=${CONFIG_FILE} \
 		-var="module_path=${CURRENT_DIR}" \
 		#-var="backend_bucket_key=${CURRENT_DIR}"
@@ -123,7 +123,7 @@ endif
 console_commands:
 ifndef CICD_MODE
 	$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
-	$(DOCKER_COMPOSE) exec -w /workdir/${CURRENT_DIR} terraform /bin/sh
+	$(DOCKER_COMPOSE) exec -w ${DOCKER_WORKDIR}/${CURRENT_DIR} terraform /bin/sh
 endif
 
 terraform_validate:

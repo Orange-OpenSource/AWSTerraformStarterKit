@@ -8,9 +8,9 @@ services:
     environment:
       PRE_COMMIT_HOME: /tmp
     volumes:
-      - ./:/lint
+      - ./${PROJECT_ROOT_DIR}:/project
       - /tmp:/tmp
-    working_dir: /lint
+    working_dir: ${DOCKER_WORKDIR}
 
   lint:
     container_name: ${COMPOSE_PROJECT_NAME}_lint
@@ -24,14 +24,14 @@ services:
     image: tflint:0.46.1
     user: ${MY_UID}:${MY_GID}
     environment:
-      - HOME=/workdir
+      - HOME=${DOCKER_WORKDIR}
     env_file:
       - .env
     volumes:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
-      - ./:/workdir
-    working_dir: /workdir
+      - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
 
   dotenv-linter:
     container_name: ${COMPOSE_PROJECT_NAME}_dotenv_linter
@@ -44,64 +44,64 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}_markdown_lint
     image: pipelinecomponents/markdownlint:${MARKDOWN_LINTER_IMAGE_TAG}
     volumes:
-      - ./:/md
-    working_dir: /md
+      - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
 
   shell_lint:
     container_name: ${COMPOSE_PROJECT_NAME}_shell_lint
     image: pipelinecomponents/shellcheck:${SHELL_LINTER_IMAGE_TAG}
     user: ${MY_UID}:${MY_GID}
     environment:
-      - HOME=/app
+      - HOME=${DOCKER_WORKDIR}
     env_file:
       - .env
     volumes:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
-      - ./:/app
-    working_dir: /app
+      - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
 
   yaml_lint:
     container_name: ${COMPOSE_PROJECT_NAME}_yaml_lint
     image: pipelinecomponents/yamllint:${YAML_LINTER_IMAGE_TAG}
     user: ${MY_UID}:${MY_GID}
     environment:
-      - HOME=/app
+      - HOME=${DOCKER_WORKDIR}
     env_file:
       - .env
     volumes:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
-      - ./:/code
-    working_dir: /code
+      - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
 
   powershell_lint:
     container_name: ${COMPOSE_PROJECT_NAME}_powershell_lint
     image: cypher0n3/psscriptanalyzer-docker:${POWERSHELL_LINTER_IMAGE_TAG}
     volumes:
-      - ./:/app
-    working_dir: /app
+      - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
 
   json_lint:
     container_name: ${COMPOSE_PROJECT_NAME}_json_lint
     image: pipelinecomponents/jsonlint:${JSON_LINTER_IMAGE_TAG}
     volumes:
-      - ./:/code
-    working_dir: /code
+      - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
 
   trivy:
     container_name: ${COMPOSE_PROJECT_NAME}_trivy
     image: aquasec/trivy:${TRIVY_IMAGE_TAG}
     volumes:
-      - ./:/myapp
-    working_dir: /myapp
+      - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
 
   terrascan:
     container_name: ${COMPOSE_PROJECT_NAME}_terrascan
     image: tenable/terrascan:${TERRASCAN_IMAGE_TAG}
     volumes:
-      - ./:/myapp
-    working_dir: /myapp
+      - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
 
   jinja2docker:
     container_name: jinja2docker
@@ -127,7 +127,7 @@ services:
     volumes:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
-      - ./:/workdir
+      - ./${PROJECT_ROOT_DIR}:/project
 
   terraform_docs:
     container_name: ${COMPOSE_PROJECT_NAME}_terraform_docs
@@ -141,11 +141,11 @@ services:
     image: terraforms-docs:0.16.0
     user: ${MY_UID}:${MY_GID}
     environment:
-      HOME: /workdir
+      HOME: ${DOCKER_WORKDIR}
     env_file:
       - .env
     volumes:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
-      - ./:/workdir
-    working_dir: /workdir
+      - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
