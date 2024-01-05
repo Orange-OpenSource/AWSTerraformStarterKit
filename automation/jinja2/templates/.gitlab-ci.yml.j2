@@ -5,7 +5,7 @@ variables:
     options:
       - BUILD
       - DESTROY
-    description: When set to DESTROY plan and delete 
+    description: When set to DESTROY plan and delete
   BUILD_TYPE:
     value: CHANGES
     options:
@@ -37,7 +37,7 @@ variables:
   TF_VAR_backend_bucket_access_role: "arn:aws:iam::{{ environ('ACCOUNT_ID') }}:role/{{ environ('CICD_ROLE_NAME') }}"
   {% if  CUSTOM_BACKEND_BUCKET_KEY is sameas false %}
   CUSTOM_BACKEND_BUCKET_KEY: auto
-  {% endif %} 
+  {% endif %}
   PLAN_BINARY_FILE: {{ environ('PLAN_BINARY_FILE') }}
   PLAN_JSON_FILE: {{ environ('PLAN_JSON_FILE') }}
   ACCOUNT_ID: {{ environ('ACCOUNT_ID') }}
@@ -389,7 +389,7 @@ driftctl:
 .validate_job: &validate_job
   extends: .terraform-base
   stage: quality-checks
-  needs: 
+  needs:
     - aws-creds
     - terraform-prepare
   dependencies:

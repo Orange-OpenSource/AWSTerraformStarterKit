@@ -118,6 +118,11 @@ endif
 ########################################################################################################################
 #  FUNCTIONS
 ########################################################################################################################
+terraform_check_version_commands:
+ifndef CICD_MODE
+	$(DOCKER_COMPOSE_DEV_TOOLS) run terraform_version_check /workdir/${CURRENT_DIR}
+endif
+
 console_commands:
 ifndef CICD_MODE
 	$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
@@ -364,9 +369,31 @@ console_terraform_demo: ## Connect terraform Docker AWS terraform/demo layer
 console_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo console_commands
 
+tsvc_terraform_demo: ## Check terraform module version terraform/demo
+tsvc_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_check_version_commands
+
+tsvc_all: ## Install all AWS layers
+tsvc_all: tsvc_terraform_demo 
+
+tsvc_terraform_demo: ## Check terraform module version terraform/demo
+tsvc_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_check_version_commands
+
+tsvc_all: ## Install all AWS layers
+tsvc_all: tsvc_terraform_demo 
+
 init_terraform_demo: ## Init AWS terraform/demo layer
 init_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_init_commands
+
+validate_terraform_demo: ## Validate AWS terraform/demo layer
+validate_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_validate
+
+validate_terraform_demo: ## Validate AWS terraform/demo layer
+validate_terraform_demo:
+	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_validate
 
 validate_terraform_demo: ## Validate AWS terraform/demo layer
 validate_terraform_demo:
