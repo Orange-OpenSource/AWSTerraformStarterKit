@@ -467,6 +467,7 @@ plan_{{ slug }}:
       - {{ plan_name }}/.terraform
       - {{ plan_name }}/.terraform.lock.hcl
   script:
+    - make init_{{ slug }}
     - make plan_{{ slug }}
   artifacts:
     paths:
@@ -537,6 +538,7 @@ apply_{{ slug }}:
       - {{ plan_name }}/.terraform
       - {{ plan_name }}/.terraform.lock.hcl
   script:
+    - make init_{{ slug }}
     - make apply_{{ slug }}
   rules:
 {% if TF_APPLY_ONLY_MAIN %}
@@ -601,5 +603,6 @@ delete_{{ slug }}:
       - {{ plan_name }}/.terraform
       - {{ plan_name }}/.terraform.lock.hcl
   script:
+    - make init_{{ slug }}
     - make destroyauto_{{ slug }}
 {% endfor %}
