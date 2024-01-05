@@ -156,11 +156,11 @@ services:
       image: tfverch/tfvc:${TERRAFORM_VERSION_CHECK_IMAGE_TAG}
       user: ${MY_UID}:${MY_GID}
       environment:
-        HOME: /workdir
+        HOME: ${DOCKER_WORKDIR}
       env_file:
         - .env
       volumes:
         - /etc/passwd:/etc/passwd:ro
         - /etc/group:/etc/group:ro
-        - ./:/workdir
-      working_dir: /workdir
+        - ./${PROJECT_ROOT_DIR}:/project
+      working_dir: ${DOCKER_WORKDIR}
