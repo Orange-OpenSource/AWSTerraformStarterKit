@@ -128,6 +128,7 @@ services:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
       - ./${PROJECT_ROOT_DIR}:/project
+    working_dir: ${DOCKER_WORKDIR}
 
   terraform_docs:
     container_name: ${COMPOSE_PROJECT_NAME}_terraform_docs
