@@ -81,7 +81,7 @@ ifdef CICD_MODE
 else
 	TFENV_EXEC = $(DOCKER_COMPOSE) exec terraform
 	TERRAFORM_EXEC = $(DOCKER_COMPOSE) exec terraform
-	TFLINT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm lint --config /workdir/.config/.tflint.hcl
+	TFLINT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm lint --config ${DOCKER_WORKDIR}/.config/.tflint.hcl
 	PRECOMMIT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm precommit
 	DOTENV_LINTER = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm dotenv-linter
 	SHELL_LINT = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm shell_lint shellcheck
@@ -120,7 +120,7 @@ endif
 ########################################################################################################################
 terraform_check_version_commands:
 ifndef CICD_MODE
-	$(DOCKER_COMPOSE_DEV_TOOLS) run terraform_version_check /workdir/${CURRENT_DIR}
+	$(DOCKER_COMPOSE_DEV_TOOLS) run terraform_version_check /${DOCKER_WORKDIR}/${CURRENT_DIR}
 endif
 
 console_commands:
