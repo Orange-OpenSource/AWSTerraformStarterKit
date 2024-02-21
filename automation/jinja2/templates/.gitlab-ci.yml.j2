@@ -391,6 +391,33 @@ terraform-trivy:
     - make trivy
 
 {% endif %}
+
+{% if  GITLAB_JOBS["sonarqube"]  %}
+sonarqube:
+  needs: []
+  image: sonarsource/sonar-scanner-cli:latest
+  stage: quality-checks
+  allow_failure: true
+  variables:
+    SONAR_USER_HOME: ${CI_PROJECT_DIR}/.sonar
+    SONAR_HOST_URL: {{ SONAR_HOST_URL }}
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .sonar/cache
+  script:
+    - if [[ -z $SONAR_PROJECT_BASE_DIR ]] ; then SONAR_PROJECT_BASE_DIR=$PWD ; fi
+    - if [[ ! -f $SONAR_PROJECT_BASE_DIR/sonar-project.properties ]] ; then echo "Error, sonar-project.properties does not exist in $SONAR_PROJECT_BASE_DIR" && exit 1 ; fi
+    - export SONAR_SCANNER_OPTS="$SONAR_SCANNER_OPTS -Dsonar.projectBaseDir=$SONAR_PROJECT_BASE_DIR"
+    - sonar-scanner
+  tags:
+  {% for runner in runners %}
+    - {{ runner }}
+  {% endfor %}
+
+
+{% endif %}
+
 {% if  GITLAB_JOBS["driftctl"]  %}
 ########################################################################################################################
 # DRIFT Detection

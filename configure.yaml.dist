@@ -9,8 +9,8 @@ REGION: eu-west-3
 PLAN_BINARY_FILE: tfplan.binary
 PLAN_JSON_FILE: tfplan.json
 # Relative path to project directory from this file directory.
-PROJECT_ROOT_DIR: 
-PROJECT_DIR: 
+PROJECT_ROOT_DIR:
+PROJECT_DIR:
 
 ########################################################################################################################
 # Docker Compose image tags to use
@@ -41,6 +41,7 @@ CICD_RUNNER_TAGS:
 GITLAB_JOBS:
     aws-creds: True
     terraform-lint: True
+    sonarqube: True: False
     precommit: True
     terraform-format: True
     terraform-validate: True
@@ -56,6 +57,7 @@ GITLAB_JOBS:
 
 CICD_ROLE_NAME: XXXXXX-CiCd-CrossAccountRole
 CICD_ACCOUNT_ID: 123546789123
+SONAR_HOST_URL: https://sonarqube
 
 # Run Terraform apply only on main branch
 GIT_MAIN_BRANCH: main
