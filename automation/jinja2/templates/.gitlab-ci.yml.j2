@@ -244,18 +244,25 @@ terraform-prepare:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
       - .terraform.d/plugin-cache/
+      - .config/
   script:
   - mkdir -p $TF_PLUGIN_CACHE_DIR
+  - ./get-starter-kit.sh
 
 ########################################################################################################################
 # QUALITY CHECKS
 ########################################################################################################################
 {% if  GITLAB_JOBS["terraform-lint"]  %}
 terraform-lint:
-  needs: []
+  needs:
+    - terraform-prepare
   extends: .terraform-lint
   allow_failure: true
   stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
   script:
     - make lint
 
@@ -270,6 +277,10 @@ precommit:
   extends: .precommit
   allow_failure: true
   stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
   before_script:
     - apk --no-cache --update  add make
   script:
@@ -278,10 +289,15 @@ precommit:
 {% endif %}
 {% if  GITLAB_JOBS["terraform-format"]  %}
 terraform-format:
-  needs: []
+  needs:
+    - terraform-prepare
   extends: .terraform-base
   allow_failure: true
   stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
   script:
     - make format
 
@@ -290,11 +306,16 @@ terraform-format:
 terraform-terrascan:
   needs:
     - aws-creds
+    - terraform-prepare
   dependencies:
     - aws-creds
   extends: .terraform-terrascan
   allow_failure: true
   stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
   script:
     - terrascan scan -i terraform --verbose --config-path=./.config/.terrascan_config.toml  {% for plan_name in plans_install %} --iac-dir={{ plan_name }}{% endfor %}
 
@@ -303,11 +324,16 @@ terraform-terrascan:
 md-lint:
   needs:
     - aws-creds
+    - terraform-prepare
   dependencies:
     - aws-creds
   extends: .md_lint
   allow_failure: true
   stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
   script:
     - make markdown_lint
 
@@ -316,6 +342,7 @@ md-lint:
 shell-lint:
   needs:
     - aws-creds
+    - terraform-prepare
   dependencies:
     - aws-creds
   extends: .shelllint
@@ -323,16 +350,25 @@ shell-lint:
   before_script:
     - apk --no-cache --update  add make
   stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
   script:
     - make shell_lint
 
 {% endif %}
 {% if  GITLAB_JOBS["yaml-lint"]  %}
 yaml-lint:
-  needs: []
+  needs:
+    - terraform-prepare
   extends: .yamllint
   allow_failure: true
   stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
   script:
     - make yaml_lint
 
@@ -341,11 +377,16 @@ yaml-lint:
 terraform-trivy:
   needs:
     - aws-creds
+    - terraform-prepare
   dependencies:
     - aws-creds
   extends: .terraform-trivy
   allow_failure: true
   stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
   script:
     - make trivy
 
@@ -358,6 +399,7 @@ driftctl:
   stage: drift
   needs:
     - aws-creds
+    - terraform-prepare
   dependencies:
     - aws-creds
   allow_failure: true
@@ -368,6 +410,10 @@ driftctl:
     AWS_DEFAULT_REGION: $REGION
     ROLE_TO_ASSUME: ${TF_VAR_backend_bucket_access_role}
     AWS_ROLE_SESSION_NAME: "sessiondrifctl"
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
   before_script:
     - apk add --no-cache aws-cli
     - apk add --no-cache jq
