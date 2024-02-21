@@ -197,6 +197,12 @@ If the command you want to add to the StarterKit does not depend on the configur
 the Makefile. However, if the command requires some dynamic configuration based on the configure.yaml file, you should add it to
 the Jinja template in the automation folder.
 
+## CICD
+
+### Sonarqube
+
+In order to use the CICD sonarqube job, create a `sonar-project.properties` file at the root of the project and add a gitlab-ci variable `SONAR_TOKEN`
+
 # Tips
 
 [Rebase from a fork repository](https://levelup.gitconnected.com/how-to-update-fork-repo-from-original-repo-b853387dd471)
