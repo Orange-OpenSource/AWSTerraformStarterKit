@@ -41,7 +41,7 @@ CICD_RUNNER_TAGS:
 GITLAB_JOBS:
     aws-creds: True
     terraform-lint: True
-    sonarqube: True: False
+    sonarqube: False
     precommit: True
     terraform-format: True
     terraform-validate: True
