@@ -127,6 +127,10 @@ The following examples show how you can configure environment variables for the 
 $ export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
 $ export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 $ export AWS_DEFAULT_REGION=us-west-2
+
+# Alternatively you can specify a profile
+# https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
+$ export AWS_PROFILE=myprofile
 ```
 > **Please note that exporting credentials as environment variables may not be the most secure method, especially in shared environments.**
 
