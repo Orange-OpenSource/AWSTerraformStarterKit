@@ -1,139 +1,139 @@
-{%- set plans_install = environ('PLAN_INSTALL_LIST').split(',') -%}
-{%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
+{%- set plans_install = plans -%}
+{%- set plans_delete = plans | reverse %}
 
 # Automatic Content Generated
 
 generate_documentation: ## Generate Terraform Documentation
 generate_documentation:
-{% for plan_name in plans_install %}
-	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs {{ plan_name }} --config=./.config/.terraform-docs.yml
+{% for plan in plans_install %}
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} --config=./.config/.terraform-docs.yml
 {% endfor %}
 
 terraform_terrascan: ## Terrascan Terraform
 terraform_terrascan:
-	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml {% for plan_name in plans_install %} --iac-dir={{ plan_name }} {% endfor %}
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml {% for plan in plans_install %} --iac-dir={{ plan }} {% endfor %}
 
 format: ## Format all Terraform files using "terraform fmt"
 format:
-{% for plan_name in plans_install %}
-	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="{{ plan_name }}"
+{% for plan in plans_install %}
+	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="{% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %}"
 {% endfor %}
 
 trivy:  ## Terraform Trivy
 trivy:
-{% for plan_name in plans_install %}
-	$(TRIVY_RUN) config {{ plan_name }} --config=./.config/.trivy.yaml --skip-dirs .terraform
+{% for plan in plans_install %}
+	$(TRIVY_RUN) config {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} --config=./.config/.trivy.yaml --skip-dirs .terraform
 {% endfor %}
 
 validate: ## Validate all Terraform files using "terraform validate"
 validate:
-{% for plan_name in plans_install %}
-	@$(MAKE) --no-print-directory terraform_validate CURRENT_DIR="{{ plan_name }}"
+{% for plan in plans_install %}
+	@$(MAKE) --no-print-directory terraform_validate CURRENT_DIR="{% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %}"
 {% endfor %}
 
 lint: ## Check that good naming practices are respected in Terraform files (using tflint)
 lint:
 	$(TFLINT_RUN) --init
-{% for plan_name in plans_install %}
-	@$(MAKE) --no-print-directory terraform_lint CURRENT_DIR="{{ plan_name }}"
+{% for plan in plans_install %}
+	@$(MAKE) --no-print-directory terraform_lint CURRENT_DIR="{% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %}"
 {% endfor %}
 
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
-console_{{ slug}}: ## Connect terraform Docker AWS {{ plan_name }} layer
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
+console_{{ slug}}: ## Connect terraform Docker AWS {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} layer
 console_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} console_commands
+	@$(MAKE) --no-print-directory CURRENT_DIR={% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} console_commands
 {% endfor %}
 
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
-tsvc_{{ slug}}: ## Check terraform module version {{ plan_name }}
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
+tsvc_{{ slug}}: ## Check terraform module version {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %}
 tsvc_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_check_version_commands
+	@$(MAKE) --no-print-directory CURRENT_DIR={% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} terraform_check_version_commands
 {% endfor %}
 
 tsvc_all: ## Install all AWS layers
-tsvc_all: {% for plan_name in plans_install %}{% set slug = plan_name.replace('/',"_") %}{% set path = plan_name.split('/') %}tsvc_{{ slug }} {% endfor %}
+tsvc_all: {% for plan in plans_install %}{% set slug = plan.replace('/',"_") %}{% set path = plan.split('/') %}tsvc_{{ slug }} {% endfor %}
 
 
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
-init_{{ slug}}: ## Init AWS {{ plan_name }} layer
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
+init_{{ slug}}: ## Init AWS {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} layer
 init_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_init_commands
+	@$(MAKE) --no-print-directory CURRENT_DIR={% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} terraform_init_commands
 {% endfor %}
 
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
-validate_{{ slug}}: ## Validate AWS {{ plan_name }} layer
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
+validate_{{ slug}}: ## Validate AWS {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} layer
 validate_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_validate
+	@$(MAKE) --no-print-directory CURRENT_DIR={% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} terraform_validate
 {% endfor %}
 
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
-plan_{{ slug}}: ## Plan AWS {{ plan_name }} layer
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
+plan_{{ slug}}: ## Plan AWS {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} layer
 plan_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_plan_commands
+	@$(MAKE) --no-print-directory CURRENT_DIR={% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} terraform_plan_commands
 {% endfor %}
 
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
-apply_{{ slug }}: ## Apply AWS {{ plan_name }} layer
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
+apply_{{ slug }}: ## Apply AWS {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} layer
 apply_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_apply_commands
+	@$(MAKE) --no-print-directory CURRENT_DIR={% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} terraform_apply_commands
 {% endfor %}
 
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
-install_{{ slug }}: ## Install AWS {{ plan_name }} layer
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
+install_{{ slug }}: ## Install AWS {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} layer
 install_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_install_commands
+	@$(MAKE) --no-print-directory CURRENT_DIR={% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} terraform_install_commands
 {% endfor %}
 
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
-destroy_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
+destroy_{{ slug }}: ## Uninstall AWS {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} layer
 destroy_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_destroy_commands
+	@$(MAKE) --no-print-directory CURRENT_DIR={% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} terraform_destroy_commands
 {% endfor %}
 
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
-destroyauto_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer automaticaly
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
+destroyauto_{{ slug }}: ## Uninstall AWS {% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} layer automaticaly
 destroyauto_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_destroyauto_commands
+	@$(MAKE) --no-print-directory CURRENT_DIR={% if 'name' in plan %}{{ plan['name'] }}{% else %}{{ plan }}{% endif %} terraform_destroyauto_commands
 {% endfor %}
 
 
 init_all: ## Init all AWS layers
 init_all:
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
 	@$(MAKE) --no-print-directory init_{{ slug }}
 {% endfor %}
 
 plan_all: ## Plan all AWS layers
 plan_all:
-{% for plan_name in plans_install %}
-{% set path = plan_name.split('/') %}
-{% set slug = plan_name.replace('/',"_") %}
+{% for plan in plans_install %}
+{% set path = plan.split('/') %}
+{% set slug = plan.replace('/',"_") %}
 	@$(MAKE) --no-print-directory plan_{{ slug }}
 {% endfor %}
 
 install_all: ## Install all AWS layers
-install_all: {% for plan_name in plans_install %}{% set slug = plan_name.replace('/',"_") %}{% set path = plan_name.split('/') %}install_{{ slug }} {% endfor %}
+install_all: {% for plan in plans_install %}{% set slug = plan.replace('/',"_") %}{% set path = plan.split('/') %}install_{{ slug }} {% endfor %}
 
 
 destroy_all: ## Uninstall all layers
-destroy_all: {% for plan_name in plans_delete %}{% set slug = plan_name.replace('/',"_") %}{% set path = plan_name.split('/') %}destroy_{{ slug }} {% endfor %}
+destroy_all: {% for plan in plans_delete %}{% set slug = plan.replace('/',"_") %}{% set path = plan.split('/') %}destroy_{{ slug }} {% endfor %}

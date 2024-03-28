@@ -64,7 +64,8 @@ ifdef CUSTOM_BACKEND_BUCKET_KEY
 	TERRAFORM_INIT_BACKEND_CONFIG_KEY = -backend-config="key=${PROJECT_NAME}${subst terraform,,$(CURRENT_DIR)}.tfstate"
 endif
 
-TERRAFORM_INIT = init --upgrade $(TERRAFORM_INIT_BACKEND_CONFIG_BUCKET) $(TERRAFORM_INIT_BACKEND_CONFIG_REGION) $(TERRAFORM_INIT_BACKEND_CONFIG_DYNAMO_TABLE) $(TERRAFORM_INIT_BACKEND_CONFIG_ROLE_ARN) $(TERRAFORM_INIT_BACKEND_CONFIG_KEY)
+TERRAFORM_UPGRADE_FLAG ?= --upgrade
+TERRAFORM_INIT = init $(TERRAFORM_UPGRADE_FLAG) $(TERRAFORM_INIT_BACKEND_CONFIG_BUCKET) $(TERRAFORM_INIT_BACKEND_CONFIG_REGION) $(TERRAFORM_INIT_BACKEND_CONFIG_DYNAMO_TABLE) $(TERRAFORM_INIT_BACKEND_CONFIG_ROLE_ARN) $(TERRAFORM_INIT_BACKEND_CONFIG_KEY)
 
 ifdef CICD_MODE
 	TFENV_EXEC ?= $(shell which tfenv)
@@ -256,8 +257,8 @@ generate_makefile:
 	if [ ! -d .backup ] ; then mkdir .backup ; fi
 	cp Makefile .backup/Makefile-${cur_date}.bck
 	# Hack: use only for first run
-	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker make.mk.j2 /variables/vars.yml
-	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker make.mk.j2 /variables/vars.yml | tee makeplan.mk
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker make.mk.j2 /variables/configure.yaml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker make.mk.j2 /variables/configure.yaml | tee makeplan.mk
 	./automation/Makefile/delete_automatic_content.sh
 	cat makeplan.mk >> Makefile
 
@@ -369,15 +370,7 @@ console_terraform_demo: ## Connect terraform Docker AWS terraform/demo layer
 console_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo console_commands
 
-tsvc_terraform_demo: ## Check terraform module version terraform/demo
-tsvc_terraform_demo:
-	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_check_version_commands
-
-tsvc_all: ## Install all AWS layers
-tsvc_all: tsvc_terraform_demo 
-
-tsvc_terraform_demo: ## Check terraform module version terraform/demo
-tsvc_terraform_demo:
+tsvc_terraform_demo: ## Check terraform module version terraform/demotsvc_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_check_version_commands
 
 tsvc_all: ## Install all AWS layers
@@ -386,14 +379,6 @@ tsvc_all: tsvc_terraform_demo
 init_terraform_demo: ## Init AWS terraform/demo layer
 init_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_init_commands
-
-validate_terraform_demo: ## Validate AWS terraform/demo layer
-validate_terraform_demo:
-	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_validate
-
-validate_terraform_demo: ## Validate AWS terraform/demo layer
-validate_terraform_demo:
-	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_validate
 
 validate_terraform_demo: ## Validate AWS terraform/demo layer
 validate_terraform_demo:
@@ -415,9 +400,10 @@ destroy_terraform_demo: ## Uninstall AWS terraform/demo layer
 destroy_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_destroy_commands
 
-destroyauto_terraform_demo: ## Uninstall AWS terraform/demo layer automatically
+destroyauto_terraform_demo: ## Uninstall AWS terraform/demo layer automaticaly
 destroyauto_terraform_demo:
 	@$(MAKE) --no-print-directory CURRENT_DIR=terraform/demo terraform_destroyauto_commands
+
 
 init_all: ## Init all AWS layers
 init_all:

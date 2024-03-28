@@ -103,6 +103,9 @@ TF_VAR_assume_role: <AWS_IAM_ROLE_NAME>
 ########################################################################################################################
 # PLANS
 ########################################################################################################################
+# terraform command behavior
+DEFAULT_UPGRADE: false
+
 # List the folder for each Terraform Plan to install, respect the order of installation
 plans:
   - terraform/demo
