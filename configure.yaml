@@ -97,9 +97,17 @@ TF_VAR_assume_role: <AWS_IAM_ROLE_NAME>
 ########################################################################################################################
 # PLANS
 ########################################################################################################################
+# terraform command behavior
+DEFAULT_UPGRADE: false
+
 # List the folder for each Terraform Plan to install, respect the order of installation
 plans:
   - terraform/demo
+  - name: terraform/demo2
+    override_init_parameters: ""
+    override_var_parameters: ""
+  - name: terraform/demo3
+    additional_var_parameters: "-var-file=../common.tfvars"
 
 # AWS Account ID in which your plan are deployed and containing the backend bucket
 # SSO Account

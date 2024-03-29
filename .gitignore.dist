@@ -41,7 +41,6 @@ terraform.rc
 # Additional Terraform files
 tfplan.binary
 tfplan.json
-.terraform.lock.hcl
 
 # AWSTerraformStarterKit
 .config/

@@ -21,6 +21,7 @@ services:
       - /etc/group:/etc/group:ro
       - ./${PROJECT_ROOT_DIR}:/project
       - $HOME/.ssh:$HOME/.ssh
+      - $HOME/.gitconfig:$HOME/.gitconfig
       - $HOME/.terraformrc:$HOME/.terraformrc
       - $HOME/.terraform.d:$HOME/.terraform.d
     working_dir: ${DOCKER_WORKDIR}

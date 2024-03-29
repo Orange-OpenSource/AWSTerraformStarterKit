@@ -117,6 +117,7 @@ services:
       - ./automation/jinja2/templates:/templates
       - ./automation/jinja2/variables:/variables
       - ./automation/jinja2/render.py:/script/entities/render.py
+      - ./configure.yaml:/configure.yaml
 
   compare_configuration:
     container_name: compare_configuration
