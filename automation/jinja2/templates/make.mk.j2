@@ -10,6 +10,12 @@ generate_documentation:
 	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs {{ plan_name }} --config=./${TERRAFORM_DOCS_CONFIG}
 {% endfor %}
 
+render_templates: ## Render all templates
+render_templates:
+{% for template in templates %}
+	@$(MAKE) --no-print-directory render_template TPL_SRC="{{ template['source'] }}" TPL_DST="{{ template['target'] }}"
+{% endfor %}
+
 terraform_terrascan: ## DEPRECATED: Terrascan Terraform
 terraform_terrascan:
 	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml {% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %} --iac-dir={{ plan_name }} {% endfor %}

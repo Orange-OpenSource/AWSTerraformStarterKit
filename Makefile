@@ -286,6 +286,7 @@ generate: ## Generate from template gitlab-ci.yml and Makefile
 generate:
 	@$(MAKE) init
 	@$(MAKE) generate_makefile
+	@$(MAKE) render_templates
 	if [ "${GENERATE_GITLAB_CI}" == "True" ]; then "$(MAKE)" generate_gitlab_ci; fi
 
 
@@ -307,6 +308,18 @@ generate_gitlab_ci:
 	$(DOCKER_COMPOSE_DEV_TOOLS) run jinja2docker .gitlab-ci.yml.j2 /variables/configure.yaml | tee .gitlab-ci.yml
 	tr -d "\r" < .gitlab-ci.yml>.gitlab-ci.yml.tmp
 	mv .gitlab-ci.yml.tmp .gitlab-ci.yml
+
+render_template: ## Render  template
+render_template:
+	if [ ! -d .backup ] ; then mkdir .backup ; fi
+	if [ -f ${TPL_DST} ] ; then mkdir -p .backup/$$(dirname ${TPL_DST}) && cp ${TPL_DST} .backup/${TPL_DST}-${cur_date}.bck ; else touch ${TPL_DST} ; fi
+	cp configure.yaml automation/jinja2/variables/
+	cp ${TPL_SRC} automation/jinja2/templates/$$(basename ${TPL_SRC})
+	$(DOCKER_COMPOSE_DEV_TOOLS) run jinja2docker $$(basename ${TPL_SRC}) /variables/configure.yaml | tee ${TPL_DST}
+	tr -d "\r" < ${TPL_DST}>${TPL_DST}.tmp
+	mv ${TPL_DST}.tmp ${TPL_DST}
+
+render_templates: ## Render  templates
 
 start: ## Start the project
 start: init generate
@@ -384,6 +397,9 @@ generate_documentation:
 	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs terraform/demo --config=./.config/.terraform-docs.yml
 	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs terraform/demo2 --config=./.config/.terraform-docs.yml
 	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs terraform/demo3 --config=./.config/.terraform-docs.yml
+
+render_templates: ## Render all templates
+render_templates:
 
 terraform_terrascan: ## Terrascan Terraform
 terraform_terrascan:
