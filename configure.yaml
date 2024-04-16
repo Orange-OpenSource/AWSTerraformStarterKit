@@ -109,6 +109,10 @@ plans:
   - name: terraform/demo3
     additional_var_parameters: "-var-file=../common.tfvars"
 
+# templates:
+#   - source: .github/.github-actions.yaml.j2
+#     target: .github/workflows/.github-actions.yaml
+
 # AWS Account ID in which your plan are deployed and containing the backend bucket
 # SSO Account
 ACCOUNT_ID: <AWS_ACCOUNT_ID>
