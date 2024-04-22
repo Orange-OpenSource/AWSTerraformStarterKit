@@ -259,6 +259,96 @@ This command will generate the necessary templates based on the newly added plan
 
 4. Once the process completes, you can proceed with using the generated templates for your Terraform deployment.
 
+## Customize terraform commands for a plan
+
+You can customize terraform commands by following these steps:
+
+1. Configure commands
+
+   Edit the `configure.yaml` and add the config key depending on the customization you want
+   For `init` with the following keys `override_init_parameters`. eg.
+
+   ```yaml
+   ...
+   plans:
+   - name: terraform/compute/app-server
+     override_init_parameters: -config=../backend.tfvars
+   ...
+   ```
+
+   The equivalent terraform command for this configuration would be `cd terraform/compute/app-server && terraform init -config=../backend.tfvars`.
+
+   For  `plan` with the following keys:
+   - `override_var_parameters`: This key can be used to override the default parameters. eg.
+
+       ```yaml
+       ...
+       plans:
+         - name: terraform/compute/app-server
+           override_var_parameters: -var-file=../compute.tfvars
+       ...
+       ```
+
+       The equivalent terraform command for this configuration would be `cd terraform/compute/app-server && terraform plan -var-file=../compute.tfvars`.
+
+   - `additional_var_parameters`: This key can be used to add parameters to default parameters. eg.
+
+      ```yaml
+      ...
+      plans:
+        - name: terraform/compute/app-server
+          additional_var_parameters: -var-file=../compute.tfvars
+      ...
+      ```
+
+      The equivalent terraform command for this configuration would be `cd terraform/compute/app-server && terraform plan -var-file=/project/terraform/common.tfvars -var-file=parameters.auto.tfvars -var-file=../compute.tfvars`.
+
+2. Re-generate the `Makefile`
+
+   ```bash
+   make start
+   ```
+
+   This command will re-generate the local `.env` file, generates and override the automatic content part of the `Makefile` with the new parameter for the updated plan.
+
+## Customize tools config file for a plan
+
+You can customize terraform commands by following these steps:
+
+1. Configure commands in project configuration
+
+   Edit the `configure.yaml` and, using the key mapping bellow, add the `key` for the tools you want to override the configuration file for.
+
+   | tools | key |
+   |-------|-----|
+   | tflint | tflint_config |
+   | shellcheck | shellcheck_config |
+   | yaml lint | yamllint_config |
+   | markdown lint | markdownlint_config |
+   | trivy | trivy_config |
+   | terrascan | terrascan_config |
+   | terraform-docs | terraform_docs_config |
+
+   ```yaml
+   ...
+   plans:
+   - name: terraform/compute/app-server
+     # (optional) layer specific tflint config file
+     tflint_config: .config/.tflint.hcl
+     # (optional) layer specific shell check config file
+     shellcheck_config: .config/.shellcheckrc
+     # (optional) layer specific yaml lint config file
+     yamllint_config: .config/.yamllintrc
+     # (optional) layer specific markdown lint config file
+     markdownlint_config: .config/.mdl_style.rb
+     # (optional) layer specific trivy config file
+     trivy_config: .config/.trivy.yaml
+     # (optional) layer specific terrascan config file
+     terrascan_config: .config/.terrascan_config.toml
+     # (optioanl) layer specific terraform-docs config file
+     terraform_docs_config: .config/.terraform-docs.yml
+   ...
+   ```
 
 # Update AWSTerraformStarterKit
 
