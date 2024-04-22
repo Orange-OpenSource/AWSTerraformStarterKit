@@ -27,6 +27,19 @@ variables:
   TFENV_IMAGE_TAG: {{ environ('TFENV_IMAGE_TAG') }}
   DRIFTCTL_IMAGE_TAG: {{ environ('DRIFTCTL_IMAGE_TAG') }}
 
+  ### global variables ###
+  TFLINT_CONFIG: {{ environ('TFLINT_CONFIG') }}
+  PRECOMMIT_CONFIG: {{ environ('PRECOMMIT_CONFIG') }}
+  SHELLCHECK_CONFIG: {{ environ('SHELLCHECK_CONFIG') }}
+  YAMLLINT_CONFIG: {{ environ('YAMLLINT_CONFIG') }}
+  MARKDOWNLINT_CONFIG: {{ environ('MARKDOWNLINT_CONFIG') }}
+  TRIVY_CONFIG: {{ environ('TRIVY_CONFIG') }}
+  TERRASCAN_CONFIG: {{ environ('TERRASCAN_CONFIG') }}
+  TERRAFORM_DOCS_CONFIG: {{ environ('TERRAFORM_DOCS_CONFIG') }}
+
+  TFENV_TERRAFORM_VERSION: {{ environ('TFENV_TERRAFORM_VERSION') }}
+  TERRAFORM_UPGRADE_FLAG: {{ environ('TERRAFORM_UPGRADE_FLAG') }}
+
   # NEED TO BE CHANGED FOR EACH PROJECT
   PROJECT_NAME: {{ environ('PROJECT_NAME') }}
   REGION: {{ environ('REGION') }}
@@ -264,7 +277,7 @@ terraform-lint:
     paths:
       - .config/
   script:
-    - make lint
+    - make lint_all
 
 {% endif %}
 {% if  GITLAB_JOBS["precommit"]  %}
@@ -299,7 +312,7 @@ terraform-format:
     paths:
       - .config/
   script:
-    - make format
+    - make format_all
 
 {% endif %}
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
@@ -317,7 +330,7 @@ terraform-terrascan:
     paths:
       - .config/
   script:
-    - terrascan scan -i terraform --verbose --config-path=./.config/.terrascan_config.toml  {% for plan_name in plans_install %} --iac-dir={{ plan_name }}{% endfor %}
+    - make terraform_terrascan_all
 
 {% endif %}
 {% if  GITLAB_JOBS["md-lint"]  %}

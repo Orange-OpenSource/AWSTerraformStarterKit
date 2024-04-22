@@ -69,30 +69,40 @@ DEFAULT_TERRAFORM_INIT_PARAMETERS = $(TERRAFORM_UPGRADE_FLAG) $(TERRAFORM_INIT_B
 TERRAFORM_INIT_PARAMETERS ?= $(DEFAULT_TERRAFORM_INIT_PARAMETERS)
 TERRAFORM_INIT := init $(TERRAFORM_INIT_PARAMETERS)
 
+#### global variables ####
+TFLINT_CONFIG ?= $(DEFAULT_TFLINT_CONFIG)
+PRECOMMIT_CONFIG ?= $(DEFAULT_PRECOMMIT_CONFIG)
+SHELLCHECK_CONFIG ?= $(DEFAULT_SHELLCHECK_CONFIG)
+YAMLLINT_CONFIG ?= $(DEFAULT_YAMLLINT_CONFIG)
+MARKDOWNLINT_CONFIG ?= $(DEFAULT_MARKDOWNLINT_CONFIG)
+TRIVY_CONFIG ?= $(DEFAULT_TRIVY_CONFIG)
+TERRASCAN_CONFIG ?= $(DEFAULT_TERRASCAN_CONFIG)
+TERRAFORM_DOCS_CONFIG ?= $(DEFAULT_TERRAFORM_DOCS_CONFIG)
+
 ifdef CICD_MODE
 	TFENV_EXEC ?= $(shell which tfenv)
 	TERRAFORM_EXEC ?= $(shell which terraform)
-	TFLINT_RUN ?= $(shell which tflint) --config $(shell pwd)/.config/.tflint.hcl
+	TFLINT_RUN ?= $(shell which tflint) --config $(TFLINT_CONFIG)
 	PRECOMMIT_RUN ?= $(shell which pre-commit)
 	DOTENV_LINTER ?= $(shell which dotenv-linter)
 	SHELL_LINT ?= $(shell which shellcheck)
 	YAML_LINT ?= $(shell which yamllint)
-	MD_LINT ?= $(shell which mdl) --style .config/.mdl_style.rb
+	MD_LINT ?= $(shell which mdl) --style $(MARKDOWNLINT_CONFIG)
 	TRIVY_RUN ?= $(shell which trivy)
 	TERRASCAN_RUN ?= $(shell which terrascan)
 	TERRAFORM_DOCS ?= $(shell which terraform-docs)
 else
 	TFENV_EXEC = $(DOCKER_COMPOSE) exec terraform
 	TERRAFORM_EXEC = $(DOCKER_COMPOSE) exec terraform
-	TFLINT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm lint --config ${DOCKER_WORKDIR}/.config/.tflint.hcl
+	TFLINT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm lint --config ${DOCKER_WORKDIR}/$(TFLINT_CONFIG)
 	PRECOMMIT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm precommit
 	DOTENV_LINTER = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm dotenv-linter
 	SHELL_LINT = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm shell_lint shellcheck
 	YAML_LINT = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm yaml_lint yamllint
-	MD_LINT = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm markdown_lint mdl --style ./.config/.mdl_style.rb
+	MD_LINT = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm markdown_lint mdl --style ./$(MARKDOWNLINT_CONFIG)
 	TRIVY_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm trivy
 	TERRASCAN_RUN  = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm terrascan
-	TERRAFORM_DOCS = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm terraform-docs
+	TERRAFORM_DOCS = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm terraform_docs
 endif
 
 debug: ## Print debug logs
@@ -232,6 +242,29 @@ else
 endif
 endif
 
+# Trivy commands to scan a stack layer
+trivy_commands:
+	$(TRIVY_RUN) config ${CURRENT_DIR} --config=./$(TRIVY_CONFIG) --skip-dirs .terraform
+
+# Terrascan commands to scan a stack layer
+terrascan_commands:
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./$(TERRASCAN_CONFIG)  --iac-dir=${CURRENT_DIR}
+
+# Terraform docs commands for a stack layer
+terraform_docs_commands:
+	$(TERRAFORM_DOCS) ${CURRENT_DIR} --config=./${TERRAFORM_DOCS_CONFIG}
+
+# markdown lint commands for a stack layer
+markdown_lint_commands:
+	$(MD_LINT) ${CURRENT_DIR}
+
+# shell lint commands for a stack layer
+shell_lint_commands:
+	$(SHELL_LINT) $$(find ${CURRENT_DIR} -name "*.sh")
+
+# yaml lint commands for a stack layer
+yaml_lint_commands:
+	$(YAML_LINT) -c ./$(YAMLLINT_CONFIG)  --no-warnings ${CURRENT_DIR}
 ########################################################################################################################
 #  LOCAL DEV DOCKER
 ########################################################################################################################
@@ -310,35 +343,35 @@ logout:
 
 precommit: ## Launch precommit hooks
 precommit:
-	$(PRECOMMIT_RUN) run -a --config=./.config/.pre-commit-config.yaml
+	$(PRECOMMIT_RUN) run -a --config ./$(PRECOMMIT_CONFIG)
 
 dotenv_lint: ## Lint dotenv files
 dotenv_lint:
 	$(DOTENV_LINTER) --skip UnorderedKey --skip LowercaseKey
 
-markdown_lint: ## Lint Markdown files files
+markdown_lint: ## DEPRECATED: Lint Markdown files files
 markdown_lint:
 	echo $(MD_LINT)
 	$(MD_LINT) .
 
-shell_lint: ## Lint shell files
+shell_lint: ## DEPRECATED: Lint shell files
 shell_lint:
 	$(SHELL_LINT) **/*/*.sh
 
-yaml_lint: ## Lint yaml files
+yaml_lint: ## DEPRECATED: Lint yaml files
 yaml_lint:
-	$(YAML_LINT) -c ./.config/.yamllintrc  --no-warnings .
+	$(YAML_LINT) -c ./$(YAMLLINT_CONFIG)  --no-warnings .
 
 terrascan_docker: ## Terrascan Docker
 terrascan_docker:
-	$(DOCKER_COMPOSE_DEV_TOOLS) run terrascan scan -d automation -i docker --verbose --config-path=./.config/.terrascan_config.toml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run terrascan scan -d automation -i docker --verbose --config-path=./$(TERRASCAN_CONFIG)
 
 powershell_lint: ## PowerShell Linter
 powershell_lint:
 	$(DOCKER_COMPOSE_DEV_TOOLS) run powershell_lint "Invoke-ScriptAnalyzer -Recurse -Path ."
 
 quality-checks: ## run quality checks
-quality-checks: dotenv_lint format validate lint precommit markdown_lint shell_lint yaml_lint trivy terrascan_docker terraform_terrascan
+quality-checks: dotenv_lint format_all validate_all lint_all precommit markdown_lint_all shell_lint_all yaml_lint_all trivy_all terrascan_docker terrascan_all
 
 ########################################################################################################################
 #  INSTALL / DELETE PLANS
