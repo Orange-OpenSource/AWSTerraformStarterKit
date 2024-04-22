@@ -17,7 +17,7 @@ PROJECT_DIR:
 ########################################################################################################################
 TFENV_IMAGE_TAG: latest
 TFLINT_IMAGE_TAG: v0.49.0
-PRECOMMIT_IMAGE_TAG: v1.83.6
+PRECOMMIT_IMAGE_TAG: v1.89.0
 DRIFTCTL_IMAGE_TAG: latest
 DOTENV_LINTER_IMAGE_TAG: latest
 MARKDOWN_LINTER_IMAGE_TAG: latest
@@ -103,6 +103,27 @@ TF_VAR_assume_role: <AWS_IAM_ROLE_NAME>
 ########################################################################################################################
 # PLANS
 ########################################################################################################################
+
+######### GLOBAL VARIABLES ###############
+# The default terraform version for all plans
+# terraform_version: 1.6.4
+# The default tflint config file path
+tflint_config: .config/.tflint.hcl
+# The default precommit config file path
+precommit_config: .config/.pre-commit-config.yaml
+# The default shell linter config file
+shellcheck_config: .config/.shellcheckrc
+# The default yaml lint config file
+yamllint_config: .config/.yamllintrc
+# The default markdown lint config file
+markdownlint_config: .config/.mdl_style.rb
+# The default trivy config file
+trivy_config: .config/.trivy.yaml
+# The default terrascan config file
+terrascan_config: .config/.terrascan_config.toml
+# The default terraform-docs config file
+terraform-docs_config: .config/.terraform-docs.yml
+
 # terraform command behavior
 DEFAULT_UPGRADE: false
 
