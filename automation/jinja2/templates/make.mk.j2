@@ -162,3 +162,12 @@ install_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name'
 
 destroy_all: ## Uninstall all layers
 destroy_all:{% for plan in plans_delete %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} destroy_{{ slug }} {% endfor %}
+
+
+### Makefile customizations
+
+{% if additional_makefiles is defined %}
+{% for additional_makefile in additional_makefiles %}
+include {{ additional_makefile }}
+{% endfor %}
+{% endif %}

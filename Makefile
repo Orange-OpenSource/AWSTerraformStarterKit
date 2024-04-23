@@ -164,7 +164,6 @@ endif
 
 # Combination of Terraform commands to install a stack layer
 terraform_install_commands:
-ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
@@ -174,24 +173,19 @@ else
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
 endif
-endif
-
 
 # Combination of Terraform commands to apply a stack layer
 terraform_apply_commands:
-ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
 else
 		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
-endif
 endif
 
 # Combination of Terraform commands to init a stack layer
 terraform_init_commands:
-ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
@@ -199,11 +193,9 @@ else
 		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
 endif
-endif
 
 # Combination of Terraform commands to plan a stack layer
 terraform_plan_commands:
-ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && $(TFENV_EXEC) install
 		cd ${CURRENT_DIR} && terraform plan ${TERRAFORM_VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}
@@ -213,14 +205,12 @@ else
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform plan -compact-warnings ${TERRAFORM_VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}"
 endif
-endif
 
 terraform_lint:
 	$(TFLINT_RUN) --chdir ${CURRENT_DIR}
 
 # Terraform commands to delete a stack layer
 terraform_destroy_commands:
-ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform destroy ${TERRAFORM_VAR_PARAMETERS}
@@ -228,18 +218,15 @@ else
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform destroy ${TERRAFORM_VAR_PARAMETERS}"
 endif
-endif
 
 # Terraform commands to delete a stack layer from a binary plan
 terraform_destroyauto_commands:
-ifneq (,$(wildcard ${CURRENT_DIR}/${CONFIG_FILE}))
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} ${PLAN_BINARY_FILE}
 else
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} ${PLAN_BINARY_FILE}"
-endif
 endif
 
 # Trivy commands to scan a stack layer
@@ -540,3 +527,6 @@ install_all: install_terraform_demo install_terraform_demo2 install_terraform_de
 
 destroy_all: ## Uninstall all layers
 destroy_all: destroy_terraform_demo3 destroy_terraform_demo2 destroy_terraform_demo 
+
+### Makefile customizations
+
