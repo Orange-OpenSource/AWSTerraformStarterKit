@@ -350,6 +350,23 @@ You can customize terraform commands by following these steps:
    ...
    ```
 
+## Add custom template
+
+This functionality help render template using the same content of the `configure.yaml` this can be useful for example when you want to render a pipeline as code for another CI like Github Actions. This allow extension of the functionality of the starterkit.
+
+To add custom template, just specify in the `configure.yaml` file  under the `templates` array an entry with `source` key for the template path and the `target` key for the output file. for example:
+
+```yaml
+templates:
+  - source: templates/.github-actions.yaml.2
+    target: .github/workflows/.github-actions.yaml
+```
+
+For the entry 0, the starterkit will render the template `templates/.github-actions.yaml.j2` using variables from `configure.yaml` to `.github/workflows/.github-actions.yaml`.
+
+> [!IMPORTANT]
+> The directory of the target file must exists. If not rendered file creation will fail.
+
 # Update AWSTerraformStarterKit
 
 1. Download `remove-starter-kit.sh`, make it executable and execute the shell script.  

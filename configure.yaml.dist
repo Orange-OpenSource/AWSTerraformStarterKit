@@ -157,6 +157,7 @@ plans:
 # SSO Account
 ACCOUNT_ID: <AWS_ACCOUNT_ID>
 
+# (Optional) variable to defined additional jinj2 template file to render with variables from `configure.yaml` file
 # templates:
 #   - source: .github/.github-actions.yaml.j2
 #     target: .github/workflows/.github-actions.yaml
