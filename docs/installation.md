@@ -311,45 +311,6 @@ You can customize terraform commands by following these steps:
 
    This command will re-generate the local `.env` file, generates and override the automatic content part of the `Makefile` with the new parameter for the updated plan.
 
-## Customize tools config file for a plan
-
-You can customize terraform commands by following these steps:
-
-1. Configure commands in project configuration
-
-   Edit the `configure.yaml` and, using the key mapping bellow, add the `key` for the tools you want to override the configuration file for.
-
-   | tools | key |
-   |-------|-----|
-   | tflint | tflint_config |
-   | shellcheck | shellcheck_config |
-   | yaml lint | yamllint_config |
-   | markdown lint | markdownlint_config |
-   | trivy | trivy_config |
-   | terrascan | terrascan_config |
-   | terraform-docs | terraform_docs_config |
-
-   ```yaml
-   ...
-   plans:
-   - name: terraform/compute/app-server
-     # (optional) layer specific tflint config file
-     tflint_config: .config/.tflint.hcl
-     # (optional) layer specific shell check config file
-     shellcheck_config: .config/.shellcheckrc
-     # (optional) layer specific yaml lint config file
-     yamllint_config: .config/.yamllintrc
-     # (optional) layer specific markdown lint config file
-     markdownlint_config: .config/.mdl_style.rb
-     # (optional) layer specific trivy config file
-     trivy_config: .config/.trivy.yaml
-     # (optional) layer specific terrascan config file
-     terrascan_config: .config/.terrascan_config.toml
-     # (optioanl) layer specific terraform-docs config file
-     terraform_docs_config: .config/.terraform-docs.yml
-   ...
-   ```
-
 ## Add custom template
 
 This functionality help render template using the same content of the `configure.yaml` this can be useful for example when you want to render a pipeline as code for another CI like Github Actions. This allow extension of the functionality of the starterkit.
@@ -366,6 +327,64 @@ For the entry 0, the starterkit will render the template `templates/.github-acti
 
 > [!IMPORTANT]
 > The directory of the target file must exists. If not rendered file creation will fail.
+
+## Add additional make files
+
+This functionality can be used to add custom target to `Makefile`. This allows to extends functionalities of the starterkit by provider makefile with additional target related to new tools for example.
+
+To add additional make files, follows the following steps:
+
+**step 1:** just specify in the `configure.yaml` file  under the `additional_makefiles` array an entry with the path to the make files. for example:
+
+```yaml
+additional_makefiles:
+  - project.mk
+```
+
+**step 2:** runs the generate target of the project
+
+```shell
+make generate
+```
+
+The starterkit will include additional make files at the end of the `Makefile` using the `include` key word.
+
+## New command in Makefile
+
+If the command you want to add to the StarterKit does not depend on the configure.yaml file, you can add it to
+custome make file and update the `configure.yaml` file accordingly. However, if the command requires some dynamic configuration based on the configure.yaml file, you should create a custom jinja template for the custom make file and configure its target as a custom make file.
+
+For example, in the following example we will add clean up command.
+
+The command template file `project.mk.j2`
+
+```txt
+{% for plan in plans %}
+{% set plan_name = plan['name'] if 'name' in plan else plan %}
+{% set slug = plan_name | replace('/',"_") %}
+cleanup_{{ plan['name] }}:
+   rm -rf {{ plan_name }}/.terraform
+{% endfor %}
+```
+
+In the `configure.yaml` file
+
+```yaml
+...
+templates:
+  - source: project.mk.j2
+    target: project.mk
+...
+additional_makefiles:
+  - project.mk
+...
+```
+
+Don't forget to generate files
+
+```shell
+make generate
+```
 
 # Update AWSTerraformStarterKit
 
