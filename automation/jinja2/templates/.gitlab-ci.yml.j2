@@ -64,7 +64,7 @@ variables:
 
   {%- set plans_install = environ('PLAN_INSTALL_LIST').split(',') -%}
   {%- set plans_delete = environ('PLAN_DELETE_LIST').split(',') %}
-  {%- set runners = environ('CICD_RUNNER_TAGS').split(',') %}
+  {%- set runners = CICD_RUNNER_TAGS if CICD_RUNNER_TAGS is defined else [] %}
 
 workflow:
   rules:
@@ -82,12 +82,15 @@ stages:
 ########################################################################################################################
 # FUNCTIONS
 ########################################################################################################################
+
 .base: &base
   {% if runners is defined and runners|length > 0 %}
   tags:
   {% for runner in runners %}
     - {{ runner }}
   {% endfor %}
+  {% else %}
+  tags: []
   {% endif %}
 
 {% if  GITLAB_JOBS["aws-creds"]  %}
