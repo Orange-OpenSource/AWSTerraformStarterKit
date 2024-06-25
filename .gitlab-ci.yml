@@ -1,0 +1,903 @@
+---
+variables:
+  PHASE:
+    value: BUILD
+    options:
+      - BUILD
+      - DESTROY
+    description: When set to DESTROY plan and delete
+  BUILD_TYPE:
+    value: CHANGES
+    options:
+      - CHANGES
+      - FORCE
+      - ALL
+    description: When set to CHANGES only changes are built, when set to ALL all plan are plan build
+  CICD_MODE: "true"
+  GIT_SUBMODULE_STRATEGY: "recursive"
+  PRINT_DEBUG: "false"
+  TF_PLUGIN_CACHE_DIR: $CI_PROJECT_DIR/.terraform.d/plugin-cache
+
+  # Docker Image Tag
+  TFLINT_IMAGE_TAG: "v0.49.0"
+  PRECOMMIT_IMAGE_TAG: "v1.89.0"
+  TFENV_IMAGE_TAG: "latest"
+  DRIFTCTL_IMAGE_TAG: "latest"
+
+  ### global variables ###
+  DEFAULT_TFLINT_CONFIG: ".config/.tflint.hcl"
+  DEFAULT_PRECOMMIT_CONFIG: ".config/.pre-commit-config.yaml"
+  DEFAULT_SHELLCHECK_CONFIG: ".config/.shellcheckrc"
+  DEFAULT_YAMLLINT_CONFIG: ".config/.yamllintrc"
+  DEFAULT_MARKDOWNLINT_CONFIG: ".config/.mdl_style.rb"
+  DEFAULT_TRIVY_CONFIG: ".config/.trivy.yaml"
+  DEFAULT_TERRASCAN_CONFIG: ".config/.terrascan_config.toml"
+  DEFAULT_TERRAFORM_DOCS_CONFIG: ".config/.terraform-docs.yml"
+
+  TFENV_TERRAFORM_VERSION: ""
+  TERRAFORM_UPGRADE_FLAG: ""
+
+  # NEED TO BE CHANGED FOR EACH PROJECT
+  PROJECT_NAME: "starterkit"
+  REGION: "eu-west-3"
+  TF_VAR_assume_role: "cici-role-name"
+  TF_VAR_backend_bucket_name: "aws-s3-bucket-name"
+  TF_VAR_backend_bucket_region: "eu-west-3"
+  TF_VAR_backend_dynamodb_table: "tf-locks"
+  TF_VAR_backend_bucket_access_role: "arn:aws:iam::12345798012:role/cici-role-name"
+  CUSTOM_BACKEND_BUCKET_KEY: auto
+  PLAN_BINARY_FILE: "tfplan.binary"
+  PLAN_JSON_FILE: "tfplan.json"
+  ACCOUNT_ID: "12345798012"
+  CICD_ROLE_NAME: "cici-role-name"
+
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' # only on pull request
+    - if: $CI_COMMIT_BRANCH == 'main' # only main branch
+
+stages:
+  - prepare
+  - quality-checks
+  - drift
+  - init
+  - plan-apply-delete
+  - clean-cache
+
+########################################################################################################################
+# FUNCTIONS
+########################################################################################################################
+.base: &base
+
+# .aws-cli:
+#   before_script:
+#     - yum install -y jq
+#   image:
+#     name: amazon/aws-cli:latest
+#     entrypoint:
+#       - '/usr/bin/env'
+#       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+
+# .aws_get_creds: &aws_get_creds
+.aws_get_creds:
+  before_script:
+    - yum install -y jq
+  image:
+    name: amazon/aws-cli:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  script: |
+    #!/usr/bin/env bash
+    echo "Getting temporary credentials associated to assume role"
+    STS_CREDS=$(aws sts assume-role --role-arn arn:aws:iam::123546789123:role/cici-role-name --role-session-name ${CI_COMMIT_SHA})
+    AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
+    AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
+    AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
+    echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
+    echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
+    echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
+  artifacts:
+    reports:
+      dotenv: creds.env
+  <<: *base
+
+.terraform-base: &terraform_base
+  image:
+    name: marmarama/tfenv:$TFENV_IMAGE_TAG
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+  <<: *base
+
+.terraform-trivy:
+  before_script:
+    - rm -rf .terraform
+    - apk --no-cache --update  add make
+  image:
+    name: aquasec/trivy:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+  <<: *base
+
+.terraform-lint:
+  image:
+    name: ghcr.io/terraform-linters/tflint:${TFLINT_IMAGE_TAG}
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - apk --no-cache --update  add make
+  <<: *base
+
+.shelllint:
+  image:
+    name: pipelinecomponents/shellcheck:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - apk --no-cache --update  add make
+  <<: *base
+
+.precommit:
+  image:
+    name: ghcr.io/antonbabenko/pre-commit-terraform:${PRECOMMIT_IMAGE_TAG}
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  <<: *base
+
+.yamllint:
+  image:
+    name: pipelinecomponents/yamllint:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - apk --no-cache --update  add make
+  <<: *base
+
+.terraform-terrascan:
+  image:
+    name: tenable/terrascan:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  <<: *base
+
+.md_lint:
+  image:
+    name: pipelinecomponents/markdownlint:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/bin'
+  before_script:
+    - apk --no-cache --update  add make
+  <<: *base
+
+
+.init_job:
+  extends: .terraform-base
+  stage: init
+  needs: ["aws-creds", "terraform-prepare"]
+  allow_failure: false
+
+# .validate_job: &validate_job
+#   extends: .terraform-base
+#   stage: quality-checks
+#   needs: ["aws-creds", "terraform-prepare"]
+#   allow_failure: false
+
+.plan_job:
+  extends: .terraform-base
+  stage: plan-apply-delete
+  allow_failure: false
+
+.apply_job:
+  extends: .terraform-base
+  stage: plan-apply-delete
+  allow_failure: false
+  when: manual
+
+.delete_job:
+  extends: .terraform-base
+  stage: plan-apply-delete
+  allow_failure: false
+  when: manual
+  rules:
+    - if: $PHASE == "DESTROY" && $BUILD_TYPE == "FORCE"
+
+########################################################################################################################
+# COMMONS
+########################################################################################################################
+aws-creds:
+  # extends: .aws-cli
+  extends: .aws_get_creds
+  stage: prepare
+  # <<: *aws_get_creds
+
+terraform-prepare:
+  stage: prepare
+  <<: *terraform_base
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - .config/
+  script:
+  - mkdir -p $TF_PLUGIN_CACHE_DIR
+  - ./get-starter-kit.sh
+
+########################################################################################################################
+# QUALITY CHECKS
+########################################################################################################################
+precommit:
+  needs: ["aws-creds", "terraform-prepare"]
+  extends: .precommit
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  before_script:
+    - apk --no-cache --update  add make
+  script:
+    - make precommit
+
+
+
+.rules_terraform_demo: &rules_terraform_demo
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
+      - terraform/demo/**/*
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - terraform/demo/**/*
+        compare_to: "refs/heads/main"
+    - if: $BUILD_TYPE == "FORCE"
+    - when: never
+
+terraform-lint_terraform_demo:
+  needs:
+    - terraform-prepare
+  extends: .terraform-lint
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make tflint_terraform_demo
+  <<: *rules_terraform_demo
+
+terraform-format_terraform_demo:
+  needs:
+    - terraform-prepare
+  extends: .terraform-base
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make format_terraform_demo
+  <<: *rules_terraform_demo
+
+terraform-terrascan_terraform_demo:
+  needs:
+    - terraform-prepare
+  extends: .terraform-terrascan
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make terrascan_terraform_demo
+  <<: *rules_terraform_demo
+
+md-lint_terraform_demo:
+  needs:
+    - terraform-prepare
+  extends: .md_lint
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make markdown_lint_terraform_demo
+  <<: *rules_terraform_demo
+
+shell-lint_terraform_demo:
+  needs:
+    - terraform-prepare
+  extends: .shelllint
+  allow_failure: true
+  before_script:
+    - apk --no-cache --update  add make
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make shell_lint_terraform_demo
+  <<: *rules_terraform_demo
+
+yaml-lint_terraform_demo:
+  needs:
+    - terraform-prepare
+  extends: .yamllint
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make yaml_lint_terraform_demo
+  <<: *rules_terraform_demo
+
+terraform-trivy_terraform_demo:
+  needs:
+    - terraform-prepare
+  extends: .terraform-trivy
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make trivy_terraform_demo
+  <<: *rules_terraform_demo
+
+
+# ########################################################################################################################
+# # VALIDATE
+# ########################################################################################################################
+
+# validate_terraform_demo:
+#   extends: .validate_job
+#   script:
+#     - make init_terraform_demo
+#     - make validate_terraform_demo
+#   cache:
+#     key: tf-$CI_COMMIT_REF_SLUG
+#     paths:
+#       - .terraform.d/plugin-cache/
+#       - terraform/demo/.terraform
+#       - terraform/demo/.terraform.lock.hcl
+#   <<: *rules_terraform_demo
+# 
+.rules_terraform_demo2: &rules_terraform_demo2
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
+      - terraform/demo2/**/*
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - terraform/demo2/**/*
+        compare_to: "refs/heads/main"
+    - if: $BUILD_TYPE == "FORCE"
+    - when: never
+
+terraform-lint_terraform_demo2:
+  needs:
+    - terraform-prepare
+  extends: .terraform-lint
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make tflint_terraform_demo2
+  <<: *rules_terraform_demo2
+
+terraform-format_terraform_demo2:
+  needs:
+    - terraform-prepare
+  extends: .terraform-base
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make format_terraform_demo2
+  <<: *rules_terraform_demo2
+
+terraform-terrascan_terraform_demo2:
+  needs:
+    - terraform-prepare
+  extends: .terraform-terrascan
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make terrascan_terraform_demo2
+  <<: *rules_terraform_demo2
+
+md-lint_terraform_demo2:
+  needs:
+    - terraform-prepare
+  extends: .md_lint
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make markdown_lint_terraform_demo2
+  <<: *rules_terraform_demo2
+
+shell-lint_terraform_demo2:
+  needs:
+    - terraform-prepare
+  extends: .shelllint
+  allow_failure: true
+  before_script:
+    - apk --no-cache --update  add make
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make shell_lint_terraform_demo2
+  <<: *rules_terraform_demo2
+
+yaml-lint_terraform_demo2:
+  needs:
+    - terraform-prepare
+  extends: .yamllint
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make yaml_lint_terraform_demo2
+  <<: *rules_terraform_demo2
+
+terraform-trivy_terraform_demo2:
+  needs:
+    - terraform-prepare
+  extends: .terraform-trivy
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make trivy_terraform_demo2
+  <<: *rules_terraform_demo2
+
+
+# ########################################################################################################################
+# # VALIDATE
+# ########################################################################################################################
+
+# validate_terraform_demo2:
+#   extends: .validate_job
+#   script:
+#     - make init_terraform_demo2
+#     - make validate_terraform_demo2
+#   cache:
+#     key: tf-$CI_COMMIT_REF_SLUG
+#     paths:
+#       - .terraform.d/plugin-cache/
+#       - terraform/demo2/.terraform
+#       - terraform/demo2/.terraform.lock.hcl
+#   <<: *rules_terraform_demo2
+# 
+.rules_terraform_demo3: &rules_terraform_demo3
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
+      - terraform/demo3/**/*
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - terraform/demo3/**/*
+        compare_to: "refs/heads/main"
+    - if: $BUILD_TYPE == "FORCE"
+    - when: never
+
+terraform-lint_terraform_demo3:
+  needs:
+    - terraform-prepare
+  extends: .terraform-lint
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make tflint_terraform_demo3
+  <<: *rules_terraform_demo3
+
+terraform-format_terraform_demo3:
+  needs:
+    - terraform-prepare
+  extends: .terraform-base
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make format_terraform_demo3
+  <<: *rules_terraform_demo3
+
+terraform-terrascan_terraform_demo3:
+  needs:
+    - terraform-prepare
+  extends: .terraform-terrascan
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make terrascan_terraform_demo3
+  <<: *rules_terraform_demo3
+
+md-lint_terraform_demo3:
+  needs:
+    - terraform-prepare
+  extends: .md_lint
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make markdown_lint_terraform_demo3
+  <<: *rules_terraform_demo3
+
+shell-lint_terraform_demo3:
+  needs:
+    - terraform-prepare
+  extends: .shelllint
+  allow_failure: true
+  before_script:
+    - apk --no-cache --update  add make
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make shell_lint_terraform_demo3
+  <<: *rules_terraform_demo3
+
+yaml-lint_terraform_demo3:
+  needs:
+    - terraform-prepare
+  extends: .yamllint
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make yaml_lint_terraform_demo3
+  <<: *rules_terraform_demo3
+
+terraform-trivy_terraform_demo3:
+  needs:
+    - terraform-prepare
+  extends: .terraform-trivy
+  allow_failure: true
+  stage: quality-checks
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  script:
+    - make trivy_terraform_demo3
+  <<: *rules_terraform_demo3
+
+
+# ########################################################################################################################
+# # VALIDATE
+# ########################################################################################################################
+
+# validate_terraform_demo3:
+#   extends: .validate_job
+#   script:
+#     - make init_terraform_demo3
+#     - make validate_terraform_demo3
+#   cache:
+#     key: tf-$CI_COMMIT_REF_SLUG
+#     paths:
+#       - .terraform.d/plugin-cache/
+#       - terraform/demo3/.terraform
+#       - terraform/demo3/.terraform.lock.hcl
+#   <<: *rules_terraform_demo3
+# 
+########################################################################################################################
+# DRIFT Detection
+########################################################################################################################
+driftctl:
+  stage: drift
+  needs: ["aws-creds", "terraform-prepare"]
+  allow_failure: true
+  image:
+    name: snyk/driftctl:$DRIFTCTL_IMAGE_TAG
+    entrypoint: [""]
+  variables:
+    AWS_DEFAULT_REGION: $REGION
+    ROLE_TO_ASSUME: ${TF_VAR_backend_bucket_access_role}
+    AWS_ROLE_SESSION_NAME: "sessiondrifctl"
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .config/
+  before_script:
+    - apk add --no-cache aws-cli
+    - apk add --no-cache jq
+  script: |
+    #!/usr/bin/env bash
+    echo "Getting temporary credentials associated to assume role"
+    aws sts get-caller-identity
+    STS_CREDS=$(aws sts assume-role --role-arn ${ROLE_TO_ASSUME} --role-session-name ${AWS_ROLE_SESSION_NAME})
+    AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
+    AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
+    AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
+    aws sts get-caller-identity
+    driftctl scan --only-managed  --from tfstate+s3://"${TF_VAR_backend_bucket_name}"/*.tfstate
+
+
+########################################################################################################################
+# TERRAFORM INIT
+########################################################################################################################
+init_terraform_demo:
+  extends: .init_job
+  script:
+    - make init_terraform_demo
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo/.terraform
+      - terraform/demo/.terraform.lock.hcl
+  <<: *rules_terraform_demo
+
+init_terraform_demo2:
+  extends: .init_job
+  script:
+    - make init_terraform_demo2
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo2/.terraform
+      - terraform/demo2/.terraform.lock.hcl
+  <<: *rules_terraform_demo2
+
+init_terraform_demo3:
+  extends: .init_job
+  script:
+    - make init_terraform_demo3
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo3/.terraform
+      - terraform/demo3/.terraform.lock.hcl
+  <<: *rules_terraform_demo3
+
+
+########################################################################################################################
+# TERRAFORM PLAN
+########################################################################################################################
+
+plan_terraform_demo:
+  extends: .plan_job
+  needs:
+    - aws-creds
+    - init_terraform_demo
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo/.terraform
+      - terraform/demo/.terraform.lock.hcl
+  script:
+    - make init_terraform_demo
+    - make plan_terraform_demo
+  artifacts:
+    paths:
+      - terraform/demo/tfplan.binary
+      - terraform/demo/tfplan.json
+  <<: *rules_terraform_demo
+
+plan_terraform_demo2:
+  extends: .plan_job
+  needs:
+    - aws-creds
+    - init_terraform_demo2
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo2/.terraform
+      - terraform/demo2/.terraform.lock.hcl
+  script:
+    - make init_terraform_demo2
+    - make plan_terraform_demo2
+  artifacts:
+    paths:
+      - terraform/demo2/tfplan.binary
+      - terraform/demo2/tfplan.json
+  <<: *rules_terraform_demo2
+
+plan_terraform_demo3:
+  extends: .plan_job
+  needs:
+    - aws-creds
+    - init_terraform_demo3
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo3/.terraform
+      - terraform/demo3/.terraform.lock.hcl
+  script:
+    - make init_terraform_demo3
+    - make plan_terraform_demo3
+  artifacts:
+    paths:
+      - terraform/demo3/tfplan.binary
+      - terraform/demo3/tfplan.json
+  <<: *rules_terraform_demo3
+
+
+########################################################################################################################
+# TERRAFORM APPLY
+########################################################################################################################
+
+apply_terraform_demo:
+  extends: .apply_job
+  needs:
+    - aws-creds
+    - plan_terraform_demo
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo/.terraform
+      - terraform/demo/.terraform.lock.hcl
+  script:
+    - make init_terraform_demo
+    - make apply_terraform_demo
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+      changes:
+      - terraform/demo/**/*
+    - if: $CI_COMMIT_BRANCH == "main" && $BUILD_TYPE == "FORCE"
+    - when: never
+
+apply_terraform_demo2:
+  extends: .apply_job
+  needs:
+    - aws-creds
+    - plan_terraform_demo2
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo2/.terraform
+      - terraform/demo2/.terraform.lock.hcl
+  script:
+    - make init_terraform_demo2
+    - make apply_terraform_demo2
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+      changes:
+      - terraform/demo2/**/*
+    - if: $CI_COMMIT_BRANCH == "main" && $BUILD_TYPE == "FORCE"
+    - when: never
+
+apply_terraform_demo3:
+  extends: .apply_job
+  needs:
+    - aws-creds
+    - plan_terraform_demo3
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo3/.terraform
+      - terraform/demo3/.terraform.lock.hcl
+  script:
+    - make init_terraform_demo3
+    - make apply_terraform_demo3
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+      changes:
+      - terraform/demo3/**/*
+    - if: $CI_COMMIT_BRANCH == "main" && $BUILD_TYPE == "FORCE"
+    - when: never
+
+
+########################################################################################################################
+# DELETE
+########################################################################################################################
+
+
+delete_terraform_demo3:
+  extends: .delete_job
+  needs:
+    - aws-creds
+    - plan_terraform_demo3
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo3/.terraform
+      - terraform/demo3/.terraform.lock.hcl
+  script:
+    - make init_terraform_demo3
+    - make destroy_terraform_demo3
+
+
+delete_terraform_demo2:
+  extends: .delete_job
+  needs:
+    - aws-creds
+    - plan_terraform_demo2
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo2/.terraform
+      - terraform/demo2/.terraform.lock.hcl
+  script:
+    - make init_terraform_demo2
+    - make destroy_terraform_demo2
+
+
+delete_terraform_demo:
+  extends: .delete_job
+  needs:
+    - aws-creds
+    - plan_terraform_demo
+  cache:
+    key: tf-$CI_COMMIT_REF_SLUG
+    paths:
+      - .terraform.d/plugin-cache/
+      - terraform/demo/.terraform
+      - terraform/demo/.terraform.lock.hcl
+  script:
+    - make init_terraform_demo
+    - make destroy_terraform_demo
+
