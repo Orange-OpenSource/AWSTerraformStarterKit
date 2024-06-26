@@ -191,11 +191,45 @@ documentation, improving the overall quality of module documentation and enhanci
 
 5. Save the `docker-compose-tools.yaml` file after adding the new service definition.
 
-## New command in Makefile
+## Customize tools config file for a plan
 
-If the command you want to add to the StarterKit does not depend on the configure.yaml file, you can directly add it to
-the Makefile. However, if the command requires some dynamic configuration based on the configure.yaml file, you should add it to
-the Jinja template in the automation folder.
+You can customize terraform commands by following these steps:
+
+1. Configure commands in project configuration
+
+   Edit the `configure.yaml` and, using the key mapping bellow, add the `key` for the tools you want to override the configuration file for.
+
+   | tools | key |
+   |-------|-----|
+   | tflint | tflint_config |
+   | shellcheck | shellcheck_config |
+   | yaml lint | yamllint_config |
+   | markdown lint | markdownlint_config |
+   | trivy | trivy_config |
+   | terrascan | terrascan_config |
+   | terraform-docs | terraform_docs_config |
+
+   ```yaml
+   ...
+   plans:
+   - name: terraform/compute/app-server
+     # (optional) layer specific tflint config file
+     tflint_config: .config/.tflint.hcl
+     # (optional) layer specific shell check config file
+     shellcheck_config: .config/.shellcheckrc
+     # (optional) layer specific yaml lint config file
+     yamllint_config: .config/.yamllintrc
+     # (optional) layer specific markdown lint config file
+     markdownlint_config: .config/.mdl_style.rb
+     # (optional) layer specific trivy config file
+     trivy_config: .config/.trivy.yaml
+     # (optional) layer specific terrascan config file
+     terrascan_config: .config/.terrascan_config.toml
+     # (optioanl) layer specific terraform-docs config file
+     terraform_docs_config: .config/.terraform-docs.yml
+   ...
+   ```
+
 
 ## CICD
 

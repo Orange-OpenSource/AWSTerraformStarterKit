@@ -21,9 +21,12 @@ import sys
 import jinja2
 import yaml
 
+import compute_deps
+
 
 class Render:
-    TEMPLATES_DIR = os.environ.get('TEMPLATES_DIR') if os.environ.get('TEMPLATES_DIR') is not None else "/templates"
+    TEMPLATES_DIR = os.environ.get('TEMPLATES_DIR') if os.environ.get(
+        'TEMPLATES_DIR') is not None else "/templates"
 
     def __init__(self, template_name=None, variables_path=None):
         self.template_name = template_name
@@ -43,13 +46,20 @@ class Render:
 
     def rend_template(self):
         env_data = {}
-        for k,v in os.environ.items():
+        for k, v in os.environ.items():
             env_data[k] = v
         var_data = {}
         with open(self.variables_path, closefd=True) as f:
             var_data = yaml.full_load(f)
+        # compute execution plan
+        for idx in var_data['plans']:
+            var_data['plans'][idx] = var_data['plans'][idx] if 'name' in var_data['plans'][idx] else {
+                'name': var_data['plans'][idx]} # this is for backward compatiblity
+        exec_plan = compute_deps.build_exec_plan(plans=var_data['plans'])
+        var_data['exec_plan'] = exec_plan
+        # build final variables
         data = env_data
-        for k,v in var_data.items():
+        for k, v in var_data.items():
             data[k] = v
         self.env.filters['yaml'] = self.yaml_filter
         self.env.globals["environ"] = lambda key: os.environ.get(key)

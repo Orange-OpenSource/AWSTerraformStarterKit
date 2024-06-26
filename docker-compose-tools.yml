@@ -4,12 +4,13 @@ services:
   precommit:
     container_name: ${COMPOSE_PROJECT_NAME}_precommit
     image: ghcr.io/antonbabenko/pre-commit-terraform:${PRECOMMIT_IMAGE_TAG}
-    user: root
     environment:
       PRE_COMMIT_HOME: /tmp
+      USERID: ${MY_UID}:${MY_GID}
     volumes:
       - ./${PROJECT_ROOT_DIR}:/project
       - /tmp:/tmp
+      - /tmp:/.cache
     working_dir: ${DOCKER_WORKDIR}
 
   lint:

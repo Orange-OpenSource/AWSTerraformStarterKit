@@ -3,39 +3,45 @@
 
 # Automatic Content Generated
 
-generate_documentation: ## Generate Terraform Documentation
+generate_documentation: ## DEPRECATED: Generate Terraform Documentation
 generate_documentation:
 {% for plan in plans_install %}
 {% set plan_name = plan if not 'name' in plan else plan['name'] %}
-	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs {{ plan_name }} --config=./.config/.terraform-docs.yml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm --remove-orphans terraform_docs {{ plan_name }} --config=./${TERRAFORM_DOCS_CONFIG}
 {% endfor %}
 
-terraform_terrascan: ## Terrascan Terraform
+render_templates: ## Render all templates
+render_templates:
+{% for template in templates %}
+	@$(MAKE) --no-print-directory render_template TPL_SRC="{{ template['source'] }}" TPL_DST="{{ template['target'] }}"
+{% endfor %}
+
+terraform_terrascan: ## DEPRECATED: Terrascan Terraform
 terraform_terrascan:
 	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml {% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %} --iac-dir={{ plan_name }} {% endfor %}
 
-format: ## Format all Terraform files using "terraform fmt"
+format: ## DEPREATED: Format all Terraform files using "terraform fmt"
 format:
 {% for plan in plans_install %}
 {% set plan_name = plan if not 'name' in plan else plan['name'] %}
 	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="{{ plan_name }}"
 {% endfor %}
 
-trivy:  ## Terraform Trivy
+trivy:  ## DEPRECATED: Terraform Trivy
 trivy:
 {% for plan in plans_install %}
 {% set plan_name = plan if not 'name' in plan else plan['name'] %}
-	$(TRIVY_RUN) config {{ plan_name }} --config=./.config/.trivy.yaml --skip-dirs .terraform
+	$(TRIVY_RUN) config {{ plan_name }} --config=./.config/${TRIVY_CONFIG} --skip-dirs .terraform
 {% endfor %}
 
-validate: ## Validate all Terraform files using "terraform validate"
+validate: ## DEPRECATED: Validate all Terraform files using "terraform validate"
 validate:
 {% for plan in plans_install %}
 {% set plan_name = plan if not 'name' in plan else plan['name'] %}
 	@$(MAKE) --no-print-directory terraform_validate CURRENT_DIR="{{ plan_name }}"
 {% endfor %}
 
-lint: ## Check that good naming practices are respected in Terraform files (using tflint)
+lint: ## DEPRECATED: Check that good naming practices are respected in Terraform files (using tflint)
 lint:
 	$(TFLINT_RUN) --init
 {% for plan in plans_install %}
@@ -46,99 +52,122 @@ lint:
 {% for plan in plans_install %}
 {% set plan_name = plan if not 'name' in plan else plan['name'] %}
 {% set slug = plan_name | replace('/',"_") %}
-console_{{ slug}}: ## Connect terraform Docker AWS {{ plan_name }} layer
-console_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} console_commands
-{% endfor %}
+terraform_docs_{{ slug}}: ## Generate {{ plan_name }} layer Terraform Documentation
+terraform_docs_{{ slug}}:
+	@$(MAKE) --no-print-directory terraform_docs_commands CURRENT_DIR="{{ plan_name }}"{% if 'terraform_docs_config' in plan %} TERRAFORM_DOCS_CONFIG={{ plan['terraform_docs_config'] }}{% endif %}
 
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
-tsvc_{{ slug}}: ## Check terraform module version {{ plan_name }}
-tsvc_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_check_version_commands
-{% endfor %}
+terrascan_{{ slug}}: ## Terrascan Terraform {{ plan_name }} layer
+terrascan_{{ slug}}:
+	@$(MAKE) --no-print-directory terrascan_commands CURRENT_DIR="{{ plan_name }}"{% if 'terrascan_config' in plan %} TERRASCAN_CONFIG={{ plan['terrascan_config'] }}{% endif %}
 
-tsvc_all: ## Install all AWS layers
-tsvc_all: {% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %}tsvc_{{ slug }} {% endfor %}
+format_{{ slug}}: ## Format {{ plan_name }} layer Terraform files using "terraform fmt"
+format_{{ slug}}:
+	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="{{ plan_name }}"
 
+trivy_{{ slug}}: ## Terraform trivy {{ plan_name }} layer
+trivy_{{ slug }}:
+	@$(MAKE) --no-print-directory trivy_commands CURRENT_DIR={{ plan_name }}{% if 'trivy_config' in plan %} TRIVY_CONFIG={{ trivy_config }}{% endif %}
 
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
-init_{{ slug}}: ## Init AWS {{ plan_name }} layer
-init_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_init_parameters' in plan %}TERRAFORM_INIT_PARAMETERS="{{ plan['override_init_parameters'] }}" {% endif %}terraform_init_commands
-{% endfor %}
-
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
 validate_{{ slug}}: ## Validate AWS {{ plan_name }} layer
 validate_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_validate
-{% endfor %}
 
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
+tflint_{{ slug}}: ## Terraform code goot practices check with tflint on {{ plan_name }} layer
+tflint_{{ slug }}:
+	@$(MAKE) --no-print-directory terraform_lint CURRENT_DIR={{ plan_name }}{% if 'tflint_config' in plan %} TFLINT_CONFIG={{ plan['tflint_config'] }}{% endif %}
+
+markdown_lint_{{ slug}}: ## Lint Markdown files files on {{ plan_name }} layer
+markdown_lint_{{ slug }}:
+	@$(MAKE) --no-print-directory markdown_lint_commands CURRENT_DIR={{ plan_name }}{% if 'markdownlint_config' in plan %} MARKDOWNLINT_CONFIG={{ plan['markdownlint_config'] }}{% endif %}
+
+shell_lint_{{ slug}}: ## Lint shell files files on {{ plan_name }} layer
+shell_lint_{{ slug }}:
+	@$(MAKE) --no-print-directory shell_lint_commands CURRENT_DIR={{ plan_name }}{% if 'shellcheck_config' in plan %} SHELLCHECK_CONFIG={{ plan['shellcheck_config'] }}{% endif %}
+
+yaml_lint_{{ slug}}: ## Lint yaml files files on {{ plan_name }} layer
+yaml_lint_{{ slug }}:
+	@$(MAKE) --no-print-directory yaml_lint_commands CURRENT_DIR={{ plan_name }}{% if 'yamllint_config' in plan %} YAMLLINT_CONFIG={{ plan['yamllint_config'] }}{% endif %}
+
+console_{{ slug}}: ## Connect terraform Docker AWS {{ plan_name }} layer
+console_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} console_commands
+
+tsvc_{{ slug}}: ## Check terraform module version {{ plan_name }}
+tsvc_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_check_version_commands
+
+init_{{ slug}}: ## Init AWS {{ plan_name }} layer
+init_{{ slug }}:
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_init_parameters' in plan %}TERRAFORM_INIT_PARAMETERS="{{ plan['override_init_parameters'] }}" {% endif %}terraform_init_commands
+
 plan_{{ slug}}: ## Plan AWS {{ plan_name }} layer
 plan_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_plan_commands
-{% endfor %}
 
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
 apply_{{ slug }}: ## Apply AWS {{ plan_name }} layer
 apply_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_apply_commands
-{% endfor %}
 
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
 install_{{ slug }}: ## Install AWS {{ plan_name }} layer
 install_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_install_commands
-{% endfor %}
 
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
 destroy_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer
 destroy_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_destroy_commands
-{% endfor %}
 
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
 destroyauto_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer automaticaly
 destroyauto_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_destroyauto_commands
 {% endfor %}
 
+terraform_docs_all:  ## Generate Terraform Documentation for all stacks
+terraform_docs_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} terraform_docs_{{ slug }}{% endfor %}
+
+terrascan_all:  ## Terrascan Terraform
+terrascan_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} terrascan_{{ slug }}{% endfor %}
+
+format_all:  ## Format all Terraform files using "terraform fmt"
+format_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} format_{{ slug }}{% endfor %}
+
+trivy_all:  ## Terraform Trivy
+trivy_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} trivy_{{ slug }} {% endfor %}
+
+validate_all:  ## Validate all Terraform files using "terraform validate"
+validate_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} validate_{{ slug }} {% endfor %}
+
+tflint_all:  ## Terraform code goot practices check with tflint on all layers
+tflint_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} tflint_{{ slug }} {% endfor %}
+
+markdown_lint_all:  ## Lint Markdown files files on all layers
+markdown_lint_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} markdown_lint_{{ slug }} {% endfor %}
+
+shell_lint_all:  ## Lint shell files files on all layers
+shell_lint_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} shell_lint_{{ slug }} {% endfor %}
+
+yaml_lint_all:  ## Lint yaml files files on all layers
+yaml_lint_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} yaml_lint_{{ slug }} {% endfor %}
+
+tsvc_all: ## Install all AWS layers
+tsvc_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} tsvc_{{ slug }} {% endfor %}
 
 init_all: ## Init all AWS layers
-init_all:
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
-	@$(MAKE) --no-print-directory init_{{ slug }}
-{% endfor %}
+init_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} init_{{ slug }} {% endfor %}
 
 plan_all: ## Plan all AWS layers
-plan_all:
-{% for plan in plans_install %}
-{% set plan_name = plan if not 'name' in plan else plan['name'] %}
-{% set slug = plan_name | replace('/',"_") %}
-	@$(MAKE) --no-print-directory plan_{{ slug }}
-{% endfor %}
+plan_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} init_{{ slug }} {% endfor %}
 
 install_all: ## Install all AWS layers
-install_all: {% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %}install_{{ slug }} {% endfor %}
-
+install_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} plan_{{ slug }} {% endfor %}
 
 destroy_all: ## Uninstall all layers
-destroy_all: {% for plan in plans_delete %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %}destroy_{{ slug }} {% endfor %}
+destroy_all:{% for plan in plans_delete %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} destroy_{{ slug }} {% endfor %}
+
+
+### Makefile customizations
+
+{% if additional_makefiles is defined %}
+{% for additional_makefile in additional_makefiles %}
+include {{ additional_makefile }}
+{% endfor %}
+{% endif %}

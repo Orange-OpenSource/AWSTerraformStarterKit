@@ -17,7 +17,7 @@ PROJECT_DIR:
 ########################################################################################################################
 TFENV_IMAGE_TAG: latest
 TFLINT_IMAGE_TAG: v0.49.0
-PRECOMMIT_IMAGE_TAG: v1.83.6
+PRECOMMIT_IMAGE_TAG: v1.89.0
 DRIFTCTL_IMAGE_TAG: latest
 DOTENV_LINTER_IMAGE_TAG: latest
 MARKDOWN_LINTER_IMAGE_TAG: latest
@@ -103,6 +103,27 @@ TF_VAR_assume_role: <AWS_IAM_ROLE_NAME>
 ########################################################################################################################
 # PLANS
 ########################################################################################################################
+
+######### GLOBAL VARIABLES ###############
+# The default terraform version for all plans
+# terraform_version: 1.6.4
+# The default tflint config file path
+tflint_config: .config/.tflint.hcl
+# The default precommit config file path
+precommit_config: .config/.pre-commit-config.yaml
+# The default shell linter config file
+shellcheck_config: .config/.shellcheckrc
+# The default yaml lint config file
+yamllint_config: .config/.yamllintrc
+# The default markdown lint config file
+markdownlint_config: .config/.mdl_style.rb
+# The default trivy config file
+trivy_config: .config/.trivy.yaml
+# The default terrascan config file
+terrascan_config: .config/.terrascan_config.toml
+# The default terraform-docs config file
+terraform-docs_config: .config/.terraform-docs.yml
+
 # terraform command behavior
 DEFAULT_UPGRADE: false
 
@@ -110,14 +131,42 @@ DEFAULT_UPGRADE: false
 plans:
   - terraform/demo
   - name: terraform/demo2
+    # (optional) layer specific init parameters replacement
     override_init_parameters: ""
+    # (optional) layer specific 'plan' parameters replacement
     override_var_parameters: ""
+    # (optional) layer specific tflint config file
+    tflint_config: .config/.tflint.hcl
+    # (optional) layer specific shell check config file
+    shellcheck_config: .config/.shellcheckrc
+    # (optional) layer specific yaml lint config file
+    yamllint_config: .config/.yamllintrc
+    # (optional) layer specific markdown lint config file
+    markdownlint_config: .config/.mdl_style.rb
+    # (optional) layer specific trivy config file
+    trivy_config: .config/.trivy.yaml
+    # (optional) layer specific terrascan config file
+    terrascan_config: .config/.terrascan_config.toml
+    # (optioanl) layer specific terraform-docs config file
+    terraform_docs_config: .config/.terraform-docs.yml
   - name: terraform/demo3
+    # (optional) layer specific 'plan' additionals parameters
     additional_var_parameters: "-var-file=../common.tfvars"
 
 # AWS Account ID in which your plan are deployed and containing the backend bucket
 # SSO Account
 ACCOUNT_ID: <AWS_ACCOUNT_ID>
+
+# (Optional) variable to defined additional jinj2 template file to render with variables from `configure.yaml` file
+# templates:
+#   - source: .github/.github-actions.yaml.j2
+#     target: .github/workflows/.github-actions.yaml
+
+########################################################################################################################
+# Makefile customizations
+########################################################################################################################
+# (Optional) this parameter can be used to specify additional make files to be added at the en of the Makefile with "include"
+# additional_makefiles: []
 
 ########################################################################################################################
 # PROXY

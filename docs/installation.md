@@ -259,6 +259,132 @@ This command will generate the necessary templates based on the newly added plan
 
 4. Once the process completes, you can proceed with using the generated templates for your Terraform deployment.
 
+## Customize terraform commands for a plan
+
+You can customize terraform commands by following these steps:
+
+1. Configure commands
+
+   Edit the `configure.yaml` and add the config key depending on the customization you want
+   For `init` with the following keys `override_init_parameters`. eg.
+
+   ```yaml
+   ...
+   plans:
+   - name: terraform/compute/app-server
+     override_init_parameters: -config=../backend.tfvars
+   ...
+   ```
+
+   The equivalent terraform command for this configuration would be `cd terraform/compute/app-server && terraform init -config=../backend.tfvars`.
+
+   For  `plan` with the following keys:
+   - `override_var_parameters`: This key can be used to override the default parameters. eg.
+
+       ```yaml
+       ...
+       plans:
+         - name: terraform/compute/app-server
+           override_var_parameters: -var-file=../compute.tfvars
+       ...
+       ```
+
+       The equivalent terraform command for this configuration would be `cd terraform/compute/app-server && terraform plan -var-file=../compute.tfvars`.
+
+   - `additional_var_parameters`: This key can be used to add parameters to default parameters. eg.
+
+      ```yaml
+      ...
+      plans:
+        - name: terraform/compute/app-server
+          additional_var_parameters: -var-file=../compute.tfvars
+      ...
+      ```
+
+      The equivalent terraform command for this configuration would be `cd terraform/compute/app-server && terraform plan -var-file=/project/terraform/common.tfvars -var-file=parameters.auto.tfvars -var-file=../compute.tfvars`.
+
+2. Re-generate the `Makefile`
+
+   ```bash
+   make start
+   ```
+
+   This command will re-generate the local `.env` file, generates and override the automatic content part of the `Makefile` with the new parameter for the updated plan.
+
+## Add custom template
+
+This functionality help render template using the same content of the `configure.yaml` this can be useful for example when you want to render a pipeline as code for another CI like Github Actions. This allow extension of the functionality of the starterkit.
+
+To add custom template, just specify in the `configure.yaml` file  under the `templates` array an entry with `source` key for the template path and the `target` key for the output file. for example:
+
+```yaml
+templates:
+  - source: templates/.github-actions.yaml.2
+    target: .github/workflows/.github-actions.yaml
+```
+
+For the entry 0, the starterkit will render the template `templates/.github-actions.yaml.j2` using variables from `configure.yaml` to `.github/workflows/.github-actions.yaml`.
+
+> [!IMPORTANT]
+> The directory of the target file must exists. If not rendered file creation will fail.
+
+## Add additional make files
+
+This functionality can be used to add custom target to `Makefile`. This allows to extends functionalities of the starterkit by provider makefile with additional target related to new tools for example.
+
+To add additional make files, follows the following steps:
+
+**step 1:** just specify in the `configure.yaml` file  under the `additional_makefiles` array an entry with the path to the make files. for example:
+
+```yaml
+additional_makefiles:
+  - project.mk
+```
+
+**step 2:** runs the generate target of the project
+
+```shell
+make generate
+```
+
+The starterkit will include additional make files at the end of the `Makefile` using the `include` key word.
+
+## New command in Makefile
+
+If the command you want to add to the StarterKit does not depend on the configure.yaml file, you can add it to
+custome make file and update the `configure.yaml` file accordingly. However, if the command requires some dynamic configuration based on the configure.yaml file, you should create a custom jinja template for the custom make file and configure its target as a custom make file.
+
+For example, in the following example we will add clean up command.
+
+The command template file `project.mk.j2`
+
+```txt
+{% for plan in plans %}
+{% set plan_name = plan['name'] if 'name' in plan else plan %}
+{% set slug = plan_name | replace('/',"_") %}
+cleanup_{{ plan['name] }}:
+   rm -rf {{ plan_name }}/.terraform
+{% endfor %}
+```
+
+In the `configure.yaml` file
+
+```yaml
+...
+templates:
+  - source: project.mk.j2
+    target: project.mk
+...
+additional_makefiles:
+  - project.mk
+...
+```
+
+Don't forget to generate files
+
+```shell
+make generate
+```
 
 # Update AWSTerraformStarterKit
 
