@@ -4,6 +4,7 @@ FROM "docker.io/bash:${BASH_VERSION}"
 # Runtime dependencies
 RUN apk add --no-cache --purge \
     curl \
+    awscli \
     python3 py3-pip \
     git \
     wget \
