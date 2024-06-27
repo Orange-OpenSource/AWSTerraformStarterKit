@@ -21,6 +21,7 @@ RUN pip3 --no-cache-dir install Jinja2==3.1.2
 
 # Copy extra scripts: embedded render
 COPY ./render.py $SCRIPTS_DIR/entities/render.py
+COPY ./compute_deps.py $SCRIPTS_DIR/entities/compute_deps.py
 RUN chmod +x $SCRIPTS_DIR/entities/render.py
 
 ENTRYPOINT ["jinja2"]

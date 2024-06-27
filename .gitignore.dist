@@ -52,3 +52,4 @@ docker-compose.yml
 .gitignore.dist
 .env
 makeplan.mk
+.scoutesuite-report

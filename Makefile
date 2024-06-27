@@ -91,6 +91,7 @@ ifdef CICD_MODE
 	TRIVY_RUN ?= $(shell which trivy)
 	TERRASCAN_RUN ?= $(shell which terrascan)
 	TERRAFORM_DOCS ?= $(shell which terraform-docs)
+	SCOUTSUITE_EXEC ?= $(shell which scout)
 else
 	TFENV_EXEC = $(DOCKER_COMPOSE) exec terraform
 	TERRAFORM_EXEC = $(DOCKER_COMPOSE) exec terraform
@@ -103,6 +104,7 @@ else
 	TRIVY_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm trivy
 	TERRASCAN_RUN  = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm terrascan
 	TERRAFORM_DOCS = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm terraform_docs
+	SCOUTSUITE_EXEC ?= $(DOCKER_COMPOSE_DEV_TOOLS) run --rm scoutsuite
 endif
 
 debug: ## Print debug logs
@@ -252,6 +254,9 @@ shell_lint_commands:
 # yaml lint commands for a stack layer
 yaml_lint_commands:
 	$(YAML_LINT) -c ./$(YAMLLINT_CONFIG)  --no-warnings ${CURRENT_DIR}
+
+scoutsuite:
+	$(SCOUTSUITE_EXEC) scout aws --report-dir .scoutesuite-report --no-browser
 ########################################################################################################################
 #  LOCAL DEV DOCKER
 ########################################################################################################################
