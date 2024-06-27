@@ -52,7 +52,7 @@ class Render:
         with open(self.variables_path, closefd=True) as f:
             var_data = yaml.full_load(f)
         # compute execution plan
-        for idx in var_data['plans']:
+        for idx in range(len(var_data['plans'])):
             var_data['plans'][idx] = var_data['plans'][idx] if 'name' in var_data['plans'][idx] else {
                 'name': var_data['plans'][idx]} # this is for backward compatiblity
         exec_plan = compute_deps.build_exec_plan(plans=var_data['plans'])
