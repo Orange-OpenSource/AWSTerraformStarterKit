@@ -54,7 +54,7 @@ lint:
 {% set slug = plan_name | replace('/',"_") %}
 terraform_docs_{{ slug}}: ## Generate {{ plan_name }} layer Terraform Documentation
 terraform_docs_{{ slug}}:
-	@$(MAKE) --no-print-directory terraform_docs_commands CURRENT_DIR="{{ plan_name }}"{% if 'terraform_docs_config' in plan %} TERRAFORM_DOCS_CONFIG={{ plan['terraform_docs_config'] }}{% endif %}
+	@$(MAKE) --no-print-directory terraform_docs_commands CURRENT_DIR="{{ plan_name }}"{% if 'terraform-docs_config' in plan %} TERRAFORM_DOCS_CONFIG={{ plan['terraform-docs_config'] }}{% endif %}
 
 terrascan_{{ slug}}: ## Terrascan Terraform {{ plan_name }} layer
 terrascan_{{ slug}}:
