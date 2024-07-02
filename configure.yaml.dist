@@ -149,7 +149,7 @@ plans:
     # (optional) layer specific terrascan config file
     terrascan_config: .config/.terrascan_config.toml
     # (optioanl) layer specific terraform-docs config file
-    terraform_docs_config: .config/.terraform-docs.yml
+    terraform-docs_config: .config/.terraform-docs.yml
   - name: terraform/demo3
     # (optional) layer specific 'plan' additionals parameters
     additional_var_parameters: "-var-file=../common.tfvars"
