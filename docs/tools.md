@@ -207,7 +207,7 @@ You can customize terraform commands by following these steps:
    | markdown lint | markdownlint_config |
    | trivy | trivy_config |
    | terrascan | terrascan_config |
-   | terraform-docs | terraform-docs_config |
+   | terraform-docs | terraform_docs_config |
 
    ```yaml
    ...
@@ -226,7 +226,7 @@ You can customize terraform commands by following these steps:
      # (optional) layer specific terrascan config file
      terrascan_config: .config/.terrascan_config.toml
      # (optioanl) layer specific terraform-docs config file
-     terraform-docs_config: .config/.terraform-docs.yml
+     terraform_docs_config: .config/.terraform-docs.yml
    ...
    ```
 

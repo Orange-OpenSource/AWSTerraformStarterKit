@@ -123,7 +123,7 @@ trivy_config: .config/.trivy.yaml
 # The default terrascan config file
 terrascan_config: .config/.terrascan_config.toml
 # The default terraform-docs config file
-terraform-docs_config: .config/.terraform-docs.yml
+terraform_docs_config: .config/.terraform-docs.yml
 
 # terraform command behavior
 DEFAULT_UPGRADE: false
@@ -149,7 +149,7 @@ plans:
     # (optional) layer specific terrascan config file
     terrascan_config: .config/.terrascan_config.toml
     # (optioanl) layer specific terraform-docs config file
-    terraform-docs_config: .config/.terraform-docs.yml
+    terraform_docs_config: .config/.terraform-docs.yml
   - name: terraform/demo3
     # (optional) layer specific 'plan' additionals parameters
     additional_var_parameters: "-var-file=../common.tfvars"
