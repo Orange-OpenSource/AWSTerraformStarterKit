@@ -94,16 +94,6 @@ stages:
   {% endif %}
 
 {% if  GITLAB_JOBS["aws-creds"]  %}
-# .aws-cli:
-#   before_script:
-#     - yum install -y jq
-#   image:
-#     name: amazon/aws-cli:latest
-#     entrypoint:
-#       - '/usr/bin/env'
-#       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-
-# .aws_get_creds: &aws_get_creds
 .aws_get_creds:
   before_script:
     - yum install -y jq
@@ -112,22 +102,41 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  {% if GITLAB_AWS_AUTH_METHOD is defined and GITLAB_AWS_AUTH_METHOD == 'oidc' %}
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: {% if GITLAB_OIDC_TOKEN_AUDIENCE is defined %}{{GITLAB_OIDC_TOKEN_AUDIENCE}}{% else %}${CI_SERVER_PROTOCOL}://${CI_SERVER_HOST}{% endif %}
+
+  {% endif %}
   script: |
     #!/usr/bin/env bash
     echo "Getting temporary credentials associated to assume role"
+    {% if (GITLAB_AWS_AUTH_METHOD is defined and GITLAB_AWS_AUTH_METHOD == 'role') or GITLAB_AWS_AUTH_METHOD is not defined %}
     STS_CREDS=$(aws sts assume-role --role-arn arn:aws:iam::{{ environ('CICD_ACCOUNT_ID') }}:role/{{ environ('CICD_ROLE_NAME') }} --role-session-name ${CI_COMMIT_SHA})
     AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
     AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
     AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
+    {% elif GITLAB_AWS_AUTH_METHOD is defined and GITLAB_AWS_AUTH_METHOD == 'oidc' %}
+    ROLE_ARN="arn:aws:iam::{{ environ('CICD_ACCOUNT_ID') }}:role/{{ environ('CICD_ROLE_NAME') }}"
+    export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s"
+      $(aws sts assume-role-with-web-identity
+      --role-arn ${ROLE_ARN}
+      --role-session-name "GitLabRunner-${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
+      --web-identity-token ${GITLAB_OIDC_TOKEN}
+      --duration-seconds 3600
+      --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]'
+      --output text))
+    {% endif %}
     echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
     echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
     echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> creds.env
+    aws sts get-caller-identity
   artifacts:
     reports:
       dotenv: creds.env
   <<: *base
-
 {% endif %}
+
 .terraform-base: &terraform_base
   image:
     name: marmarama/tfenv:$TFENV_IMAGE_TAG

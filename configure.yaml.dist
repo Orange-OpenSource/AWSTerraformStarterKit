@@ -8,8 +8,10 @@ REGION: eu-west-3
 # Name of the output of the terraform plan
 PLAN_BINARY_FILE: tfplan.binary
 PLAN_JSON_FILE: tfplan.json
-# Relative path to project directory from this file directory.
+
+# Path to the top level directory relative to this file directory.
 PROJECT_ROOT_DIR:
+# This is the starterkit working directory relative to the PROJECT_ROOT_DIR
 PROJECT_DIR:
 
 ########################################################################################################################
@@ -59,6 +61,13 @@ GITLAB_JOBS:
 CICD_ROLE_NAME: XXXXXX-CiCd-CrossAccountRole
 CICD_ACCOUNT_ID: 123546789123
 SONAR_HOST_URL: https://sonarqube
+
+# (Optional) AWS authentication method. possible values are: 
+#  role: (Default) here the runner assumes the CICD_ROLE_NAME in the CICD_ACCOUNT_ID to get temporary AccessKey/SecretKey credentials
+#  oidc: here the runner assume the CICD_ROLE_NAME using a GITLAB_OIDC_TOKEN to get temporary AccessKey/SecretKey credentials
+GITLAB_AWS_AUTH_METHOD: oidc
+# (Optional) The id token audience value when AWs Authentication Method is OIDC. The default value is "${CI_SERVER_PROTOCOL}://${CI_SERVER_HOST}"
+# GITLAB_OIDC_TOKEN_AUDIENCE: https://gitlab.example.com
 
 # Run Terraform apply only on main branch
 GIT_MAIN_BRANCH: main
