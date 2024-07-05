@@ -209,6 +209,9 @@ else
 endif
 
 terraform_lint:
+ifeq (,$(wildcard .tflint.d))
+	$(TFLINT_RUN) --chdir ${CURRENT_DIR} --init
+endif
 	$(TFLINT_RUN) --chdir ${CURRENT_DIR}
 
 # Terraform commands to delete a stack layer
