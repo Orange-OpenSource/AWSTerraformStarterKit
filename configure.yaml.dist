@@ -65,7 +65,7 @@ SONAR_HOST_URL: https://sonarqube
 # (Optional) AWS authentication method. possible values are: 
 #  role: (Default) here the runner assumes the CICD_ROLE_NAME in the CICD_ACCOUNT_ID to get temporary AccessKey/SecretKey credentials
 #  oidc: here the runner assume the CICD_ROLE_NAME using a GITLAB_OIDC_TOKEN to get temporary AccessKey/SecretKey credentials
-GITLAB_AWS_AUTH_METHOD: oidc
+GITLAB_CI_AWS_AUTH_METHOD: oidc
 # (Optional) The id token audience value when AWs Authentication Method is OIDC. The default value is "${CI_SERVER_PROTOCOL}://${CI_SERVER_HOST}"
 # GITLAB_OIDC_TOKEN_AUDIENCE: https://gitlab.example.com
 
