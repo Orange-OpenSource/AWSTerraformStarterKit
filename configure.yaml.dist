@@ -63,11 +63,16 @@ CICD_ACCOUNT_ID: 123546789123
 SONAR_HOST_URL: https://sonarqube
 
 # (Optional) AWS authentication method. possible values are: 
-#  role: (Default) here the runner assumes the CICD_ROLE_NAME in the CICD_ACCOUNT_ID to get temporary AccessKey/SecretKey credentials
-#  oidc: here the runner assume the CICD_ROLE_NAME using a GITLAB_OIDC_TOKEN to get temporary AccessKey/SecretKey credentials
-GITLAB_AWS_AUTH_METHOD: oidc
+#  role: (Default) here the Gitlab Runner assumes the CICD_ROLE_NAME in the CICD_ACCOUNT_ID to get temporary AccessKey/SecretKey credentials
+#  oidc: here the Gitlab Runner assumes the CICD_ROLE_NAME using a GITLAB_OIDC_TOKEN to get temporary AccessKey/SecretKey credentials
+#  accesskey: here the Gitlab Runner uses permanent AccessKey/SecretKey from group or project CI/CD variables
+GITLAB_CI_AWS_AUTH_METHOD: oidc
 # (Optional) The id token audience value when AWs Authentication Method is OIDC. The default value is "${CI_SERVER_PROTOCOL}://${CI_SERVER_HOST}"
-# GITLAB_OIDC_TOKEN_AUDIENCE: https://gitlab.example.com
+# GITLAB_CI_OIDC_TOKEN_AUDIENCE: https://gitlab.example.com
+# (Optional) Use this variables when the `GITLAB_CI_AWS_AUTH_METHOD` is `accesskey` to specify the AWS Access Key ID and the AWS Secret Access Key CI/CD variables.
+# eg. `GITLAB_CI_AWS_ACCESS_KEY_ID_VARIABLE: $CREDS_AWS_ACCESS_KEY_ID`
+# GITLAB_CI_AWS_ACCESS_KEY_ID_VARIABLE: 
+# GITLAB_CI_AWS_SECRET_ACCESS_KEY_VARIABLE:
 
 # Run Terraform apply only on main branch
 GIT_MAIN_BRANCH: main

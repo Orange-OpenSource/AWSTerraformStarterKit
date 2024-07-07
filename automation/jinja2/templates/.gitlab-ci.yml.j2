@@ -102,21 +102,21 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-  {% if GITLAB_AWS_AUTH_METHOD is defined and GITLAB_AWS_AUTH_METHOD == 'oidc' %}
+  {% if GITLAB_CI_AWS_AUTH_METHOD is defined and GITLAB_CI_AWS_AUTH_METHOD == 'oidc' %}
   id_tokens:
     GITLAB_OIDC_TOKEN:
-      aud: {% if GITLAB_OIDC_TOKEN_AUDIENCE is defined %}{{GITLAB_OIDC_TOKEN_AUDIENCE}}{% else %}${CI_SERVER_PROTOCOL}://${CI_SERVER_HOST}{% endif %}
+      aud: {% if GITLAB_CI_OIDC_TOKEN_AUDIENCE is defined %}{{GITLAB_CI_OIDC_TOKEN_AUDIENCE}}{% else %}${CI_SERVER_PROTOCOL}://${CI_SERVER_HOST}{% endif %}
 
   {% endif %}
   script: |
     #!/usr/bin/env bash
     echo "Getting temporary credentials associated to assume role"
-    {% if (GITLAB_AWS_AUTH_METHOD is defined and GITLAB_AWS_AUTH_METHOD == 'role') or GITLAB_AWS_AUTH_METHOD is not defined %}
+    {% if (GITLAB_CI_AWS_AUTH_METHOD is defined and GITLAB_CI_AWS_AUTH_METHOD == 'role') or GITLAB_CI_AWS_AUTH_METHOD is not defined %}
     STS_CREDS=$(aws sts assume-role --role-arn arn:aws:iam::{{ environ('CICD_ACCOUNT_ID') }}:role/{{ environ('CICD_ROLE_NAME') }} --role-session-name ${CI_COMMIT_SHA})
     AWS_ACCESS_KEY_ID=$(echo $STS_CREDS | jq -r '.Credentials.AccessKeyId')
     AWS_SECRET_ACCESS_KEY=$(echo $STS_CREDS | jq -r '.Credentials.SecretAccessKey')
     AWS_SESSION_TOKEN=$(echo $STS_CREDS | jq -r '.Credentials.SessionToken')
-    {% elif GITLAB_AWS_AUTH_METHOD is defined and GITLAB_AWS_AUTH_METHOD == 'oidc' %}
+    {% elif GITLAB_CI_AWS_AUTH_METHOD is defined and GITLAB_CI_AWS_AUTH_METHOD == 'oidc' %}
     ROLE_ARN="arn:aws:iam::{{ environ('CICD_ACCOUNT_ID') }}:role/{{ environ('CICD_ROLE_NAME') }}"
     export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s"
       $(aws sts assume-role-with-web-identity
@@ -126,6 +126,10 @@ stages:
       --duration-seconds 3600
       --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]'
       --output text))
+    {% elif GITLAB_CI_AWS_AUTH_METHOD is defined and GITLAB_CI_AWS_AUTH_METHOD == 'accesskey' %}
+    AWS_ACCESS_KEY_ID="{{ GITLAB_CI_AWS_ACCESS_KEY_ID_VARIABLE }}"
+    AWS_SECRET_ACCESS_KEY="{{ GITLAB_CI_AWS_SECRET_ACCESS_KEY_VARIABLE }}"
+    AWS_SESSION_TOKEN=""
     {% endif %}
     echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
     echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
