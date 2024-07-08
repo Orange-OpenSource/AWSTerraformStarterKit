@@ -105,7 +105,7 @@ stages:
   {% if GITLAB_CI_AWS_AUTH_METHOD is defined and GITLAB_CI_AWS_AUTH_METHOD == 'oidc' %}
   id_tokens:
     GITLAB_OIDC_TOKEN:
-      aud: {% if GITLAB_OIDC_TOKEN_AUDIENCE is defined %}{{GITLAB_OIDC_TOKEN_AUDIENCE}}{% else %}${CI_SERVER_PROTOCOL}://${CI_SERVER_HOST}{% endif %}
+      aud: {% if GITLAB_CI_OIDC_TOKEN_AUDIENCE is defined %}{{GITLAB_CI_OIDC_TOKEN_AUDIENCE}}{% else %}${CI_SERVER_PROTOCOL}://${CI_SERVER_HOST}{% endif %}
 
   {% endif %}
   script: |
@@ -126,6 +126,10 @@ stages:
       --duration-seconds 3600
       --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]'
       --output text))
+    {% elif GITLAB_CI_AWS_AUTH_METHOD is defined and GITLAB_CI_AWS_AUTH_METHOD == 'accesskey' %}
+    AWS_ACCESS_KEY_ID="{{ GITLAB_CI_AWS_ACCESS_KEY_ID_VARIABLE }}"
+    AWS_SECRET_ACCESS_KEY="{{ GITLAB_CI_AWS_SECRET_ACCESS_KEY_VARIABLE }}"
+    AWS_SESSION_TOKEN=""
     {% endif %}
     echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > creds.env
     echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> creds.env
