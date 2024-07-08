@@ -82,7 +82,7 @@ TERRAFORM_DOCS_CONFIG ?= $(DEFAULT_TERRAFORM_DOCS_CONFIG)
 ifdef CICD_MODE
 	TFENV_EXEC ?= $(shell which tfenv)
 	TERRAFORM_EXEC ?= $(shell which terraform)
-	TFLINT_RUN ?= $(shell which tflint) --config $(TFLINT_CONFIG)
+	TFLINT_RUN ?= $(shell which tflint) --config $(shell pwd)/$(TFLINT_CONFIG)
 	PRECOMMIT_RUN ?= $(shell which pre-commit)
 	DOTENV_LINTER ?= $(shell which dotenv-linter)
 	SHELL_LINT ?= $(shell which shellcheck)
