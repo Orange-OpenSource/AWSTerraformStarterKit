@@ -316,12 +316,12 @@ render_template:
 
 render_templates: ## Render  templates
 
-start: ## Start the project
+start: ## Start the project run the docker containers and process the templates files
 start: init generate
 	$(DOCKER_COMPOSE) up -d
 	# $(TERRAFORM_EXEC) apk add --no-cache python3 py3-pip
 
-stop: ## Stop the project
+stop: ## Stop the project, stop the docker containers
 stop:
 	$(DOCKER_COMPOSE) stop
 

@@ -2,7 +2,9 @@
 # ENV Variables used for local development
 # Use the command $make dotenv_linter to validate this file
 ########################################################################################################################
+# Terraform project name
 PROJECT_NAME: starterkit
+# Docker compose project name
 COMPOSE_PROJECT_NAME: starterkit
 REGION: eu-west-3
 # Name of the output of the terraform plan
@@ -62,7 +64,7 @@ CICD_ROLE_NAME: XXXXXX-CiCd-CrossAccountRole
 CICD_ACCOUNT_ID: 123546789123
 SONAR_HOST_URL: https://sonarqube
 
-# (Optional) AWS authentication method. possible values are: 
+# (Optional) AWS authentication method. possible values are:
 #  role: (Default) here the Gitlab Runner assumes the CICD_ROLE_NAME in the CICD_ACCOUNT_ID to get temporary AccessKey/SecretKey credentials
 #  oidc: here the Gitlab Runner assumes the CICD_ROLE_NAME using a GITLAB_OIDC_TOKEN to get temporary AccessKey/SecretKey credentials
 #  accesskey: here the Gitlab Runner uses permanent AccessKey/SecretKey from group or project CI/CD variables
@@ -71,7 +73,7 @@ GITLAB_CI_AWS_AUTH_METHOD: oidc
 # GITLAB_CI_OIDC_TOKEN_AUDIENCE: https://gitlab.example.com
 # (Optional) Use this variables when the `GITLAB_CI_AWS_AUTH_METHOD` is `accesskey` to specify the AWS Access Key ID and the AWS Secret Access Key CI/CD variables.
 # eg. `GITLAB_CI_AWS_ACCESS_KEY_ID_VARIABLE: $CREDS_AWS_ACCESS_KEY_ID`
-# GITLAB_CI_AWS_ACCESS_KEY_ID_VARIABLE: 
+# GITLAB_CI_AWS_ACCESS_KEY_ID_VARIABLE:
 # GITLAB_CI_AWS_SECRET_ACCESS_KEY_VARIABLE:
 
 # Run Terraform apply only on main branch
@@ -99,13 +101,15 @@ TF_LOG_PATH: /tmp/terraform_logs
 # Terraform S3 Backend Configuration
 ########################################################################################################################
 # Leave empty if you want to customize the Terraform backend config into the Terraform plans
+# Terraform AWS S3 backend documentation https://developer.hashicorp.com/terraform/language/settings/backends/s3
+# Terraform AWS DynamoDB lock documentation https://developer.hashicorp.com/terraform/language/settings/backends/s3#dynamodb-state-locking
 TF_VAR_backend_bucket_name: <AWS_S3_BUCKET_NAME>
 TF_VAR_backend_bucket_region: <AWS_REGION_CODE>
 TF_VAR_backend_dynamodb_table: <AWS_DYNAMODB_TABLE_NAME>
 TF_VAR_backend_bucket_access_role: arn:aws:iam::<AWS_ACCOUNT_ID>:role/<AWS_IAM_ROLE_NAME>
 
 # Customize Terraform backend bucket key
-# True: set the key in the Terraform plan remote state confgirutation
+# True: set the key in the Terraform plan remote state configuration
 # False: Terraform backend bucket key is automatically generated
 CUSTOM_BACKEND_BUCKET_KEY: False
 
@@ -143,6 +147,7 @@ terraform_docs_config: .config/.terraform-docs.yml
 DEFAULT_UPGRADE: false
 
 # List the folder for each Terraform Plan to install, respect the order of installation
+# Replace the default demo plan by your own plan name and configuration
 plans:
   - terraform/demo
   - name: terraform/demo2

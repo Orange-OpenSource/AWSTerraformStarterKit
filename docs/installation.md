@@ -126,7 +126,6 @@ The following examples show how you can configure environment variables for the 
 ```bash
 $ export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
 $ export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-$ export AWS_DEFAULT_REGION=us-west-2
 
 # Alternatively you can specify a profile
 # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
@@ -187,6 +186,9 @@ To get help and list all the available commands in the AWSTerraformStarterKit, y
 $ make help
 ```
 ```bash
+
+run your own `make help` command in your environement to list all the available commands
+
 help                           This help.
 debug                          Print debug logs
 init                           Generate .env file
@@ -194,8 +196,8 @@ generate                       Generate from template gitlab-ci.yml and Makefile
 generate_makefile              Generate Makefile
 generate_gitlab_ci             Generate  GitlabCI
 start                          Stop the project
-stop                           Start the project
-down                           stop containers
+stop                           Start the project run the docker containers and process the templates files
+down                           Stop the project, stop the docker containers
 kill                           Destroy all containers
 console                        Connect Terraform Docker
 logout                         Remove assumed role
