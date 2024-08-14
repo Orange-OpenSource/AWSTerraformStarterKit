@@ -19,6 +19,10 @@ PROJECT_DIR:
 ########################################################################################################################
 # Docker Compose image tags to use
 ########################################################################################################################
+# docker-compose.yaml terraform image
+BASH_VERSION_TAG: 5
+TFENV_VERSION: 3.0.0
+# Tools image versions
 TFENV_IMAGE_TAG: latest
 TFLINT_IMAGE_TAG: v0.49.0
 PRECOMMIT_IMAGE_TAG: v1.89.0
