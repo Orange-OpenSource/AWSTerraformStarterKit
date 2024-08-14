@@ -6,9 +6,9 @@ services:
     build:
       dockerfile: automation/TFEnv/Dockerfile
       args:
-        - TFENV_VERSION=3.0.0
-        - BASH_VERSION=5
-    image: tfenv:3.0.0
+        - TFENV_VERSION=${TFENV_VERSION}
+        - BASH_VERSION=${BASH_VERSION_TAG}
+    image: tfenv:${BASH_VERSION_TAG}-${TFENV_VERSION}
     user: ${MY_UID}:${MY_GID}
     environment:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}

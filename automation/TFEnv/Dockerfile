@@ -4,11 +4,12 @@ FROM "docker.io/bash:${BASH_VERSION}"
 # Runtime dependencies
 RUN apk add --no-cache --purge \
     curl \
-    awscli \
+    aws-cli \
     python3 py3-pip \
     git \
     wget \
     openssh-client \
+    make \
     ;
 
 RUN apk --update --no-cache --allow-untrusted --repository http://dl-cdn.alpinelinux.org/alpine/edge/community add \
