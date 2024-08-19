@@ -226,7 +226,7 @@ stages:
     name: homebrew/brew:latest
     entrypoint:
       - '/usr/bin/env'
-      - 'PATH=/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+      - 'PATH=/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/linuxbrew/.linuxbrew/bin/'
   before_script:
     - brew install make
     - brew install terrascan
