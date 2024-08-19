@@ -223,10 +223,13 @@ stages:
 {% if  GITLAB_JOBS["terraform-terrascan"]  %}
 .terraform-terrascan:
   image:
-    name: tenable/terrascan:latest
+    name: homebrew/brew:latest
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - brew install make
+    - brew install terrascan
   <<: *base
 
 {% endif %}
