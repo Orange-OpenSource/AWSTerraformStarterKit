@@ -2,6 +2,7 @@ ARG BASH_VERSION
 FROM "docker.io/bash:${BASH_VERSION}"
 
 # Runtime dependencies
+# Runtime dependencies
 RUN apk add --no-cache --purge \
     curl \
     aws-cli \
@@ -10,6 +11,7 @@ RUN apk add --no-cache --purge \
     wget \
     openssh-client \
     make \
+    zip \
     ;
 
 RUN apk --update --no-cache --allow-untrusted --repository http://dl-cdn.alpinelinux.org/alpine/edge/community add \
