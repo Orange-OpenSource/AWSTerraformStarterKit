@@ -147,6 +147,9 @@ stages:
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+  before_script:
+    - apt-get update
+    - apt-get install zip
   <<: *base
 
 {% if  GITLAB_JOBS["terraform-trivy"]  %}
