@@ -167,7 +167,7 @@ stages:
 {% if  GITLAB_JOBS["terraform-lint"]  %}
 .terraform-lint:
   image:
-    name: ghcr.io/terraform-linters/tflint:${TFLINT_IMAGE_TAG}
+    name: ${DOCKER_REGISTRY}tfenv:${TFENV_IMAGE_TAG}
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
