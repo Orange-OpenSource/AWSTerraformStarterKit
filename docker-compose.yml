@@ -3,12 +3,13 @@
 services:
   terraform:
     container_name: ${COMPOSE_PROJECT_NAME}_terraform
-    build:
-      dockerfile: automation/TFEnv/Dockerfile
-      args:
-        - TFENV_VERSION=${TFENV_VERSION}
-        - BASH_VERSION=${BASH_VERSION_TAG}
-    image: tfenv:${BASH_VERSION_TAG}-${TFENV_VERSION}
+    image: ${DOCKER_REGISTRY}tfenv:${TFENV_IMAGE_TAG}
+#    build:
+#      dockerfile: automation/TFEnv/Dockerfile
+#      args:
+#        - TFENV_VERSION=${TFENV_VERSION}
+#        - BASH_VERSION=${BASH_VERSION_TAG}
+#    image: tfenv:${BASH_VERSION_TAG}-${TFENV_VERSION}
     user: ${MY_UID}:${MY_GID}
     environment:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
