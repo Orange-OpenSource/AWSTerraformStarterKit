@@ -278,6 +278,15 @@ init:
 	# Hack: use only for first run
 	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml
 	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
+	# Read env variable with pattern  SK_ and add them into the .env file, replace the original value if it already exists
+	@printenv | grep '^SK_' | while IFS='=' read -r key value; do \
+		new_key=$${key#SK_}; \
+		if grep -q "^$$new_key=" .env; then \
+			sed -i "s/^$$new_key=.*/$$new_key=$$value/" .env; \
+		else \
+			echo "$$new_key=$$value" >> .env; \
+		fi; \
+	done
 
 compare_configuration: ## Compare configuration file configure.yaml and configure.yaml.dist
 compare_configuration:
@@ -404,7 +413,7 @@ render_templates:
 
 terraform_terrascan: ## DEPRECATED: Terrascan Terraform
 terraform_terrascan:
-	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo  --iac-dir=terraform/demo2  --iac-dir=terraform/demo3 
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo  --iac-dir=terraform/demo2  --iac-dir=terraform/demo3
 format: ## DEPREATED: Format all Terraform files using "terraform fmt"
 format:
 	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="terraform/demo"
@@ -618,27 +627,27 @@ terrascan_all: terrascan_terraform_demo terrascan_terraform_demo2 terrascan_terr
 format_all:  ## Format all Terraform files using "terraform fmt"
 format_all: format_terraform_demo format_terraform_demo2 format_terraform_demo3
 trivy_all:  ## Terraform Trivy
-trivy_all: trivy_terraform_demo  trivy_terraform_demo2  trivy_terraform_demo3 
+trivy_all: trivy_terraform_demo  trivy_terraform_demo2  trivy_terraform_demo3
 validate_all:  ## Validate all Terraform files using "terraform validate"
-validate_all: validate_terraform_demo  validate_terraform_demo2  validate_terraform_demo3 
+validate_all: validate_terraform_demo  validate_terraform_demo2  validate_terraform_demo3
 tflint_all:  ## Terraform code goot practices check with tflint on all layers
-tflint_all: tflint_terraform_demo  tflint_terraform_demo2  tflint_terraform_demo3 
+tflint_all: tflint_terraform_demo  tflint_terraform_demo2  tflint_terraform_demo3
 markdown_lint_all:  ## Lint Markdown files files on all layers
-markdown_lint_all: markdown_lint_terraform_demo  markdown_lint_terraform_demo2  markdown_lint_terraform_demo3 
+markdown_lint_all: markdown_lint_terraform_demo  markdown_lint_terraform_demo2  markdown_lint_terraform_demo3
 shell_lint_all:  ## Lint shell files files on all layers
-shell_lint_all: shell_lint_terraform_demo  shell_lint_terraform_demo2  shell_lint_terraform_demo3 
+shell_lint_all: shell_lint_terraform_demo  shell_lint_terraform_demo2  shell_lint_terraform_demo3
 yaml_lint_all:  ## Lint yaml files files on all layers
-yaml_lint_all: yaml_lint_terraform_demo  yaml_lint_terraform_demo2  yaml_lint_terraform_demo3 
+yaml_lint_all: yaml_lint_terraform_demo  yaml_lint_terraform_demo2  yaml_lint_terraform_demo3
 tsvc_all: ## Install all AWS layers
-tsvc_all: tsvc_terraform_demo  tsvc_terraform_demo2  tsvc_terraform_demo3 
+tsvc_all: tsvc_terraform_demo  tsvc_terraform_demo2  tsvc_terraform_demo3
 init_all: ## Init all AWS layers
-init_all: init_terraform_demo  init_terraform_demo2  init_terraform_demo3 
+init_all: init_terraform_demo  init_terraform_demo2  init_terraform_demo3
 plan_all: ## Plan all AWS layers
-plan_all: init_terraform_demo  init_terraform_demo2  init_terraform_demo3 
+plan_all: init_terraform_demo  init_terraform_demo2  init_terraform_demo3
 install_all: ## Install all AWS layers
-install_all: plan_terraform_demo  plan_terraform_demo2  plan_terraform_demo3 
+install_all: plan_terraform_demo  plan_terraform_demo2  plan_terraform_demo3
 destroy_all: ## Uninstall all layers
-destroy_all: destroy_terraform_demo3  destroy_terraform_demo2  destroy_terraform_demo 
+destroy_all: destroy_terraform_demo3  destroy_terraform_demo2  destroy_terraform_demo
 
 ### Makefile customizations
 
