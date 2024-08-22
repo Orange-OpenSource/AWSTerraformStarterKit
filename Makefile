@@ -333,7 +333,7 @@ render_templates: ## Render  templates
 
 start: ## Start the project run the docker containers and process the templates files
 start: init generate
-	$(DOCKER_COMPOSE) up -d
+	$(DOCKER_COMPOSE) up -d --remove-orphans
 	$(MAKE) -s check_starterkit_version
 
 check_starterkit_version: ## Verify if you are using the latest version

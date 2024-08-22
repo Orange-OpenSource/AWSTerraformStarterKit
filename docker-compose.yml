@@ -12,10 +12,9 @@ services:
 #    image: tfenv:${BASH_VERSION_TAG}-${TFENV_VERSION}
     user: ${MY_UID}:${MY_GID}
     environment:
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
-      AWS_PROFILE: ${AWS_PROFILE}
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-secret}"
+      AWS_SESSION_TOKEN: "${AWS_SESSION_TOKEN:-secret}"
+      AWS_PROFILE: "${AWS_PROFILE:-secret}"
       TFENV_TERRAFORM_VERSION: ${TFENV_TERRAFORM_VERSION}
     env_file:
       - .env
