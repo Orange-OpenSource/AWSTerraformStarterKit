@@ -282,7 +282,7 @@ init:
 	@printenv | grep '^SK_' | while IFS='=' read -r key value; do \
 		new_key=$${key#SK_}; \
 		if grep -q "^$$new_key=" .env; then \
-			sed -i "s/^$$new_key=.*/$$new_key=$$value/" .env; \
+			sed -i "s|^$$new_key=.*|$$new_key=$$value|" .env; \
 		else \
 			echo "$$new_key=$$value" >> .env; \
 		fi; \
