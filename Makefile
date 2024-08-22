@@ -137,7 +137,7 @@ TERRAFORM_VAR_PARAMETERS ?= $(VAR_PARAMETERS) ${ADDITIONAL_VAR_PARAMETERS}
 ########################################################################################################################
 terraform_check_version_commands:
 ifndef CICD_MODE
-	$(DOCKER_COMPOSE_DEV_TOOLS) run terraform_version_check /${DOCKER_WORKDIR}/${CURRENT_DIR}
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm terraform_version_check /${DOCKER_WORKDIR}/${CURRENT_DIR}
 endif
 
 console_commands:
@@ -290,7 +290,7 @@ init:
 
 compare_configuration: ## Compare configuration file configure.yaml and configure.yaml.dist
 compare_configuration:
-	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm compare_configuration
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) compare_configuration
 
 generate: ## Generate from template gitlab-ci.yml and Makefile
 generate:
@@ -315,7 +315,7 @@ generate_gitlab_ci:
 	if [ ! -d .backup ] ; then mkdir .backup ; fi
 	if [ -f .gitlab-ci.yml ] ; then cp .gitlab-ci.yml .backup/.gitlab-ci.yml-${cur_date}.bck ; else touch .gitlab-ci.yml ; fi
 	cp configure.yaml automation/jinja2/variables/
-	$(DOCKER_COMPOSE_DEV_TOOLS) run jinja2docker .gitlab-ci.yml.j2 /variables/configure.yaml | tee .gitlab-ci.yml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker .gitlab-ci.yml.j2 /variables/configure.yaml | tee .gitlab-ci.yml
 	tr -d "\r" < .gitlab-ci.yml>.gitlab-ci.yml.tmp
 	mv .gitlab-ci.yml.tmp .gitlab-ci.yml
 
@@ -325,7 +325,7 @@ render_template:
 	if [ -f ${TPL_DST} ] ; then mkdir -p .backup/$$(dirname ${TPL_DST}) && cp ${TPL_DST} .backup/${TPL_DST}-${cur_date}.bck ; else touch ${TPL_DST} ; fi
 	cp configure.yaml automation/jinja2/variables/
 	cp ${TPL_SRC} automation/jinja2/templates/$$(basename ${TPL_SRC})
-	$(DOCKER_COMPOSE_DEV_TOOLS) run jinja2docker $$(basename ${TPL_SRC}) /variables/configure.yaml | tee ${TPL_DST}
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker $$(basename ${TPL_SRC}) /variables/configure.yaml | tee ${TPL_DST}
 	tr -d "\r" < ${TPL_DST}>${TPL_DST}.tmp
 	mv ${TPL_DST}.tmp ${TPL_DST}
 
@@ -370,7 +370,7 @@ logout:
 
 precommit: ## Launch precommit hooks
 precommit:
-	$(PRECOMMIT_RUN) run -a --config ./$(PRECOMMIT_CONFIG)
+	$(PRECOMMIT_RUN) run --rm -a --config ./$(PRECOMMIT_CONFIG)
 
 dotenv_lint: ## Lint dotenv files
 dotenv_lint:
@@ -391,11 +391,11 @@ yaml_lint:
 
 terrascan_docker: ## Terrascan Docker
 terrascan_docker:
-	$(DOCKER_COMPOSE_DEV_TOOLS) run terrascan scan -d automation -i docker --verbose --config-path=./$(TERRASCAN_CONFIG)
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm terrascan scan -d automation -i docker --verbose --config-path=./$(TERRASCAN_CONFIG)
 
 powershell_lint: ## PowerShell Linter
 powershell_lint:
-	$(DOCKER_COMPOSE_DEV_TOOLS) run powershell_lint "Invoke-ScriptAnalyzer -Recurse -Path ."
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm powershell_lint "Invoke-ScriptAnalyzer -Recurse -Path ."
 
 quality-checks: ## run quality checks
 quality-checks: dotenv_lint format_all validate_all lint_all precommit markdown_lint_all shell_lint_all yaml_lint_all trivy_all terrascan_docker terrascan_all
