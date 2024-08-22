@@ -276,8 +276,8 @@ init:
 	cp configure.yaml automation/jinja2/variables/
 	sed -i 's/STARTER_KIT_CURRENT_VERSION/$(shell cat .STARTER_KIT_CURRENT_VERSION)/g' ./automation/jinja2/variables/configure.yaml
 	# Hack: use only for first run
-	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml
-	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) jinja2docker .env.dist.j2 /variables/configure.yaml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
 	# Read env variable with pattern  SK_ and add them into the .env file, replace the original value if it already exists
 	@printenv | grep '^SK_' | while IFS='=' read -r key value; do \
 		new_key=$${key#SK_}; \
@@ -334,7 +334,11 @@ render_templates: ## Render  templates
 start: ## Start the project run the docker containers and process the templates files
 start: init generate
 	$(DOCKER_COMPOSE) up -d
-	# $(TERRAFORM_EXEC) apk add --no-cache python3 py3-pip
+	$(MAKE) -s check_starterkit_version
+
+check_starterkit_version: ## Verify if you are using the latest version
+check_starterkit_version:
+	@./automation/CheckSKVersion/check_version.sh;
 
 stop: ## Stop the project, stop the docker containers
 stop:
@@ -342,7 +346,7 @@ stop:
 
 down: ## stop containers
 down:
-	$(DOCKER_COMPOSE) down -v
+	$(DOCKER_COMPOSE) down -v --remove-orphans
 
 kill: ## Destroy all containers
 kill:
