@@ -20,6 +20,7 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 # Access the HTTPS_PROXY environment variable
+HTTPS_PROXY=${HTTPS_PROXY:-""}
 proxy=$HTTPS_PROXY
 
 # Check if the variable is set
