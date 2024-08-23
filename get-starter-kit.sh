@@ -29,7 +29,6 @@ else
     printf "${RED}GITHUB_AUTH_TOKEN is set.${NC}\n"
 fi
 
-
 # Set Starterkit version
 STARTER_KIT_CURRENT_VERSION_PATH=".STARTER_KIT_CURRENT_VERSION"
 touch $STARTER_KIT_CURRENT_VERSION_PATH
