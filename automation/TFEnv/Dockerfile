@@ -67,15 +67,15 @@ RUN apk add --no-cache --purge \
 RUN apk add --no-cache cosign \
                 tenv --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
                 ;
-# # install pyenv pyenv-doctor pyenv-installer pyenv-update pyenv-virtualenv pyenv-which-ext
-# RUN curl https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
-# RUN mv /root/.pyenv /pyenv
-# # these need to go into your .bashrc
-# ENV PYENV_ROOT "/pyenv"
-# ENV PATH "$PYENV_ROOT/bin:$PATH"
-# RUN eval "$(pyenv init -)"
-# RUN eval "$(pyenv virtualenv-init -)"
-# RUN pyenv install 3.8 3.9 3.10 3.11 3.12
-# ENV PATH "$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
+# install pyenv pyenv-doctor pyenv-installer pyenv-update pyenv-virtualenv pyenv-which-ext
+RUN curl https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
+RUN mv /root/.pyenv /pyenv
+# these need to go into your .bashrc
+ENV PYENV_ROOT "/pyenv"
+ENV PATH "$PYENV_ROOT/bin:$PATH"
+RUN eval "$(pyenv init -)"
+RUN eval "$(pyenv virtualenv-init -)"
+RUN pyenv install 3.8 3.9 3.10 3.11 3.12
+ENV PATH "$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
 
 ENTRYPOINT ["/usr/local/bin/terraform"]
