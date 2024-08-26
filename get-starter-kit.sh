@@ -23,10 +23,10 @@ command -v curl >/dev/null 2>&1 || { echo -e "${RED}Error: curl is not installed
 command -v jq >/dev/null 2>&1 || { echo -e "${RED}Error: jq is not installed.${NC}" >&2; exit 1; }
 command -v tar >/dev/null 2>&1 || { echo -e "${RED}Error: tar is not installed.${NC}" >&2; exit 1; }
 
-if [ -n "$GITHUB_AUTH_TOKEN" ]; then
-    printf "${GREEN}GITHUB_AUTH_TOKEN is set.${NC}\n"
+if [ -z "$GITHUB_AUTH_TOKEN" ]; then
+    printf "${RED}GITHUB_AUTH_TOKEN is not set.${NC}\n"
 else
-    printf "${RED}GITHUB_AUTH_TOKEN is set.${NC}\n"
+    printf "${GREEN}GITHUB_AUTH_TOKEN is set.${NC}\n"
 fi
 
 # Set Starterkit version
@@ -49,31 +49,31 @@ STARTER_KIT_URL="https://api.github.com/repos/${STARTER_KIT_PROJECT}"
 STARTER_KIT_LOCATION="${STARTER_KIT_URL}/${STARTER_KIT_FORMAT}ball/${STARTER_KIT_VERSION}"
 
 if [ "$STARTER_KIT_VERSION" == "latest" ]; then
-    if [ -n "$GITHUB_AUTH_TOKEN" ]; then
-        # If the variable exists, use the token in the curl command
-        STARTER_KIT_LOCATION=$(curl -s -H "Authorization: token $GITHUB_AUTH_TOKEN" "${STARTER_KIT_URL}/releases/latest" | jq -r ".${STARTER_KIT_FORMAT}ball_url")
-    else
+    if [ -z "$GITHUB_AUTH_TOKEN" ]; then
         # If the token is not set, execute curl without authentication
         STARTER_KIT_LOCATION=$(curl -s "${STARTER_KIT_URL}/releases/latest" | jq -r ".${STARTER_KIT_FORMAT}ball_url")
+    else
+        # If the variable exists, use the token in the curl command
+        STARTER_KIT_LOCATION=$(curl -s -H "Authorization: token $GITHUB_AUTH_TOKEN" "${STARTER_KIT_URL}/releases/latest" | jq -r ".${STARTER_KIT_FORMAT}ball_url")
     fi
 fi
 
-if [ -n "$GITHUB_AUTH_TOKEN" ]; then
-    # If the variable exists, use the token in the curl command
-    LAST_PUBLISH_VERSION=$(curl -s -H "Authorization: token $GITHUB_AUTH_TOKEN" "${STARTER_KIT_URL}/releases/latest" | jq -r ".tag_name")
-else
+if [ -z "$GITHUB_AUTH_TOKEN" ]; then
     # If the token is not set, execute curl without authentication
     LAST_PUBLISH_VERSION=$(curl -s "${STARTER_KIT_URL}/releases/latest" | jq -r ".tag_name")
+else
+    # If the variable exists, use the token in the curl command
+    LAST_PUBLISH_VERSION=$(curl -s -H "Authorization: token $GITHUB_AUTH_TOKEN" "${STARTER_KIT_URL}/releases/latest" | jq -r ".tag_name")
 fi
 
 printf "Download StarterKit from: ${STARTER_KIT_LOCATION}\n"
 
-if [ -n "$GITHUB_AUTH_TOKEN" ]; then
-    # If the variable exists, use the token in the curl command
-    curl --fail -L --progress-bar -H "Authorization: token $GITHUB_AUTH_TOKEN" "${STARTER_KIT_LOCATION}" | tar -xz --strip-components 1
-else
+if [ -z "$GITHUB_AUTH_TOKEN" ]; then
     # If the token is not set, execute curl without authentication
     curl --fail -L --progress-bar "${STARTER_KIT_LOCATION}" | tar -xz --strip-components 1
+else
+    # If the variable exists, use the token in the curl command
+    curl --fail -L --progress-bar -H "Authorization: token $GITHUB_AUTH_TOKEN" "${STARTER_KIT_LOCATION}" | tar -xz --strip-components 1
 fi
 
 STARTER_KIT_VERSION=${STARTER_KIT_LOCATION##*/}

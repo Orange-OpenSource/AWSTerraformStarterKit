@@ -167,12 +167,12 @@ endif
 # Combination of Terraform commands to install a stack layer
 terraform_install_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && [ -f .python-version ] && pyenv install -s && pyenv local  && python3 --version
+		cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
 else
-		$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && [ -f .python-version ] && pyenv install -s && pyenv local  && python3 --version"
+		$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
 		$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
@@ -182,10 +182,10 @@ endif
 terraform_apply_commands:
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
-		cd ${CURRENT_DIR} && [ -f .python-version ] && pyenv install -s && pyenv local  && python3 --version
+		cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
 else
-		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && [ -f .python-version ] && pyenv install -s && pyenv local && python3 --version"
+		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
 		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
 endif
