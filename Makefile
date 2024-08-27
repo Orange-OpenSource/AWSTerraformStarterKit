@@ -137,7 +137,7 @@ TERRAFORM_VAR_PARAMETERS ?= $(VAR_PARAMETERS) ${ADDITIONAL_VAR_PARAMETERS}
 ########################################################################################################################
 terraform_check_version_commands:
 ifndef CICD_MODE
-	$(DOCKER_COMPOSE_DEV_TOOLS) run terraform_version_check /${DOCKER_WORKDIR}/${CURRENT_DIR}
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm terraform_version_check /${DOCKER_WORKDIR}/${CURRENT_DIR}
 endif
 
 console_commands:
@@ -167,11 +167,13 @@ endif
 # Combination of Terraform commands to install a stack layer
 terraform_install_commands:
 ifdef CICD_MODE
+		cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version
 		cd ${CURRENT_DIR} && tfenv install
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
 else
-		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+		$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
+		$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
 endif
@@ -180,8 +182,10 @@ endif
 terraform_apply_commands:
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
+		cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
 else
+		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
 		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
 endif
@@ -266,16 +270,27 @@ scoutsuite:
 
 init: ## Generate .env file
 init:
+	if [ ! -f ~/.terraformrc ] ; then touch ~/.terraformrc ; fi
 	if [ ! -d .backup ] ; then mkdir .backup ; fi
 	if [ -f .env ] ; then   cp .env .backup/.env-${cur_date}.bck ; else touch .env ; fi
 	cp configure.yaml automation/jinja2/variables/
+	sed -i 's/STARTER_KIT_CURRENT_VERSION/$(shell cat .STARTER_KIT_CURRENT_VERSION)/g' ./automation/jinja2/variables/configure.yaml
 	# Hack: use only for first run
-	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml
-	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) jinja2docker .env.dist.j2 /variables/configure.yaml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) jinja2docker .env.dist.j2 /variables/configure.yaml | tee .env
+	# Read env variable with pattern  SK_ and add them into the .env file, replace the original value if it already exists
+	@printenv | grep '^SK_' | while IFS='=' read -r key value; do \
+		new_key=$${key#SK_}; \
+		if grep -q "^$$new_key=" .env; then \
+			sed -i "s|^$$new_key=.*|$$new_key=$$value|" .env; \
+		else \
+			echo "$$new_key=$$value" >> .env; \
+		fi; \
+	done
 
 compare_configuration: ## Compare configuration file configure.yaml and configure.yaml.dist
 compare_configuration:
-	$(DOCKER_COMPOSE_DEV_TOOLS) run -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) --rm compare_configuration
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm -e MY_UID=$(shell id -u) -e MY_GID=$(shell id -g) compare_configuration
 
 generate: ## Generate from template gitlab-ci.yml and Makefile
 generate:
@@ -300,7 +315,7 @@ generate_gitlab_ci:
 	if [ ! -d .backup ] ; then mkdir .backup ; fi
 	if [ -f .gitlab-ci.yml ] ; then cp .gitlab-ci.yml .backup/.gitlab-ci.yml-${cur_date}.bck ; else touch .gitlab-ci.yml ; fi
 	cp configure.yaml automation/jinja2/variables/
-	$(DOCKER_COMPOSE_DEV_TOOLS) run jinja2docker .gitlab-ci.yml.j2 /variables/configure.yaml | tee .gitlab-ci.yml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker .gitlab-ci.yml.j2 /variables/configure.yaml | tee .gitlab-ci.yml
 	tr -d "\r" < .gitlab-ci.yml>.gitlab-ci.yml.tmp
 	mv .gitlab-ci.yml.tmp .gitlab-ci.yml
 
@@ -310,7 +325,7 @@ render_template:
 	if [ -f ${TPL_DST} ] ; then mkdir -p .backup/$$(dirname ${TPL_DST}) && cp ${TPL_DST} .backup/${TPL_DST}-${cur_date}.bck ; else touch ${TPL_DST} ; fi
 	cp configure.yaml automation/jinja2/variables/
 	cp ${TPL_SRC} automation/jinja2/templates/$$(basename ${TPL_SRC})
-	$(DOCKER_COMPOSE_DEV_TOOLS) run jinja2docker $$(basename ${TPL_SRC}) /variables/configure.yaml | tee ${TPL_DST}
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker $$(basename ${TPL_SRC}) /variables/configure.yaml | tee ${TPL_DST}
 	tr -d "\r" < ${TPL_DST}>${TPL_DST}.tmp
 	mv ${TPL_DST}.tmp ${TPL_DST}
 
@@ -318,8 +333,13 @@ render_templates: ## Render  templates
 
 start: ## Start the project run the docker containers and process the templates files
 start: init generate
-	$(DOCKER_COMPOSE) up -d
-	# $(TERRAFORM_EXEC) apk add --no-cache python3 py3-pip
+	docker logout public.ecr.aws
+	$(DOCKER_COMPOSE) up -d --remove-orphans
+	@$(MAKE) -s check_starterkit_version
+
+check_starterkit_version: ## Verify if you are using the latest version
+check_starterkit_version:
+	@./automation/CheckSKVersion/check_version.sh;
 
 stop: ## Stop the project, stop the docker containers
 stop:
@@ -327,7 +347,7 @@ stop:
 
 down: ## stop containers
 down:
-	$(DOCKER_COMPOSE) down -v
+	$(DOCKER_COMPOSE) down -v --remove-orphans
 
 kill: ## Destroy all containers
 kill:
@@ -351,7 +371,7 @@ logout:
 
 precommit: ## Launch precommit hooks
 precommit:
-	$(PRECOMMIT_RUN) run -a --config ./$(PRECOMMIT_CONFIG)
+	$(PRECOMMIT_RUN) run --rm -a --config ./$(PRECOMMIT_CONFIG)
 
 dotenv_lint: ## Lint dotenv files
 dotenv_lint:
@@ -372,11 +392,11 @@ yaml_lint:
 
 terrascan_docker: ## Terrascan Docker
 terrascan_docker:
-	$(DOCKER_COMPOSE_DEV_TOOLS) run terrascan scan -d automation -i docker --verbose --config-path=./$(TERRASCAN_CONFIG)
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm terrascan scan -d automation -i docker --verbose --config-path=./$(TERRASCAN_CONFIG)
 
 powershell_lint: ## PowerShell Linter
 powershell_lint:
-	$(DOCKER_COMPOSE_DEV_TOOLS) run powershell_lint "Invoke-ScriptAnalyzer -Recurse -Path ."
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm powershell_lint "Invoke-ScriptAnalyzer -Recurse -Path ."
 
 quality-checks: ## run quality checks
 quality-checks: dotenv_lint format_all validate_all lint_all precommit markdown_lint_all shell_lint_all yaml_lint_all trivy_all terrascan_docker terrascan_all
@@ -398,7 +418,7 @@ render_templates:
 
 terraform_terrascan: ## DEPRECATED: Terrascan Terraform
 terraform_terrascan:
-	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo  --iac-dir=terraform/demo2  --iac-dir=terraform/demo3 
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo  --iac-dir=terraform/demo2  --iac-dir=terraform/demo3
 format: ## DEPREATED: Format all Terraform files using "terraform fmt"
 format:
 	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="terraform/demo"
@@ -612,27 +632,27 @@ terrascan_all: terrascan_terraform_demo terrascan_terraform_demo2 terrascan_terr
 format_all:  ## Format all Terraform files using "terraform fmt"
 format_all: format_terraform_demo format_terraform_demo2 format_terraform_demo3
 trivy_all:  ## Terraform Trivy
-trivy_all: trivy_terraform_demo  trivy_terraform_demo2  trivy_terraform_demo3 
+trivy_all: trivy_terraform_demo  trivy_terraform_demo2  trivy_terraform_demo3
 validate_all:  ## Validate all Terraform files using "terraform validate"
-validate_all: validate_terraform_demo  validate_terraform_demo2  validate_terraform_demo3 
+validate_all: validate_terraform_demo  validate_terraform_demo2  validate_terraform_demo3
 tflint_all:  ## Terraform code goot practices check with tflint on all layers
-tflint_all: tflint_terraform_demo  tflint_terraform_demo2  tflint_terraform_demo3 
+tflint_all: tflint_terraform_demo  tflint_terraform_demo2  tflint_terraform_demo3
 markdown_lint_all:  ## Lint Markdown files files on all layers
-markdown_lint_all: markdown_lint_terraform_demo  markdown_lint_terraform_demo2  markdown_lint_terraform_demo3 
+markdown_lint_all: markdown_lint_terraform_demo  markdown_lint_terraform_demo2  markdown_lint_terraform_demo3
 shell_lint_all:  ## Lint shell files files on all layers
-shell_lint_all: shell_lint_terraform_demo  shell_lint_terraform_demo2  shell_lint_terraform_demo3 
+shell_lint_all: shell_lint_terraform_demo  shell_lint_terraform_demo2  shell_lint_terraform_demo3
 yaml_lint_all:  ## Lint yaml files files on all layers
-yaml_lint_all: yaml_lint_terraform_demo  yaml_lint_terraform_demo2  yaml_lint_terraform_demo3 
+yaml_lint_all: yaml_lint_terraform_demo  yaml_lint_terraform_demo2  yaml_lint_terraform_demo3
 tsvc_all: ## Install all AWS layers
-tsvc_all: tsvc_terraform_demo  tsvc_terraform_demo2  tsvc_terraform_demo3 
+tsvc_all: tsvc_terraform_demo  tsvc_terraform_demo2  tsvc_terraform_demo3
 init_all: ## Init all AWS layers
-init_all: init_terraform_demo  init_terraform_demo2  init_terraform_demo3 
+init_all: init_terraform_demo  init_terraform_demo2  init_terraform_demo3
 plan_all: ## Plan all AWS layers
-plan_all: init_terraform_demo  init_terraform_demo2  init_terraform_demo3 
+plan_all: init_terraform_demo  init_terraform_demo2  init_terraform_demo3
 install_all: ## Install all AWS layers
-install_all: plan_terraform_demo  plan_terraform_demo2  plan_terraform_demo3 
+install_all: plan_terraform_demo  plan_terraform_demo2  plan_terraform_demo3
 destroy_all: ## Uninstall all layers
-destroy_all: destroy_terraform_demo3  destroy_terraform_demo2  destroy_terraform_demo 
+destroy_all: destroy_terraform_demo3  destroy_terraform_demo2  destroy_terraform_demo
 
 ### Makefile customizations
 

@@ -23,8 +23,10 @@ PROJECT_DIR:
 BASH_VERSION_TAG: 5
 TFENV_VERSION: 3.0.0
 # Tools image versions
-TFENV_IMAGE_TAG: latest
-TFLINT_IMAGE_TAG: v0.49.0
+DOCKER_REGISTRY: public.ecr.aws/h1a2u4u1/
+TFENV_IMAGE_TAG: STARTER_KIT_CURRENT_VERSION
+TFLINT_IMAGE_TAG: STARTER_KIT_CURRENT_VERSION
+TERRAFORM_DOCS_IMAGE_TAG: STARTER_KIT_CURRENT_VERSION
 PRECOMMIT_IMAGE_TAG: v1.89.0
 DRIFTCTL_IMAGE_TAG: latest
 DOTENV_LINTER_IMAGE_TAG: latest
@@ -154,28 +156,31 @@ DEFAULT_UPGRADE: false
 # Replace the default demo plan by your own plan name and configuration
 plans:
   - terraform/demo
-  - name: terraform/demo2
-    # (optional) layer specific init parameters replacement
-    override_init_parameters: ""
-    # (optional) layer specific 'plan' parameters replacement
-    override_var_parameters: ""
-    # (optional) layer specific tflint config file
-    tflint_config: .config/.tflint.hcl
-    # (optional) layer specific shell check config file
-    shellcheck_config: .config/.shellcheckrc
-    # (optional) layer specific yaml lint config file
-    yamllint_config: .config/.yamllintrc
-    # (optional) layer specific markdown lint config file
-    markdownlint_config: .config/.mdl_style.rb
-    # (optional) layer specific trivy config file
-    trivy_config: .config/.trivy.yaml
-    # (optional) layer specific terrascan config file
-    terrascan_config: .config/.terrascan_config.toml
-    # (optioanl) layer specific terraform-docs config file
-    terraform_docs_config: .config/.terraform-docs.yml
-  - name: terraform/demo3
-    # (optional) layer specific 'plan' additionals parameters
-    additional_var_parameters: "-var-file=../common.tfvars"
+#  - name: terraform/demo2
+#    # (optional) Add Gitlab Plan artifacts
+#    additional_gitlab_plan_artifacts:
+#  - builds
+#    # (optional) layer specific init parameters replacement
+#    override_init_parameters: ""
+#    # (optional) layer specific 'plan' parameters replacement
+#    override_var_parameters: ""
+#    # (optional) layer specific tflint config file
+#    tflint_config: .config/.tflint.hcl
+#    # (optional) layer specific shell check config file
+#    shellcheck_config: .config/.shellcheckrc
+#    # (optional) layer specific yaml lint config file
+#    yamllint_config: .config/.yamllintrc
+#    # (optional) layer specific markdown lint config file
+#    markdownlint_config: .config/.mdl_style.rb
+#    # (optional) layer specific trivy config file
+#    trivy_config: .config/.trivy.yaml
+#    # (optional) layer specific terrascan config file
+#    terrascan_config: .config/.terrascan_config.toml
+#    # (optioanl) layer specific terraform-docs config file
+#    terraform_docs_config: .config/.terraform-docs.yml
+#  - name: terraform/demo3
+#    # (optional) layer specific 'plan' additionals parameters
+#    additional_var_parameters: "-var-file=../common.tfvars"
 
 # AWS Account ID in which your plan are deployed and containing the backend bucket
 # SSO Account

@@ -1,7 +1,6 @@
-ARG BASH_VERSION
+ARG BASH_VERSION=5
 FROM "docker.io/bash:${BASH_VERSION}"
 
-# Runtime dependencies
 # Runtime dependencies
 RUN apk add --no-cache --purge \
     curl \
@@ -11,7 +10,12 @@ RUN apk add --no-cache --purge \
     wget \
     openssh-client \
     make \
-    zip \
+    zip zip-doc \
+    curl curl-doc \
+    build-base gcc-doc \
+    libffi-dev zlib-dev linux-headers \
+    openssl \
+    jq \
     ;
 
 RUN apk --update --no-cache --allow-untrusted --repository http://dl-cdn.alpinelinux.org/alpine/edge/community add \
@@ -20,7 +24,7 @@ RUN apk --update --no-cache --allow-untrusted --repository http://dl-cdn.alpinel
           /tmp/* \
           /var/tmp/*
 
-ARG TFENV_VERSION
+ARG TFENV_VERSION=3.0.0
 
 RUN wget -O /tmp/tfenv.tar.gz "https://github.com/tfutils/tfenv/archive/refs/tags/v${TFENV_VERSION}.tar.gz" \
     && tar -C /tmp -xf /tmp/tfenv.tar.gz \
@@ -44,5 +48,34 @@ ENV TFENV_TERRAFORM_VERSION ""
 
 VOLUME /var/tfenv
 
-ENTRYPOINT ["/usr/local/bin/terraform"]
+RUN apk add --no-cache --purge \
+                git \
+                bash \
+                build-base \
+                libffi-dev \
+                openssl-dev \
+                bzip2-dev \
+                zlib-dev \
+                xz-dev \
+                readline-dev \
+                sqlite-dev \
+                tk-dev \
+                linux-headers \
+                vim \
+                ;
 
+RUN apk add --no-cache cosign \
+                tenv --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
+                ;
+# install pyenv pyenv-doctor pyenv-installer pyenv-update pyenv-virtualenv pyenv-which-ext
+RUN curl https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
+RUN mv /root/.pyenv /pyenv
+# these need to go into your .bashrc
+ENV PYENV_ROOT "/pyenv"
+ENV PATH "$PYENV_ROOT/bin:$PATH"
+RUN eval "$(pyenv init -)"
+RUN eval "$(pyenv virtualenv-init -)"
+RUN pyenv install 3.8 3.9 3.10 3.11 3.12
+ENV PATH "$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
+
+ENTRYPOINT ["/usr/local/bin/terraform"]

@@ -20,6 +20,8 @@ variables:
   {{ TF_TOKEN_MODULE_ACCESS_KEY }}: "{{ TF_TOKEN_MODULE_ACCESS_VALUE }}"
   {% endif %}
   TF_PLUGIN_CACHE_DIR: $CI_PROJECT_DIR/.terraform.d/plugin-cache
+  GIT_DEPTH: "{{ environ('GIT_DEPTH') }}"
+  DOCKER_REGISTRY: "{{ DOCKER_REGISTRY }}"
 
   # Docker Image Tag
   TFLINT_IMAGE_TAG: "{{ environ('TFLINT_IMAGE_TAG') }}"
@@ -143,13 +145,10 @@ stages:
 
 .terraform-base: &terraform_base
   image:
-    name: marmarama/tfenv:$TFENV_IMAGE_TAG
+    name: ${DOCKER_REGISTRY}tfenv:${TFENV_IMAGE_TAG}
     entrypoint:
       - '/usr/bin/env'
-      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
-  before_script:
-    - apt-get update
-    - apt-get install zip
+      - 'PATH=/pyenv/bin:/pyenv/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
   <<: *base
 
 {% if  GITLAB_JOBS["terraform-trivy"]  %}
@@ -168,7 +167,7 @@ stages:
 {% if  GITLAB_JOBS["terraform-lint"]  %}
 .terraform-lint:
   image:
-    name: ghcr.io/terraform-linters/tflint:${TFLINT_IMAGE_TAG}
+    name: ${DOCKER_REGISTRY}tfenv:${TFENV_IMAGE_TAG}
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
@@ -579,6 +578,11 @@ plan_{{ plan_slug }}:
     paths:
       - {{ plan_name }}/{{ environ('PLAN_BINARY_FILE') }}
       - {{ plan_name }}/{{ environ('PLAN_JSON_FILE') }}
+      {% if 'additional_gitlab_plan_artifacts' in plan %}
+        {% for additional_artifact in plan['additional_gitlab_plan_artifacts'] %}
+      - {{ plan_name }}/{{ additional_artifact }}
+        {% endfor %}
+      {% endif %}
   <<: *rules_{{ plan_slug }}
 
 {% endfor %}

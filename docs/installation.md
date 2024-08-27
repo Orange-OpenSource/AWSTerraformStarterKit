@@ -351,6 +351,49 @@ make generate
 
 The starterkit will include additional make files at the end of the `Makefile` using the `include` key word.
 
+## Pass Custom Environment Variables
+
+This feature allows you to define custom environment variables to be inserted into the generated `.env` file.
+
+### Define Custom Environment Variables
+
+1. **In your path**, define your environment variables using the **SK_** format.
+
+2. If the environment variable key already exists in the `.env` file, it will be replaced with the new value.
+
+3. You can also define custom environment variables in the `configure.yaml` file under the **CUSTOM_ENV** section.
+
+4. Additionally, in the default `gitlab-ci.yml` file, a variable will be automatically inserted with the value in the format `<VARIABLE_NAME>_SECRET`.
+
+Example configuration in `configure.yaml`:
+
+```yaml
+####################
+# CUSTOM ENV
+####################
+#CUSTOM_ENV:
+#  MYAPI: test
+```
+
+### Change the Python Version
+
+The TFenv image is built using the `pyenv` tool, a popular utility that simplifies the management of multiple Python versions. Several Python versions, ranging from Python 3.8 to Python 3.12, are pre-installed in the image.
+
+To switch the Python version for a Terraform plan, simply add a `.python-version` file to the plan's folder. This file should specify the desired Python version, and `pyenv` will automatically switch to that version when executing the plan.
+
+### About Pyenv
+
+Pyenv allows you to easily install and switch between different versions of Python in your environment. It’s highly useful for managing project-specific Python versions without affecting the global system environment.
+
+For more details about Pyenv, you can check out the official repository here: [Pyenv GitHub Repository](https://github.com/pyenv/pyenv).
+
+Example usage:
+
+```bash
+# In your plan folder, create a `.python-version` file with the desired Python version
+echo "3.9" > .python-version
+```
+
 ## New command in Makefile
 
 If the command you want to add to the StarterKit does not depend on the configure.yaml file, you can add it to

@@ -15,14 +15,15 @@ services:
 
   lint:
     container_name: ${COMPOSE_PROJECT_NAME}_lint
-    build:
-      dockerfile: automation/TFlint/Dockerfile
-      context: .
-      args:
-        - TFLINT_VERSION=0.46.1
-        - TFLINT_OS=linux
-        - TFLINT_ARCH=amd64
-    image: tflint:0.46.1
+    image: ${DOCKER_REGISTRY}tflint:${TFLINT_IMAGE_TAG}
+#    build:
+#      dockerfile: automation/TFlint/Dockerfile
+#      context: .
+#      args:
+#        - TFLINT_VERSION=0.46.1
+#        - TFLINT_OS=linux
+#        - TFLINT_ARCH=amd64
+#    image: tflint:0.46.1
     user: ${MY_UID}:${MY_GID}
     environment:
       - HOME=${DOCKER_WORKDIR}
@@ -134,14 +135,15 @@ services:
 
   terraform_docs:
     container_name: ${COMPOSE_PROJECT_NAME}_terraform_docs
-    build:
-      dockerfile: automation/TerraformDocs/Dockerfile
-      context: .
-      args:
-        - TERRAFORM_DOCS_VERSION=0.16.0
-        - TERRAFORM_DOCS_OS=linux
-        - TERRAFORM_DOCS_ARCH=amd64
-    image: terraforms-docs:0.16.0
+    image: ${DOCKER_REGISTRY}terraformdocs:${TERRAFORM_DOCS_IMAGE_TAG}
+#    build:
+#      dockerfile: automation/TerraformDocs/Dockerfile
+#      context: .
+#      args:
+#        - TERRAFORM_DOCS_VERSION=0.16.0
+#        - TERRAFORM_DOCS_OS=linux
+#        - TERRAFORM_DOCS_ARCH=amd64
+#    image: terraforms-docs:0.16.0
     user: ${MY_UID}:${MY_GID}
     environment:
       HOME: ${DOCKER_WORKDIR}
@@ -172,10 +174,10 @@ services:
     image: rossja/ncc-scoutsuite:aws-${SCOUTSUITE_VERSION}
     user: ${MY_UID}:${MY_GID}
     environment:
-      HOME: ${DOCKER_WORKDIR}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+      HOME: "${DOCKER_WORKDIR:-DOCKER_WORKDIR}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-AWS_SECRET_ACCESS_KEY}"
+      AWS_SESSION_TOKEN: "${AWS_SESSION_TOKEN:-AWS_SESSION_TOKEN}"
     env_file:
       - .env
     volumes:
