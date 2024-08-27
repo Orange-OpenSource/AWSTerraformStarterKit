@@ -640,6 +640,6 @@ delete_{{ plan_slug }}:
       - {{ plan_name }}/.terraform.lock.hcl
   script:
     - make init_{{ plan_slug }}
-    - make destroy_{{ plan_slug }}
+    - make destroyauto_{{ plan_slug }}
 
 {% endfor %}
