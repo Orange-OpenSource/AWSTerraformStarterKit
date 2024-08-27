@@ -333,6 +333,7 @@ render_templates: ## Render  templates
 
 start: ## Start the project run the docker containers and process the templates files
 start: init generate
+	docker logout public.ecr.aws
 	$(DOCKER_COMPOSE) up -d --remove-orphans
 	@$(MAKE) -s check_starterkit_version
 
