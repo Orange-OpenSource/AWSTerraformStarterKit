@@ -51,5 +51,24 @@ jobs:
         IMAGE_TAG: ${{ steps.image_tag.outputs.TAG }}
       run: |
         LOWERCASE_IMAGE_NAME=$(echo ${{ matrix.image }} | tr '[:upper:]' '[:lower:]')
-        docker build -t $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:$IMAGE_TAG ./automation/${{ matrix.image }}/
+
+        # Pull the latest image if it exists, to use as cache
+        docker pull $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:latest || true
+
+        # Build the image with cache from the latest tag
+        docker build \
+          --cache-from $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:latest \
+          -t $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:$IMAGE_TAG \
+          ./automation/${{ matrix.image }}/
+
+        # Push the new image with the regular tag
         docker push $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:$IMAGE_TAG
+
+        # Check if the branch is master
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          # Tag the image as 'latest'
+          docker tag $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:$IMAGE_TAG $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:latest
+
+          # Push the 'latest' tag
+          docker push $ECR_REGISTRY/$LOWERCASE_IMAGE_NAME:latest
+        fi
