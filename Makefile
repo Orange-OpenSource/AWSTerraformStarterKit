@@ -222,20 +222,20 @@ endif
 terraform_destroy_commands:
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
-		cd ${CURRENT_DIR} && terraform destroy ${PLAN_BINARY_FILE}
+		cd ${CURRENT_DIR} && terraform destroy ${TERRAFORM_VAR_PARAMETERS}
 else
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform destroy ${TERRAFORM_VAR_PARAMETERS}"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS}"
 endif
 
 # Terraform commands to delete a stack layer from a binary plan
 terraform_destroyauto_commands:
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && tfenv install
-		cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} ${PLAN_BINARY_FILE}
+		cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} -auto-approve
 else
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} ${PLAN_BINARY_FILE}"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} -auto-approve"
 endif
 
 # Trivy commands to scan a stack layer
