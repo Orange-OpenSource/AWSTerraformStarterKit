@@ -431,6 +431,30 @@ Don't forget to generate files
 make generate
 ```
 
+## Add dependencies between plans
+
+You can define explicite dependencies between your plans using the key work `depends_on` just like in the example below:
+
+```yaml
+...
+plans:
+- terraform/network
+- name: terraform/compute
+  depends_on:
+  - terraform/network
+  - terraform/storage
+- name: terraform/storage
+  depends_on:
+  - terraform/network
+- name: terraform/security
+...
+```
+
+Defining explicit dependency helps organization gitlab jobs in **execution batch**. Execution batch is a stage with attached jobs which doesn't have dependencies with each other within the same stage but have dependencies with the previous stage if any.
+
+This dependency definition also helps generate to correct plan destruction order.
+
+
 # Update AWSTerraformStarterKit
 
 1. Download `remove-starter-kit.sh`, make it executable and execute the shell script.  
