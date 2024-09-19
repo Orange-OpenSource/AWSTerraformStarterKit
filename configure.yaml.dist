@@ -181,6 +181,8 @@ plans:
 #  - name: terraform/demo3
 #    # (optional) layer specific 'plan' additionals parameters
 #    additional_var_parameters: "-var-file=../common.tfvars"
+#    depends_on:
+#    - terraform/demo2
 
 # AWS Account ID in which your plan are deployed and containing the backend bucket
 # SSO Account

@@ -57,6 +57,11 @@ class Render:
                 'name': var_data['plans'][idx]} # this is for backward compatiblity
         exec_plan = compute_deps.build_exec_plan(plans=var_data['plans'])
         var_data['exec_plan'] = exec_plan
+        ## reorganize plans order based on execution order
+        var_data['plans'] = []
+        for exec_batch in exec_plan:
+            for plan in exec_batch:
+                var_data['plans'].append(plan)
         # build final variables
         data = env_data
         for k, v in var_data.items():

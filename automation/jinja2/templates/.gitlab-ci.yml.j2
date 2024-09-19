@@ -78,7 +78,12 @@ stages:
   - quality-checks
   - drift
   - init
-  - plan-apply-delete
+  {% for exec_batch in exec_plan %}
+  - plan-apply-{{ loop.index }}
+  {% endfor %}
+  {% for exec_batch in exec_plan %}
+  - delete-{{ loop.index }}
+  {% endfor %}
   - clean-cache
 
 ########################################################################################################################
@@ -254,26 +259,17 @@ stages:
   needs: [{% if  GITLAB_JOBS["aws-creds"]  %}"aws-creds", {% endif %}"terraform-prepare"]
   allow_failure: false
 
-# .validate_job: &validate_job
-#   extends: .terraform-base
-#   stage: quality-checks
-#   needs: [{% if  GITLAB_JOBS["aws-creds"]  %}"aws-creds", {% endif %}"terraform-prepare"]
-#   allow_failure: false
-
 .plan_job:
   extends: .terraform-base
-  stage: plan-apply-delete
   allow_failure: false
 
 .apply_job:
   extends: .terraform-base
-  stage: plan-apply-delete
   allow_failure: false
   when: manual
 
 .delete_job:
   extends: .terraform-base
-  stage: plan-apply-delete
   allow_failure: false
   when: manual
   rules:
@@ -284,10 +280,8 @@ stages:
 ########################################################################################################################
 {% if  GITLAB_JOBS["aws-creds"]  %}
 aws-creds:
-  # extends: .aws-cli
   extends: .aws_get_creds
   stage: prepare
-  # <<: *aws_get_creds
 
 {% endif %}
 terraform-prepare:
@@ -453,24 +447,7 @@ terraform-trivy_{{ plan_slug }}:
   <<: *rules_{{ plan_slug }}
 
 {% endif %}
-
-# ########################################################################################################################
-# # VALIDATE
-# ########################################################################################################################
-
-# validate_{{ plan_slug }}:
-#   extends: .validate_job
-#   script:
-#     - make init_{{ plan_slug }}
-#     - make validate_{{ plan_slug }}
-#   cache:
-#     key: tf-$CI_COMMIT_REF_SLUG
-#     paths:
-#       - .terraform.d/plugin-cache/
-#       - {{ plan_name }}/.terraform
-#       - {{ plan_name }}/.terraform.lock.hcl
-#   <<: *rules_{{ plan_slug }}
-# {% endfor %}
+{% endfor %} {# end plans #}
 
 {% if  GITLAB_JOBS["sonarqube"]  %}
 sonarqube:
@@ -551,15 +528,19 @@ init_{{ plan_slug }}:
 
 {% endfor %}
 
+{% for exec_batch in exec_plan %}
+{% set stage_name = 'plan-apply-'~ loop.index %}
+
 ########################################################################################################################
-# TERRAFORM PLAN
+# TERRAFORM PLAN-APPLY BATCH {{ loop.index }}
 ########################################################################################################################
 
-{% for plan in plans %}
+{% for plan in exec_batch %}
 {% set plan_name = plan['name'] if 'name' in plan else plan %}
 {% set plan_slug = plan_name | replace('/','_') %}
 plan_{{ plan_slug }}:
   extends: .plan_job
+  stage: {{ stage_name }}
   needs:
   {% if  GITLAB_JOBS["aws-creds"] %}
     - aws-creds
@@ -587,15 +568,12 @@ plan_{{ plan_slug }}:
 
 {% endfor %}
 
-########################################################################################################################
-# TERRAFORM APPLY
-########################################################################################################################
-
-{% for plan in plans %}
+{% for plan in exec_batch %}
 {% set plan_name = plan['name'] if 'name' in plan else plan %}
 {% set plan_slug = plan_name | replace('/','_') %}
 apply_{{ plan_slug }}:
   extends: .apply_job
+  stage: {{ stage_name }}
   needs:
   {% if  GITLAB_JOBS["aws-creds"] %}
     - aws-creds
@@ -621,21 +599,24 @@ apply_{{ plan_slug }}:
 
 {% endfor %}
 
+{% endfor %} {# exec_plan #}
 ########################################################################################################################
 # DELETE
 ########################################################################################################################
 
-{% set plans_delete = plans | reverse %}
-{% for plan in plans_delete +%}
+{% set delete_exec_plan = exec_plan | reverse %}
+{% for exec_batch in delete_exec_plan %}
+{% set delete_stage_name = 'delete-' ~ loop.index %}
+{% for plan in exec_batch +%}
 {% set plan_name = plan['name'] if 'name' in plan else plan %}
 {% set plan_slug = plan_name | replace('/','_') %}
 delete_{{ plan_slug }}:
   extends: .delete_job
+  stage: {{ delete_stage_name }}
   needs:
   {% if  GITLAB_JOBS["aws-creds"] %}
     - aws-creds
   {% endif %}
-    - plan_{{ plan_slug }}
   cache:
     key: tf-$CI_COMMIT_REF_SLUG
     paths:
@@ -646,4 +627,5 @@ delete_{{ plan_slug }}:
     - make init_{{ plan_slug }}
     - make destroyauto_{{ plan_slug }}
 
-{% endfor %}
+{% endfor %} {# exec_batch #}
+{% endfor %} {# delete_exec_plan #}

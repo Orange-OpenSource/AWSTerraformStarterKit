@@ -30,13 +30,17 @@ def build_exec_plan(plans:list):
     exec_plan = []
     for plan in plans:
         schedule(exec_plan, plan, default_exec_order)
-    for plan in plans:
-        plan_exec_order = get_current_exec_order(exec_plan, plan_name=plan.get('name'))
-        for plan_dependency_name in plan.get('depends_on',[]):
-            dependency_exec_order = get_current_exec_order(exec_plan=exec_plan,plan_name = plan_dependency_name)
-            if dependency_exec_order >= plan_exec_order:
-                schedule(exec_plan=exec_plan, plan = plan, exec_order= dependency_exec_order + 1)
-                plan_exec_order = dependency_exec_order + 1
+    changed = True
+    while changed:
+        changed = False
+        for plan in plans:
+            plan_exec_order = get_current_exec_order(exec_plan, plan_name=plan.get('name'))
+            for plan_dependency_name in plan.get('depends_on',[]):
+                dependency_exec_order = get_current_exec_order(exec_plan=exec_plan,plan_name = plan_dependency_name)
+                if dependency_exec_order >= plan_exec_order:
+                    schedule(exec_plan=exec_plan, plan = plan, exec_order= dependency_exec_order + 1)
+                    plan_exec_order = dependency_exec_order + 1
+                    changed = True
     return exec_plan
                 
 def print_exec_plan(exec_plan:list):
