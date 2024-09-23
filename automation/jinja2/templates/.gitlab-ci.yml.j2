@@ -541,7 +541,7 @@ init_{{ plan_slug }}:
 plan_{{ plan_slug }}:
   extends: .plan_job
   stage: {{ stage_name }}
-  needs:
+  dependencies:
   {% if  GITLAB_JOBS["aws-creds"] %}
     - aws-creds
   {% endif %}

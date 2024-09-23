@@ -159,7 +159,7 @@ plans:
 #  - name: terraform/demo2
 #    # (optional) Add Gitlab Plan artifacts
 #    additional_gitlab_plan_artifacts:
-#  - builds
+#    - builds
 #    # (optional) layer specific init parameters replacement
 #    override_init_parameters: ""
 #    # (optional) layer specific 'plan' parameters replacement
