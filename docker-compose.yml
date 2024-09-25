@@ -28,5 +28,7 @@ services:
       - $HOME/.gitconfig:$HOME/.gitconfig
       - $HOME/.terraformrc:$HOME/.terraformrc
       - $HOME/.terraform.d:$HOME/.terraform.d
+      - $HOME/.config:$HOME/.config
+      - $HOME/.cache:$HOME/.cache
     working_dir: ${DOCKER_WORKDIR}
     entrypoint: [ "tail", "-f", "/dev/null" ]
