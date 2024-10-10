@@ -41,6 +41,14 @@ TERRAFORM_VERSION_CHECK_IMAGE_TAG: latest
 SCOUTSUITE_VERSION: latest
 
 ########################################################################################################################
+# Docker Compose custom volumes
+########################################################################################################################
+CUSTOM_VOLUMES: {}
+# CUSTOM_VOLUMES:
+#  - src: ~/Projects/terraform/terraform-modules
+#    dest: /project/terraform-modules
+
+########################################################################################################################
 # GITLAB CI
 # Use to validate the .gitlab-ci.yml file with the command $make gitlab_linter
 ########################################################################################################################
