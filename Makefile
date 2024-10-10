@@ -32,7 +32,7 @@ PLAN_JSON_FILE=tfplan.json
 CONFIG_FILE := parameters.auto.tfvars
 VAR_PARAMETERS := -var-file=../common.tfvars -var-file=${CONFIG_FILE} -var="module_path=${CURRENT_DIR}"
 
-DOCKER_COMPOSE_FILES = -f docker-compose.yml
+DOCKER_COMPOSE_FILES = -f docker-compose.yml -f docker-compose-override-volumes.yml
 DOCKER_COMPOSE_FILES_TOOLS = -f docker-compose-tools.yml
 
 DOCKER_COMPOSE = docker compose ${DOCKER_COMPOSE_FILES}
@@ -295,10 +295,18 @@ compare_configuration:
 generate: ## Generate from template gitlab-ci.yml and Makefile
 generate:
 	@$(MAKE) init
+	@$(MAKE) generate_compose_override_volumes
 	@$(MAKE) generate_makefile
 	@$(MAKE) render_templates
 	if [ "${GENERATE_GITLAB_CI}" == "True" ]; then "$(MAKE)" generate_gitlab_ci; fi
 
+generate_compose_override_volumes: ## Generate docker-compose-override-volumes.yml
+generate_compose_override_volumes:
+	if [ ! -d .backup ] ; then mkdir .backup ; fi
+	if [ -e docker-compose-override-volumes.yml ] ; then cp docker-compose-override-volumes.yml .backup/docker-compose-override-volumes.yml-${cur_date}.bck ; fi
+	# Hack: use only for first run
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker docker-compose-override-volumes.yml.j2 /variables/configure.yaml
+	$(DOCKER_COMPOSE_DEV_TOOLS) run --rm jinja2docker docker-compose-override-volumes.yml.j2 /variables/configure.yaml | tee docker-compose-override-volumes.yml
 
 generate_makefile: ## Generate Makefile
 generate_makefile:
