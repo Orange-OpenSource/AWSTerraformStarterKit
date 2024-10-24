@@ -158,7 +158,7 @@ stages:
     name: ${DOCKER_REGISTRY}tenv:${TENV_IMAGE_TAG}
     entrypoint:
       - '/usr/bin/env'
-      - 'PATH=/pyenv/bin:/pyenv/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+      - 'PATH=/pyenv/bin:/pyenv/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   <<: *base
 
 {% if  GITLAB_JOBS["terraform-trivy"]  %}
@@ -170,7 +170,7 @@ stages:
     name: aquasec/trivy:latest
     entrypoint:
       - '/usr/bin/env'
-      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   <<: *base
 
 {% endif %}

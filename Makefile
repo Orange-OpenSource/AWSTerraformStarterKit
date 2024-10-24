@@ -142,7 +142,7 @@ endif
 
 console_commands:
 ifndef CICD_MODE
-	$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
+	$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install"
 	$(DOCKER_COMPOSE) exec -w ${DOCKER_WORKDIR}/${CURRENT_DIR} terraform /bin/sh
 endif
 
@@ -151,65 +151,65 @@ ifdef CICD_MODE
 	cd ${CURRENT_DIR} && tenv install
 	cd ${CURRENT_DIR} && terraform validate
 else
-	$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
-	$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform validate"
+	$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install"
+	$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} validate"
 endif
 
 terraform_format:
 ifdef CICD_MODE
 	cd ${CURRENT_DIR} && $(TENV_EXEC) install
-	cd ${CURRENT_DIR} && terraform fmt -recursive
+	cd ${CURRENT_DIR} && ${TENV_TOOL} fmt -recursive
 else
-	$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
-	$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform fmt -recursive"
+	$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install"
+	$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} fmt -recursive"
 endif
 
 # Combination of Terraform commands to install a stack layer
 terraform_install_commands:
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version
-		cd ${CURRENT_DIR} && tenv install
-		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
-		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
+		cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install
+		cd ${CURRENT_DIR} && ${TENV_TOOL} $(TERRAFORM_INIT)
+		cd ${CURRENT_DIR} && ${TENV_TOOL} apply ${PLAN_BINARY_FILE}
 else
 		$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
-		$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
+		$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv ${TENV_TOOL} install"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} $(TERRAFORM_INIT)"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
 endif
 
 # Combination of Terraform commands to apply a stack layer
 terraform_apply_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && tenv install
+		cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install
 		cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version
-		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
+		cd ${CURRENT_DIR} && ${TENV_TOOL} apply ${PLAN_BINARY_FILE}
 else
 		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
-		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
+		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
 endif
 
 # Combination of Terraform commands to init a stack layer
 terraform_init_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && tenv install
-		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
+		cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install
+		cd ${CURRENT_DIR} && ${TENV_TOOL} $(TERRAFORM_INIT)
 else
-		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
+		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} $(TERRAFORM_INIT)"
 endif
 
 # Combination of Terraform commands to plan a stack layer
 terraform_plan_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && $(TENV_EXEC) install
-		cd ${CURRENT_DIR} && terraform plan ${TERRAFORM_VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}
-		cd ${CURRENT_DIR} && terraform show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}
+		cd ${CURRENT_DIR} && $(TENV_EXEC) ${TENV_TOOL} install
+		cd ${CURRENT_DIR} && ${TENV_TOOL} plan ${TERRAFORM_VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}
+		cd ${CURRENT_DIR} && ${TENV_TOOL} show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}
 else
-		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform plan -compact-warnings ${TERRAFORM_VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}"
+		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} plan -compact-warnings ${TERRAFORM_VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}"
 endif
 
 terraform_lint:
@@ -221,21 +221,21 @@ endif
 # Terraform commands to delete a stack layer
 terraform_destroy_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && tenv install
-		cd ${CURRENT_DIR} && terraform destroy ${TERRAFORM_VAR_PARAMETERS}
+		cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install
+		cd ${CURRENT_DIR} && ${TENV_TOOL} destroy ${TERRAFORM_VAR_PARAMETERS}
 else
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS}"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} apply -destroy ${TERRAFORM_VAR_PARAMETERS}"
 endif
 
 # Terraform commands to delete a stack layer from a binary plan
 terraform_destroyauto_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && tenv install
-		cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} -auto-approve
+		cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install
+		cd ${CURRENT_DIR} && ${TENV_TOOL} apply -destroy ${TERRAFORM_VAR_PARAMETERS} -auto-approve
 else
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} -auto-approve"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv ${TENV_TOOL} install"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && ${TENV_TOOL} apply -destroy ${TERRAFORM_VAR_PARAMETERS} -auto-approve"
 endif
 
 # Trivy commands to scan a stack layer
