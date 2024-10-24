@@ -377,7 +377,7 @@ Example configuration in `configure.yaml`:
 
 ### Change the Python Version
 
-The TFenv image is built using the `pyenv` tool, a popular utility that simplifies the management of multiple Python versions. Several Python versions, ranging from Python 3.8 to Python 3.12, are pre-installed in the image.
+The TEnv image is built using the `pyenv` tool, a popular utility that simplifies the management of multiple Python versions. Several Python versions, ranging from Python 3.8 to Python 3.12, are pre-installed in the image.
 
 To switch the Python version for a Terraform plan, simply add a `.python-version` file to the plan's folder. This file should specify the desired Python version, and `pyenv` will automatically switch to that version when executing the plan.
 

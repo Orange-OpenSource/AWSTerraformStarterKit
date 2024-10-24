@@ -20,11 +20,11 @@ PROJECT_DIR:
 # Docker Compose image tags to use
 ########################################################################################################################
 # docker-compose.yaml terraform image
-BASH_VERSION_TAG: 5
-TFENV_VERSION: 3.0.0
+ALPINE_VERSION_TAG: 3.20
+TENV_VERSION: 3.2.4
 # Tools image versions
 DOCKER_REGISTRY: public.ecr.aws/h1a2u4u1/
-TFENV_IMAGE_TAG: STARTER_KIT_CURRENT_VERSION
+TENV_IMAGE_TAG: STARTER_KIT_CURRENT_VERSION
 TFLINT_IMAGE_TAG: STARTER_KIT_CURRENT_VERSION
 TERRAFORM_DOCS_IMAGE_TAG: STARTER_KIT_CURRENT_VERSION
 PRECOMMIT_IMAGE_TAG: v1.89.0
@@ -40,6 +40,7 @@ TERRASCAN_IMAGE_TAG: latest
 TERRAFORM_VERSION_CHECK_IMAGE_TAG: latest
 SCOUTSUITE_VERSION: latest
 
+TENV_TOOL: terraform
 ########################################################################################################################
 # Docker Compose custom volumes
 ########################################################################################################################

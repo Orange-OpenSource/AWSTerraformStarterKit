@@ -80,7 +80,7 @@ TERRASCAN_CONFIG ?= $(DEFAULT_TERRASCAN_CONFIG)
 TERRAFORM_DOCS_CONFIG ?= $(DEFAULT_TERRAFORM_DOCS_CONFIG)
 
 ifdef CICD_MODE
-	TFENV_EXEC ?= $(shell which tfenv)
+	TENV_EXEC ?= $(shell which tenv)
 	TERRAFORM_EXEC ?= $(shell which terraform)
 	TFLINT_RUN ?= $(shell which tflint) --config $(shell pwd)/$(TFLINT_CONFIG)
 	PRECOMMIT_RUN ?= $(shell which pre-commit)
@@ -93,7 +93,7 @@ ifdef CICD_MODE
 	TERRAFORM_DOCS ?= $(shell which terraform-docs)
 	SCOUTSUITE_EXEC ?= $(shell which scout)
 else
-	TFENV_EXEC = $(DOCKER_COMPOSE) exec terraform
+	TENV_EXEC = $(DOCKER_COMPOSE) exec terraform
 	TERRAFORM_EXEC = $(DOCKER_COMPOSE) exec terraform
 	TFLINT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm lint --config ${DOCKER_WORKDIR}/$(TFLINT_CONFIG)
 	PRECOMMIT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm precommit
@@ -111,7 +111,7 @@ debug: ## Print debug logs
 debug:
 ifeq ($(PRINT_DEBUG),"true")
 	printenv
-	echo $(TFENV_EXEC)
+	echo $(TENV_EXEC)
 	echo $(TERRAFORM_EXEC)
 	echo $(TFLINT_RUN)
 	echo $(PRECOMMIT_RUN)
@@ -142,25 +142,25 @@ endif
 
 console_commands:
 ifndef CICD_MODE
-	$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+	$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
 	$(DOCKER_COMPOSE) exec -w ${DOCKER_WORKDIR}/${CURRENT_DIR} terraform /bin/sh
 endif
 
 terraform_validate:
 ifdef CICD_MODE
-	cd ${CURRENT_DIR} && tfenv install
+	cd ${CURRENT_DIR} && tenv install
 	cd ${CURRENT_DIR} && terraform validate
 else
-	$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+	$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
 	$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform validate"
 endif
 
 terraform_format:
 ifdef CICD_MODE
-	cd ${CURRENT_DIR} && $(TFENV_EXEC) install
+	cd ${CURRENT_DIR} && $(TENV_EXEC) install
 	cd ${CURRENT_DIR} && terraform fmt -recursive
 else
-	$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+	$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
 	$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform fmt -recursive"
 endif
 
@@ -168,12 +168,12 @@ endif
 terraform_install_commands:
 ifdef CICD_MODE
 		cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version
-		cd ${CURRENT_DIR} && tfenv install
+		cd ${CURRENT_DIR} && tenv install
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
 else
-		$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
-		$(TFENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+		$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
+		$(TENV_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
 endif
@@ -181,33 +181,33 @@ endif
 # Combination of Terraform commands to apply a stack layer
 terraform_apply_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && tfenv install
+		cd ${CURRENT_DIR} && tenv install
 		cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version
 		cd ${CURRENT_DIR} && terraform apply ${PLAN_BINARY_FILE}
 else
-		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
-		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && if [ -f .python-version ]; then pyenv install -s && pyenv local; fi && python3 --version"
+		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -compact-warnings ${TERRAFORM_VAR_PARAMETERS}"
 endif
 
 # Combination of Terraform commands to init a stack layer
 terraform_init_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && tfenv install
+		cd ${CURRENT_DIR} && tenv install
 		cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)
 else
-		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform $(TERRAFORM_INIT)"
 endif
 
 # Combination of Terraform commands to plan a stack layer
 terraform_plan_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && $(TFENV_EXEC) install
+		cd ${CURRENT_DIR} && $(TENV_EXEC) install
 		cd ${CURRENT_DIR} && terraform plan ${TERRAFORM_VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}
 		cd ${CURRENT_DIR} && terraform show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}
 else
-		$(TFENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+		$(TENV_EXEC)  /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform plan -compact-warnings ${TERRAFORM_VAR_PARAMETERS} -out ${PLAN_BINARY_FILE}"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform show -json ${PLAN_BINARY_FILE} > ${PLAN_JSON_FILE}"
 endif
@@ -221,20 +221,20 @@ endif
 # Terraform commands to delete a stack layer
 terraform_destroy_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && tfenv install
+		cd ${CURRENT_DIR} && tenv install
 		cd ${CURRENT_DIR} && terraform destroy ${TERRAFORM_VAR_PARAMETERS}
 else
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS}"
 endif
 
 # Terraform commands to delete a stack layer from a binary plan
 terraform_destroyauto_commands:
 ifdef CICD_MODE
-		cd ${CURRENT_DIR} && tfenv install
+		cd ${CURRENT_DIR} && tenv install
 		cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} -auto-approve
 else
-		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tfenv install"
+		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && tenv install"
 		$(TERRAFORM_EXEC) /bin/sh -c "cd ${CURRENT_DIR} && terraform apply -destroy ${TERRAFORM_VAR_PARAMETERS} -auto-approve"
 endif
 
@@ -424,7 +424,7 @@ render_templates:
 
 terraform_terrascan: ## DEPRECATED: Terrascan Terraform
 terraform_terrascan:
-	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo 
+	$(TERRASCAN_RUN) scan -i terraform --verbose --config-path=./.terrascan_config.toml  --iac-dir=terraform/demo
 format: ## DEPREATED: Format all Terraform files using "terraform fmt"
 format:
 	@$(MAKE) --no-print-directory terraform_format CURRENT_DIR="terraform/demo"
@@ -510,27 +510,26 @@ terrascan_all: terrascan_terraform_demo
 format_all:  ## Format all Terraform files using "terraform fmt"
 format_all: format_terraform_demo
 trivy_all:  ## Terraform Trivy
-trivy_all: trivy_terraform_demo 
+trivy_all: trivy_terraform_demo
 validate_all:  ## Validate all Terraform files using "terraform validate"
-validate_all: validate_terraform_demo 
+validate_all: validate_terraform_demo
 tflint_all:  ## Terraform code goot practices check with tflint on all layers
-tflint_all: tflint_terraform_demo 
+tflint_all: tflint_terraform_demo
 markdown_lint_all:  ## Lint Markdown files files on all layers
-markdown_lint_all: markdown_lint_terraform_demo 
+markdown_lint_all: markdown_lint_terraform_demo
 shell_lint_all:  ## Lint shell files files on all layers
-shell_lint_all: shell_lint_terraform_demo 
+shell_lint_all: shell_lint_terraform_demo
 yaml_lint_all:  ## Lint yaml files files on all layers
-yaml_lint_all: yaml_lint_terraform_demo 
+yaml_lint_all: yaml_lint_terraform_demo
 tsvc_all: ## Install all AWS layers
-tsvc_all: tsvc_terraform_demo 
+tsvc_all: tsvc_terraform_demo
 init_all: ## Init all AWS layers
-init_all: init_terraform_demo 
+init_all: init_terraform_demo
 plan_all: ## Plan all AWS layers
-plan_all: init_terraform_demo 
+plan_all: init_terraform_demo
 install_all: ## Install all AWS layers
-install_all: plan_terraform_demo 
+install_all: plan_terraform_demo
 destroy_all: ## Uninstall all layers
-destroy_all: destroy_terraform_demo 
+destroy_all: destroy_terraform_demo
 
 ### Makefile customizations
-
