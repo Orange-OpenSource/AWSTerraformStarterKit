@@ -164,7 +164,7 @@ documentation, improving the overall quality of module documentation and enhanci
 
 
 - [Terraform Check Version (tsvc)](https://github.com/tfverch/tfvc)
-- Terraform version check (tfvc) is a reporting tool to identify available updates for providers and modules referenced in your Terraform code. 
+- Terraform version check (tfvc) is a reporting tool to identify available updates for providers and modules referenced in your Terraform code.
 - It provides clear warning/failure output and resolution guidance for any issues it detects.
 
 # Adding a Tool
