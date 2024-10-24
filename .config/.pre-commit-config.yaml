@@ -3,8 +3,13 @@ exclude: '(^.+\.log$)'
 default_language_version:
   python: python3
 repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.16.1
+    hooks:
+      - id: gitleaks
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.2.0
+    rev: v4.6.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -25,8 +30,4 @@ repos:
         args:
           - --allow-missing-credentials
 
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.74.2
-    hooks:
-      - id: terraform_validate
-      - id: terraform_fmt
+

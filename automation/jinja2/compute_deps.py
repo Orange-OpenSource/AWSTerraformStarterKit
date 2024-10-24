@@ -5,7 +5,7 @@ import os
 
 
 default_exec_order = 0
-        
+
 def get_current_exec_order(exec_plan:list, plan_name:str):
     for i in range(len(exec_plan)):
         for item in exec_plan[i]:
@@ -42,7 +42,7 @@ def build_exec_plan(plans:list):
                     plan_exec_order = dependency_exec_order + 1
                     changed = True
     return exec_plan
-                
+
 def print_exec_plan(exec_plan:list):
     for exec_order in range(len(exec_plan)):
         print(f"order[{exec_order}]: {exec_plan[exec_order]}")
@@ -72,14 +72,14 @@ def main():
 
     # Parse YAML file and create an object
     config_data = parse_yaml_file(args.config_file)
-    
+
     # generate execution plan
     plans = config_data.get('plans',[])
     exec_plan = build_exec_plan(plans=plans)
-    
+
     # Combine environment variables and YAML data
     context = {**os.environ, **config_data, **{"plans_execution_plan":exec_plan}}
-    
+
     # Render Jinja template
     rendered_content = render_template(args.template_file, context)
     with open(args.output_file, 'w') as output_file:

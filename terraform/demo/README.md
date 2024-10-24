@@ -1,6 +1,6 @@
 # Demo project plan
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+## Requirements
 ## Requirements
 
 | Name | Version |
