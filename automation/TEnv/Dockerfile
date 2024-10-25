@@ -27,11 +27,12 @@ RUN apk --update --no-cache --allow-untrusted --repository http://dl-cdn.alpinel
 ARG TENV_VERSION=3.2.4
 ENV TENV_ROOT=/var/tenv
 VOLUME /var/tenv
-RUN chmod -R /var/tenv
 
 RUN wget -O /tmp/tenv.apk "https://github.com/tofuutils/tenv/releases/download/v${TENV_VERSION}/tenv_v${TENV_VERSION}_386.apk" \
     && apk add --allow-untrusted /tmp/tenv.apk \
-    ;
+    && mkdir -p $TENV_ROOT \
+    && chmod -R 777 $TENV_ROOT \
+    && rm /tmp/tenv.apk
 
 RUN apk add --no-cache --purge \
                 git \
