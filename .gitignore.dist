@@ -49,6 +49,7 @@ tfplan.json
 automation/
 docker-compose-tools.yml
 docker-compose.yml
+docker-compose-override-volumes.yml
 .gitignore.dist
 .env
 makeplan.mk
