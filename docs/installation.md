@@ -150,7 +150,7 @@ Once you have set your AWS credentials in the path and modified the `configure.y
 
 2. It generates a new `Makefile` based on the `configure.yaml` file. The `Makefile` contains predefined targets and commands that can be executed using the `make` command.
 
-3. It generates a new `gitlab-ci.yml` file by leveraging the information present in the .env file and using a GitLab CI Jinja template file as a blueprint. The resulting gitlab-ci.yml file will reflect the specific configurations and values provided in the .env file, allowing for a customized and automated setup of your GitLab CI pipeline. see [Gitlab-CI prerequisites](#gitlab-ci-prerequisites)
+3. It generates a new `gitlab-ci.yml` file by leveraging the information present in the .env file and using a GitLab CI Jinja template file as a blueprint. The resulting gitlab-ci.yml file will reflect the specific configurations and values provided in the .env file, allowing for a customized and automated setup of your GitLab CI pipeline. see [Gitlab-CI prerequisites](#gitlab-ci-requirements)
 
 By executing `make start`, the AWSTerraformStarterKit will be initialized with the provided configuration, and you can proceed with deploying resources on AWS using Terraform.
 
