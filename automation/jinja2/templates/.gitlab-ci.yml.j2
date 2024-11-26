@@ -27,7 +27,7 @@ variables:
   TFLINT_IMAGE_TAG: "{{ environ('TFLINT_IMAGE_TAG') }}"
   TERRAFORM_DOCS_IMAGE_TAG: "{{ environ('TERRAFORM_DOCS_IMAGE_TAG') }}"
   PRECOMMIT_IMAGE_TAG: "{{ environ('PRECOMMIT_IMAGE_TAG') }}"
-  TFENV_IMAGE_TAG: "{{ environ('TFENV_IMAGE_TAG') }}"
+  TENV_IMAGE_TAG: "{{ environ('TENV_IMAGE_TAG') }}"
   DRIFTCTL_IMAGE_TAG: "{{ environ('DRIFTCTL_IMAGE_TAG') }}"
 
   ### global variables ###
@@ -39,8 +39,9 @@ variables:
   DEFAULT_TRIVY_CONFIG: "{{ environ('DEFAULT_TRIVY_CONFIG') }}"
   DEFAULT_TERRASCAN_CONFIG: "{{ environ('DEFAULT_TERRASCAN_CONFIG') }}"
   DEFAULT_TERRAFORM_DOCS_CONFIG: "{{ environ('DEFAULT_TERRAFORM_DOCS_CONFIG') }}"
+  TENV_TOOL: "{{ TENV_TOOL }}"
 
-  TFENV_TERRAFORM_VERSION: "{{ environ('TFENV_TERRAFORM_VERSION') }}"
+  TENV_TERRAFORM_VERSION: "{{ environ('TENV_TERRAFORM_VERSION') }}"
   TERRAFORM_UPGRADE_FLAG: "{{ environ('TERRAFORM_UPGRADE_FLAG') }}"
 
   # NEED TO BE CHANGED FOR EACH PROJECT
@@ -155,10 +156,10 @@ stages:
 
 .terraform-base: &terraform_base
   image:
-    name: ${DOCKER_REGISTRY}tfenv:${TFENV_IMAGE_TAG}
+    name: ${DOCKER_REGISTRY}tenv:${TENV_IMAGE_TAG}
     entrypoint:
       - '/usr/bin/env'
-      - 'PATH=/pyenv/bin:/pyenv/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+      - 'PATH=/pyenv/bin:/pyenv/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   <<: *base
 
 {% if  GITLAB_JOBS["terraform-trivy"]  %}
@@ -170,14 +171,14 @@ stages:
     name: aquasec/trivy:latest
     entrypoint:
       - '/usr/bin/env'
-      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tfenv/bin/'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
   <<: *base
 
 {% endif %}
 {% if  GITLAB_JOBS["terraform-lint"]  %}
 .terraform-lint:
   image:
-    name: ${DOCKER_REGISTRY}tfenv:${TFENV_IMAGE_TAG}
+    name: ${DOCKER_REGISTRY}tenv:${TENV_IMAGE_TAG}
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'

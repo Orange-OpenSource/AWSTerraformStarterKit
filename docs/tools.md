@@ -1,12 +1,12 @@
 
 # Tools
 
-- [TFEnv](https://github.com/tfutils/tfenv)
+- [TEnv](https://github.com/tfutils/TEnv)
 
-tfenv is a version manager specifically designed for Terraform. It provides a simple and convenient way to manage multiple
-versions of Terraform on a single machine. With tfenv, you can easily switch between different versions of Terraform based on your project's requirements.
+TEnv is a version manager specifically designed for Terraform. It provides a simple and convenient way to manage multiple
+versions of Terraform on a single machine. With TEnv, you can easily switch between different versions of Terraform based on your project's requirements.
 
-Using tfenv, you can install and manage multiple versions of Terraform side by side, ensuring compatibility with different projects or environments.
+Using TEnv, you can install and manage multiple versions of Terraform side by side, ensuring compatibility with different projects or environments.
 It allows you to easily switch between versions with a single command, making it effortless to work on different projects that may require different
 versions of Terraform.
 
@@ -14,16 +14,16 @@ versions of Terraform.
 
 2. Inside the `.terraform-version` file, specify the desired version of Terraform you want to use for your project. For example, you can write `0.15.4` to indicate that you want to use version 0.15.4.
 
-3. Install tfenv on your machine if you haven't done so already. You can refer to the tfenv documentation for installation instructions specific to your operating system.
+3. Install TEnv on your machine if you haven't done so already. You can refer to the TEnv documentation for installation instructions specific to your operating system.
 
-4. Once tfenv is installed, navigate to the root directory of your Terraform project using the command line.
+4. Once TEnv is installed, navigate to the root directory of your Terraform project using the command line.
 
-5. Run the following command to let tfenv detect and switch to the version specified in the `.terraform-version` file
+5. Run the following command to let TEnv detect and switch to the version specified in the `.terraform-version` file
 
-`tfenv install`
+`TEnv install`
 
 This command will check the `.terraform-version` file and automatically install the specified version of Terraform if it's not already installed.
-If the desired version is already installed, tfenv will switch to that version.
+If the desired version is already installed, TEnv will switch to that version.
 
 6. Verify that the correct version of Terraform is now in use by running:
 
@@ -31,7 +31,7 @@ If the desired version is already installed, tfenv will switch to that version.
 
 You should see the version specified in the `.terraform-version` file displayed in the output.
 
-By using the `.terraform-version` file, tfenv makes it easy to ensure that the correct version of Terraform is used for each specific project or directory. It simplifies the management of Terraform versions and helps maintain consistency across different projects.
+By using the `.terraform-version` file, TEnv makes it easy to ensure that the correct version of Terraform is used for each specific project or directory. It simplifies the management of Terraform versions and helps maintain consistency across different projects.
 
 If you have any further questions or need additional assistance, feel free to ask!
 
@@ -164,7 +164,7 @@ documentation, improving the overall quality of module documentation and enhanci
 
 
 - [Terraform Check Version (tsvc)](https://github.com/tfverch/tfvc)
-- Terraform version check (tfvc) is a reporting tool to identify available updates for providers and modules referenced in your Terraform code. 
+- Terraform version check (tfvc) is a reporting tool to identify available updates for providers and modules referenced in your Terraform code.
 - It provides clear warning/failure output and resolution guidance for any issues it detects.
 
 # Adding a Tool

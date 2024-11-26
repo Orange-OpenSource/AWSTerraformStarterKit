@@ -3,19 +3,18 @@
 services:
   terraform:
     container_name: ${COMPOSE_PROJECT_NAME}_terraform
-    image: ${DOCKER_REGISTRY}tfenv:${TFENV_IMAGE_TAG}
+    image: ${DOCKER_REGISTRY}tenv:${TENV_IMAGE_TAG}
 #    build:
-#      dockerfile: automation/TFEnv/Dockerfile
+#      dockerfile: automation/TEnv/Dockerfile
 #      args:
-#        - TFENV_VERSION=${TFENV_VERSION}
-#        - BASH_VERSION=${BASH_VERSION_TAG}
-#    image: tfenv:${BASH_VERSION_TAG}-${TFENV_VERSION}
+#        - TENV_VERSION=${TENV_VERSION}
+#        - ALPINE_VERSION_TAG=${ALPINE_VERSION_TAG}
+#    image: tenv:${ALPINE_VERSION_TAG}-${TENV_VERSION}
     user: ${MY_UID}:${MY_GID}
     environment:
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
       AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
       AWS_SESSION_TOKEN: "${AWS_SESSION_TOKEN}"
-      TFENV_TERRAFORM_VERSION: "${TFENV_TERRAFORM_VERSION}"
     env_file:
       - .env
     working_dir: ${DOCKER_WORKDIR}

@@ -46,7 +46,7 @@ To **intialize** the AWSTerraformStarterKit, follow these steps:
 
 2. Create a **terraform** folder within your new repository and copy your Terraform plans into. A Terraform plan is a subfolder of the **terraform** directory.
 
-3. You can create a **common.tfvars** file at the root level of **terraform** directory that will contain the common parameters of your Teraform plans. 
+3. You can create a **common.tfvars** file at the root level of **terraform** directory that will contain the common parameters of your Teraform plans.
 
 4. Download `get-starter-kit.sh` shell script and make it executable
 
@@ -94,21 +94,21 @@ Project Root Directory:
 
 ### Step 2
 
-1. Locate the `.gitignore.dist` then copy it as `.gitignore`. 
+1. Locate the `.gitignore.dist` then copy it as `.gitignore`.
 
    ```bash
    cp .gitignore.dist .gitignore
    ```
-2. Edit `.gitignore` file in a text editor and update with your desired other files to ignore. 
+2. Edit `.gitignore` file in a text editor and update with your desired other files to ignore.
 
-> `.gitignore` contains : 
+> `.gitignore` contains :
 > - the standard ignore file list for a Terraform project
 > - the AWSTerraformStarterKit files and folders that should not be commited in your Git repo.
 > - You own list of files and directories that should not be commited in your Git repo.
 
 ### Step 3
 
-1. Locate the `configure.yaml.dist` then copy it as `configure.yaml`. 
+1. Locate the `configure.yaml.dist` then copy it as `configure.yaml`.
 
    ```bash
    cp configure.yaml.dist configure.yaml
@@ -116,7 +116,7 @@ Project Root Directory:
 2. Edit `configure.yaml` file in a text editor and update the parameters  with your desired values. Make sure to follow the instructions or comments provided in the file to correctly configure each parameter.
 
 
-> `configure.yaml` is the main configuration file of AWSTerraformStarterKit. It contains : 
+> `configure.yaml` is the main configuration file of AWSTerraformStarterKit. It contains :
 > - ENV Variables
 > - Docker Compose image tags to use
 > - GITLAB CI configuration
@@ -188,7 +188,7 @@ It's important to note that if your AWS credentials expire or change, you need t
 ```
 ## Help
 
-To get help and list all the available commands in the AWSTerraformStarterKit, you can use the `make help` command. This command will display the available targets and their descriptions from the `Makefile`. 
+To get help and list all the available commands in the AWSTerraformStarterKit, you can use the `make help` command. This command will display the available targets and their descriptions from the `Makefile`.
 
 ```bash
 $ make help
@@ -385,7 +385,7 @@ Example configuration in `configure.yaml`:
 
 ### Change the Python Version
 
-The TFenv image is built using the `pyenv` tool, a popular utility that simplifies the management of multiple Python versions. Several Python versions, ranging from Python 3.8 to Python 3.12, are pre-installed in the image.
+The TEnv image is built using the `pyenv` tool, a popular utility that simplifies the management of multiple Python versions. Several Python versions, ranging from Python 3.8 to Python 3.12, are pre-installed in the image.
 
 To switch the Python version for a Terraform plan, simply add a `.python-version` file to the plan's folder. This file should specify the desired Python version, and `pyenv` will automatically switch to that version when executing the plan.
 
@@ -492,7 +492,7 @@ Makefile exists, will be deleted
 ./get-starter-kit.sh
 ```
 
-3. Run `make start` 
+3. Run `make start`
 ```bash
 make start
 ```
