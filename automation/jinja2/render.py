@@ -53,7 +53,7 @@ class Render:
             var_data = yaml.full_load(f)
         # compute execution plan
         for idx in range(len(var_data['plans'])):
-            var_data['plans'][idx] = var_data['plans'][idx] if var_data['plans'][idx].startswith('name: ') else {
+            var_data['plans'][idx] = var_data['plans'][idx] if not isinstance(var_data['plans'][idx],str) else {
                 'name': var_data['plans'][idx]} # this is for backward compatiblity
         exec_plan = compute_deps.build_exec_plan(plans=var_data['plans'])
         var_data['exec_plan'] = exec_plan
