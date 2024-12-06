@@ -155,10 +155,10 @@ init_all: ## Init all AWS layers
 init_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} init_{{ slug }} {% endfor %}
 
 plan_all: ## Plan all AWS layers
-plan_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} init_{{ slug }} {% endfor %}
+plan_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} plan_{{ slug }} {% endfor %}
 
 install_all: ## Install all AWS layers
-install_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} plan_{{ slug }} {% endfor %}
+install_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} install_{{ slug }} {% endfor %}
 
 destroy_all: ## Uninstall all layers
 destroy_all:{% for plan in plans_delete %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} destroy_{{ slug }} {% endfor %}
