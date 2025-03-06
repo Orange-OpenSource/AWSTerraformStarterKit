@@ -13,7 +13,22 @@ generate_documentation:
 render_templates: ## Render all templates
 render_templates:
 {% for template in templates %}
-	@$(MAKE) --no-print-directory render_template TPL_SRC="{{ template['source'] }}" TPL_DST="{{ template['target'] }}"
+	{% if template['source'].startswith('http://') or template['source'].startswith('https://') %}{# open source check #}
+	{% if 'auth' in template %}{# open auth check #}
+	{% if template['auth']['type'] == 'Basic' and 'token' in template['auth'] %}{# open auth type check #}
+	{% set tpl_local_tmp = template['target'] ~ '.tmp' %}
+	curl --fail -H "Authorization: Basic {{ template['auth']['token'] }}" {{ template['source'] }} -o {{ tpl_local_tmp }} && $(MAKE) --no-print-directory render_template TPL_SRC="{{ tpl_local_tmp }}" TPL_DST="{{ template['target'] }}" && rm {{ tpl_local_tmp }} 
+	{% elif template['auth']['type'] == 'Basic' and 'username' in template['auth'] %}{# else auth type check #}
+	{% set tpl_local_tmp = template['target'] ~ '.tmp' %}
+	curl --fail -u "{{ template['auth']['username'] }}:{{ template['auth']['password'] }}" {{ template['source'] }} -o {{ tpl_local_tmp }} && $(MAKE) --no-print-directory render_template TPL_SRC="{{ tpl_local_tmp }}" TPL_DST="{{ template['target'] }}" && rm {{ tpl_local_tmp }} 
+	{% endif %}{# close auth type check #}
+	{% else %}{# else auth check #}
+	{% set tpl_local_tmp = template['target'] ~ '.tmp' %}
+	curl --fail {{ template['source'] }} -o {{ tpl_local_tmp }} && $(MAKE) --no-print-directory render_template TPL_SRC="{{ tpl_local_tmp }}" TPL_DST="{{ template['target'] }}" && rm {{ tpl_local_tmp }} 
+	{% endif %}{# close auth check #}
+	{% else %}{# else source check #}
+	$(MAKE) --no-print-directory render_template TPL_SRC="{{ template['source'] }}" TPL_DST="{{ template['target'] }}"
+	{% endif %}{# close source check #}
 {% endfor %}
 
 terraform_terrascan: ## DEPRECATED: Terrascan Terraform
