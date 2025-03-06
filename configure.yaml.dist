@@ -164,33 +164,33 @@ DEFAULT_UPGRADE: false
 # Replace the default demo plan by your own plan name and configuration
 plans:
   - terraform/demo
-#  - name: terraform/demo2
-#    # (optional) Add Gitlab Plan artifacts
-#    additional_gitlab_plan_artifacts:
-#    - builds
-#    # (optional) layer specific init parameters replacement
-#    override_init_parameters: ""
-#    # (optional) layer specific 'plan' parameters replacement
-#    override_var_parameters: ""
-#    # (optional) layer specific tflint config file
-#    tflint_config: .config/.tflint.hcl
-#    # (optional) layer specific shell check config file
-#    shellcheck_config: .config/.shellcheckrc
-#    # (optional) layer specific yaml lint config file
-#    yamllint_config: .config/.yamllintrc
-#    # (optional) layer specific markdown lint config file
-#    markdownlint_config: .config/.mdl_style.rb
-#    # (optional) layer specific trivy config file
-#    trivy_config: .config/.trivy.yaml
-#    # (optional) layer specific terrascan config file
-#    terrascan_config: .config/.terrascan_config.toml
-#    # (optioanl) layer specific terraform-docs config file
-#    terraform_docs_config: .config/.terraform-docs.yml
-#  - name: terraform/demo3
-#    # (optional) layer specific 'plan' additionals parameters
-#    additional_var_parameters: "-var-file=../common.tfvars"
-#    depends_on:
-#    - terraform/demo2
+#   - name: terraform/demo2
+#     # (optional) Add Gitlab Plan artifacts
+#     additional_gitlab_plan_artifacts:
+#     - builds
+#     # (optional) layer specific init parameters replacement
+#     override_init_parameters: ""
+#     # (optional) layer specific 'plan' parameters replacement
+#     override_var_parameters: ""
+#     # (optional) layer specific tflint config file
+#     tflint_config: .config/.tflint.hcl
+#     # (optional) layer specific shell check config file
+#     shellcheck_config: .config/.shellcheckrc
+#     # (optional) layer specific yaml lint config file
+#     yamllint_config: .config/.yamllintrc
+#     # (optional) layer specific markdown lint config file
+#     markdownlint_config: .config/.mdl_style.rb
+#     # (optional) layer specific trivy config file
+#     trivy_config: .config/.trivy.yaml
+#     # (optional) layer specific terrascan config file
+#     terrascan_config: .config/.terrascan_config.toml
+#     # (optioanl) layer specific terraform-docs config file
+#     terraform_docs_config: .config/.terraform-docs.yml
+#   - name: terraform/demo3
+#     # (optional) layer specific 'plan' additionals parameters
+#     additional_var_parameters: "-var-file=../common.tfvars"
+#     depends_on:
+#     - terraform/demo2
 
 # AWS Account ID in which your plan are deployed and containing the backend bucket
 # SSO Account
@@ -198,8 +198,21 @@ ACCOUNT_ID: <AWS_ACCOUNT_ID>
 
 # (Optional) variable to defined additional jinj2 template file to render with variables from `configure.yaml` file
 # templates:
-#   - source: .github/.github-actions.yaml.j2
-#     target: .github/workflows/.github-actions.yaml
+#   - source: .github/template.yaml.j2
+#     target: .github/file.yaml
+#   - source: https://raw.githubusercontent.com/arongate/AWSTerraformStarterKit/0cf86b1669ef19aa07927606b00dc3109b073dba/automation/jinja2/templates/.gitlab-ci.yml.j2
+#     target: .gitlab-ci-2.yml
+#   - source: https://raw.githubusercontent.com/arongate/my-private-repository/5db2e553aba52bf8c218f3dbe302d21f4427ad74/main.tf
+#     auth:
+#       type: Basic
+#       username: arongate
+#       password: "${TEMPLATE_AUTH_PASS}"
+#     target: test-auth-credentials-main.tf
+#   - source: https://raw.githubusercontent.com/arongate/my-private-repository/5db2e553aba52bf8c218f3dbe302d21f4427ad74/main.tf
+#     auth:
+#       type: Basic
+#       token: ${TEMPLATE_AUTH_TOKEN}
+#     target: test-auth-token-main.tf
 
 ########################################################################################################################
 # Makefile customizations
