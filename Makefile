@@ -347,6 +347,11 @@ start: init generate
 	$(DOCKER_COMPOSE) up -d --remove-orphans
 	@$(MAKE) -s check_starterkit_version
 
+pull: ## Pull all docker images from docker compose file
+pull:
+	$(DOCKER_COMPOSE) pull
+	$(DOCKER_COMPOSE_DEV_TOOLS) pull
+
 check_starterkit_version: ## Verify if you are using the latest version
 check_starterkit_version:
 	@./automation/CheckSKVersion/check_version.sh;
