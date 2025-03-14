@@ -55,8 +55,22 @@ To **intialize** the AWSTerraformStarterKit, follow these steps:
    chmod +x get-starter-kit.sh
    ```
 
+5. Set GITHUB Token
 
-5. Execute `get-starter-kit.sh`
+   Put in you path `bashrc`, ''.zshrc' the github token
+   
+   Used to authenticate requests to the GitHub API. Authenticating will increase the API rate limit. Any valid token is supported. No permissions are required.
+
+   ```bash
+    export SK_TENV_GITHUB_TOKEN=xxxxxxx
+    export SK_GITHUB_TOKEN=xxxxxxx
+   ```
+6. 
+   ```bash
+   curl -o get-starter-kit.sh https://raw.githubusercontent.com/Orange-OpenSource/AWSTerraformStarterKit/master/get-starter-kit.sh
+   chmod +x get-starter-kit.sh
+
+7. Execute `get-starter-kit.sh`
    - Without any arguments: the shell script will download the lastest version of the shell script.
    - With a AWSTerraformStaertKit specific version to be downloaded as argument (release list: https://github.com/Orange-OpenSource/AWSTerraformStarterKit/releases)
    ```bash
@@ -65,7 +79,7 @@ To **intialize** the AWSTerraformStarterKit, follow these steps:
    ./get-starter-kit.sh 0.1.2
    ```
 
-6. The `get-starter-kit.sh` will download the AWSTerraformStarterKit files and folders. You are now ready to bootstrap you first Terraform project with the AWSTerraformStarterKit!
+8. The `get-starter-kit.sh` will download the AWSTerraformStarterKit files and folders. You are now ready to bootstrap you first Terraform project with the AWSTerraformStarterKit!
 
 #### Directory Structure Overview after AWSTerraformStarterKit download
 
