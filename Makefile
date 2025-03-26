@@ -96,7 +96,7 @@ else
 	TFENV_EXEC = $(DOCKER_COMPOSE) exec terraform
 	TERRAFORM_EXEC = $(DOCKER_COMPOSE) exec terraform
 	TFLINT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm lint --config ${DOCKER_WORKDIR}/$(TFLINT_CONFIG)
-	PRECOMMIT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm precommit
+	PRECOMMIT_RUN = $(DOCKER_COMPOSE_DEV_TOOLS) run precommit
 	DOTENV_LINTER = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm dotenv-linter
 	SHELL_LINT = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm shell_lint shellcheck
 	YAML_LINT = $(DOCKER_COMPOSE_DEV_TOOLS) run --rm yaml_lint yamllint
@@ -347,6 +347,11 @@ start: init generate
 	$(DOCKER_COMPOSE) up -d --remove-orphans
 	@$(MAKE) -s check_starterkit_version
 
+pull: ## Pull all docker images from docker compose file
+pull:
+	$(DOCKER_COMPOSE) pull
+	$(DOCKER_COMPOSE_DEV_TOOLS) pull
+
 check_starterkit_version: ## Verify if you are using the latest version
 check_starterkit_version:
 	@./automation/CheckSKVersion/check_version.sh;
@@ -381,7 +386,7 @@ logout:
 
 precommit: ## Launch precommit hooks
 precommit:
-	$(PRECOMMIT_RUN) run --rm -a --config ./$(PRECOMMIT_CONFIG)
+	$(PRECOMMIT_RUN) run -a --config ./$(PRECOMMIT_CONFIG)
 
 dotenv_lint: ## Lint dotenv files
 dotenv_lint:

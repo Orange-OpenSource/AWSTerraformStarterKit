@@ -75,7 +75,7 @@ ENV PYENV_ROOT "/pyenv"
 ENV PATH "$PYENV_ROOT/bin:$PATH"
 RUN eval "$(pyenv init -)"
 RUN eval "$(pyenv virtualenv-init -)"
-RUN pyenv install 3.8 3.9 3.10 3.11 3.12
+RUN pyenv install 3.8 3.9 3.10 3.11 3.12 3.13
 ENV PATH "$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
 
 ENTRYPOINT ["/usr/local/bin/terraform"]
