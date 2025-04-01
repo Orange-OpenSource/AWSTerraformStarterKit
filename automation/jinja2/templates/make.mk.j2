@@ -125,7 +125,7 @@ apply_{{ slug }}:
 
 install_{{ slug }}: ## Install AWS {{ plan_name }} layer
 install_{{ slug }}:
-	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_install_commands
+	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_init_parameters' in plan %}TERRAFORM_INIT_PARAMETERS="{{ plan['override_init_parameters'] }}" {% endif %} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_install_commands
 
 destroy_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer
 destroy_{{ slug }}:
