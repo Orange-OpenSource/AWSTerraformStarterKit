@@ -172,6 +172,8 @@ plans:
 #     override_init_parameters: ""
 #     # (optional) layer specific 'plan' parameters replacement
 #     override_var_parameters: ""
+#     # (optional) layer specific 'plan' additional parameters
+#     additional_var_parameters: ""
 #     # (optional) layer specific tflint config file
 #     tflint_config: .config/.tflint.hcl
 #     # (optional) layer specific shell check config file
