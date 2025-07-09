@@ -519,6 +519,7 @@ driftctl:
 {% for plan in plans %}
 {% set plan_name = plan['name'] if 'name' in plan else plan %}
 {% set plan_slug = plan_name | replace('/','_') %}
+{% if not 'disable_terraform_init' in plan or not plan['disable_terraform_init'] %}
 init_{{ plan_slug }}:
   extends: .init_job
   script:
@@ -531,6 +532,7 @@ init_{{ plan_slug }}:
       - {{ plan_name }}/.terraform.lock.hcl
   <<: *rules_{{ plan_slug }}
 
+{% endif %}
 {% endfor %}
 
 {% for exec_batch in exec_plan %}
@@ -543,6 +545,7 @@ init_{{ plan_slug }}:
 {% for plan in exec_batch %}
 {% set plan_name = plan['name'] if 'name' in plan else plan %}
 {% set plan_slug = plan_name | replace('/','_') %}
+{% if not 'disable_terraform_plan' in plan or not plan['disable_terraform_plan'] %}
 plan_{{ plan_slug }}:
   extends: .plan_job
   stage: {{ stage_name }}
@@ -571,11 +574,13 @@ plan_{{ plan_slug }}:
       {% endif %}
   <<: *rules_{{ plan_slug }}
 
+{% endif %}
 {% endfor %}
 
 {% for plan in exec_batch %}
 {% set plan_name = plan['name'] if 'name' in plan else plan %}
 {% set plan_slug = plan_name | replace('/','_') %}
+{% if not 'disable_terraform_apply' in plan or not plan['disable_terraform_apply'] %}
 apply_{{ plan_slug }}:
   extends: .apply_job
   stage: {{ stage_name }}
@@ -602,6 +607,7 @@ apply_{{ plan_slug }}:
     - when: never
   {% endif %}
 
+{% endif %}
 {% endfor %}
 
 {% endfor %} {# exec_plan #}
@@ -615,6 +621,7 @@ apply_{{ plan_slug }}:
 {% for plan in exec_batch +%}
 {% set plan_name = plan['name'] if 'name' in plan else plan %}
 {% set plan_slug = plan_name | replace('/','_') %}
+{% if not 'disable_terraform_destroy' in plan or not plan['disable_terraform_destroy'] %}
 delete_{{ plan_slug }}:
   extends: .delete_job
   stage: {{ delete_stage_name }}
@@ -632,5 +639,6 @@ delete_{{ plan_slug }}:
     - make init_{{ plan_slug }}
     - make destroyauto_{{ plan_slug }}
 
+{% endif %} {# disable_terraform_destroy #}
 {% endfor %} {# exec_batch #}
 {% endfor %} {# delete_exec_plan #}

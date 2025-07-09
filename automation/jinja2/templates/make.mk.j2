@@ -52,8 +52,10 @@ trivy:
 validate: ## DEPRECATED: Validate all Terraform files using "terraform validate"
 validate:
 {% for plan in plans_install %}
+{% if not 'disable_terraform_validate' in plan or not plan['disable_terraform_validate'] %}
 {% set plan_name = plan if not 'name' in plan else plan['name'] %}
 	@$(MAKE) --no-print-directory terraform_validate CURRENT_DIR="{{ plan_name }}"
+{% endif %}
 {% endfor %}
 
 lint: ## DEPRECATED: Check that good naming practices are respected in Terraform files (using tflint)
@@ -83,9 +85,11 @@ trivy_{{ slug}}: ## Terraform trivy {{ plan_name }} layer
 trivy_{{ slug }}:
 	@$(MAKE) --no-print-directory trivy_commands CURRENT_DIR={{ plan_name }}{% if 'trivy_config' in plan %} TRIVY_CONFIG={{ trivy_config }}{% endif %}
 
+{% if not 'disable_terraform_validate' in plan or not plan['disable_terraform_validate'] %}
 validate_{{ slug}}: ## Validate AWS {{ plan_name }} layer
 validate_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_validate
+{% endif %}
 
 tflint_{{ slug}}: ## Terraform code goot practices check with tflint on {{ plan_name }} layer
 tflint_{{ slug }}:
@@ -111,29 +115,36 @@ tsvc_{{ slug}}: ## Check terraform module version {{ plan_name }}
 tsvc_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} terraform_check_version_commands
 
+{% if not 'disable_terraform_init' in plan or not plan['disable_terraform_init'] %}
 init_{{ slug}}: ## Init AWS {{ plan_name }} layer
 init_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_init_parameters' in plan %}TERRAFORM_INIT_PARAMETERS="{{ plan['override_init_parameters'] }}" {% endif %}terraform_init_commands
-
+{% endif %}
+{% if not 'disable_terraform_plan' in plan or not plan['disable_terraform_plan'] %}
 plan_{{ slug}}: ## Plan AWS {{ plan_name }} layer
 plan_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_plan_commands
-
+{% endif %}
+{% if not 'disable_terraform_apply' in plan or not plan['disable_terraform_apply'] %}
 apply_{{ slug }}: ## Apply AWS {{ plan_name }} layer
 apply_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_apply_commands
-
+{% endif %}
+{% if not 'disable_terraform_install' in plan or not plan['disable_terraform_install'] %}
 install_{{ slug }}: ## Install AWS {{ plan_name }} layer
 install_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_init_parameters' in plan %}TERRAFORM_INIT_PARAMETERS="{{ plan['override_init_parameters'] }}" {% endif %} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_install_commands
-
+{% endif %}
+{% if not 'disable_terraform_destroy' in plan or not plan['disable_terraform_destroy'] %}
 destroy_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer
 destroy_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_destroy_commands
-
+{% endif %}
+{% if not 'disable_terraform_destroy' in plan or not plan['disable_terraform_destroy'] %}
 destroyauto_{{ slug }}: ## Uninstall AWS {{ plan_name }} layer automaticaly
 destroyauto_{{ slug }}:
 	@$(MAKE) --no-print-directory CURRENT_DIR={{ plan_name }} {% if 'override_var_parameters' in plan %}TERRAFORM_VAR_PARAMETERS="{{ plan['override_var_parameters'] }}" {% endif %}{% if 'additional_var_parameters' in plan %}ADDITIONAL_VAR_PARAMETERS="{{ plan['additional_var_parameters'] }}" {% endif %}terraform_destroyauto_commands
+{% endif %}
 {% endfor %}
 
 terraform_docs_all:  ## Generate Terraform Documentation for all stacks
@@ -149,7 +160,7 @@ trivy_all:  ## Terraform Trivy
 trivy_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} trivy_{{ slug }} {% endfor %}
 
 validate_all:  ## Validate all Terraform files using "terraform validate"
-validate_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} validate_{{ slug }} {% endfor %}
+validate_all:{% for plan in plans_install %}{% if not 'disable_terraform_validate' in plan or not plan['disable_terraform_validate'] %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} validate_{{ slug }} {% endif %}{% endfor %}
 
 tflint_all:  ## Terraform code goot practices check with tflint on all layers
 tflint_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} tflint_{{ slug }} {% endfor %}
@@ -167,16 +178,16 @@ tsvc_all: ## Install all AWS layers
 tsvc_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} tsvc_{{ slug }} {% endfor %}
 
 init_all: ## Init all AWS layers
-init_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} init_{{ slug }} {% endfor %}
+init_all:{% for plan in plans_install %}{% if not 'disable_terraform_init' in plan or not plan['disable_terraform_init'] %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} init_{{ slug }} {% endif %}{% endfor %}
 
 plan_all: ## Plan all AWS layers
-plan_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} plan_{{ slug }} {% endfor %}
+plan_all:{% for plan in plans_install %}{% if not 'disable_terraform_plan' in plan or not plan['disable_terraform_plan'] %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} plan_{{ slug }} {% endif %}{% endfor %}
 
 install_all: ## Install all AWS layers
-install_all:{% for plan in plans_install %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} install_{{ slug }} {% endfor %}
+install_all:{% for plan in plans_install %}{% if not 'disable_terraform_install' in plan or not plan['disable_terraform_install'] %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} install_{{ slug }} {% endif %}{% endfor %}
 
 destroy_all: ## Uninstall all layers
-destroy_all:{% for plan in plans_delete %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} destroy_{{ slug }} {% endfor %}
+destroy_all:{% for plan in plans_delete %}{% if not 'disable_terraform_destroy' in plan or not plan['disable_terraform_destroy'] %}{% set plan_name = plan if not 'name' in plan else plan['name'] %}{% set slug = plan_name | replace('/',"_") %} destroy_{{ slug }} {% endif %}{% endfor %}
 
 
 ### Makefile customizations

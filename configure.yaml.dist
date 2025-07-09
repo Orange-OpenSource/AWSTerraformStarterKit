@@ -188,6 +188,12 @@ plans:
 #     terrascan_config: .config/.terrascan_config.toml
 #     # (optioanl) layer specific terraform-docs config file
 #     terraform_docs_config: .config/.terraform-docs.yml
+#     disable_terraform_init: true
+#     disable_terraform_validate: true
+#     disable_terraform_plan: true
+#     disable_terraform_apply: true
+#     disable_terraform_install: true
+#     disable_terraform_destroy: true
 #   - name: terraform/demo3
 #     # (optional) layer specific 'plan' additionals parameters
 #     additional_var_parameters: "-var-file=../common.tfvars"
